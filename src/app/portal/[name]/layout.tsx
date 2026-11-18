@@ -8,6 +8,7 @@ import PortalPopupHost from "./PortalPopupHost";
 import { effectiveCharityPermissions } from "@/lib/charityPermissions";
 import { listCharityNotices } from "@/app/actions/charityNotifications";
 import { isMediaPlanEnabled } from "@/lib/mediaPlanToggle";
+import { fundraisingOpenFor } from "@/lib/portalFundraising";
 
 export default async function CharityLayout({
   children,
@@ -24,7 +25,7 @@ export default async function CharityLayout({
 
   const charity = await prisma.charity.findUnique({
     where: { name: decodedName },
-    select: { id: true, logoUrl: true },
+    select: { id: true, name: true, logoUrl: true },
   });
   if (!charity) notFound();
 
@@ -120,6 +121,10 @@ export default async function CharityLayout({
   // (`isMediaPlanEnabled`) فيقرؤه الشريطُ والصفحةُ والأفعال.
   const mediaPlanEnabled = await isMediaPlanEnabled(charity.id);
 
+  // وتنميةُ الموارد: خدمةُ الجمعية ثمّ العلَم — تُحسب هنا مرّةً ويقرؤها
+  // الشريطُ، وتُفحص في الصفحة والأفعال من نفس الدالّة.
+  const fundraisingEnabled = await fundraisingOpenFor(charity);
+
   // وإشعاراتُ الحساب — آمنةٌ في نفسها (انظر `listCharityNotices`).
   const notices = await listCharityNotices();
 
@@ -138,6 +143,7 @@ export default async function CharityLayout({
       unreadMail={unreadMail}
       mediaWaiting={mediaWaiting}
       mediaPlanEnabled={mediaPlanEnabled}
+      fundraisingEnabled={fundraisingEnabled}
       notices={notices}
     >
       {needsEmail && (

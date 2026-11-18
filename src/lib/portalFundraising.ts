@@ -3,14 +3,15 @@ import { prisma } from "@/lib/db";
 import { decryptSecret } from "@/lib/encryption";
 import { isCharityFundraisingOpen } from "@/lib/featureFlags";
 import { requirePortalPermission } from "@/lib/portalAccess";
+import { SECTION_SERVICES, charityHasService } from "@/lib/charityServices";
 import { effectiveIntake, formatDonorDate, type IntakeStatus } from "@/lib/donorOrg";
 
 /**
  * تنميةُ الموارد المالية في بوّابة الجمعية: قراءاتُها في موضعٍ واحد.
  *
- * **وثلاثةُ شروطٍ لا شرطان**: عضويّةُ الجمعية، وصلاحيّةُ `view_fundraising`،
- * ثمّ كونُ القسم مفتوحاً لهذه الجمعية (`isCharityFundraisingOpen`). والثالثُ
- * هو ما يجعله تجربةً على جمعيةٍ واحدة، ويُفحص في كلِّ صفحةٍ وكلِّ فعل — لا في
+ * **وثلاثةُ شروطٍ لا شرطان**: عضويّةُ الجمعية، وصلاحيّةُ `view_fundraising`
+ * (ولا تُنال إلّا بتفويض خدمتها)، ثمّ كونُ القسم مفتوحاً لهذه الجمعية
+ * (`fundraisingOpenFor`: خدمتُها والعلَم). ويُفحص في كلِّ صفحةٍ وكلِّ فعل — لا في
  * الشريط الجانبيِّ وحدَه، فإخفاءُ رابطٍ ليس حجباً.
  *
  * **والجهاتُ المعروضةُ مؤسّساتُ المنح وحدَها** (`FOUNDATION`): منصّةُ إحسان
@@ -19,12 +20,31 @@ import { effectiveIntake, formatDonorDate, type IntakeStatus } from "@/lib/donor
  */
 export const PORTAL_DONOR_KIND = "FOUNDATION";
 
-/** حارسُ القسم: العضويّةُ والصلاحيّةُ والفتحُ لهذه الجمعية. */
+/**
+ * هل يُفتح هذا القسمُ لهذه الجمعية؟ — شرطان، ويُقرآن من هنا وحدَهما.
+ *
+ * **الأوّلُ خدمتُها**: القسمُ وجهُ خدمةِ «التسويق وتنمية الموارد المالية»
+ * في البوّابة، فجمعيةٌ لا تشملها الخدمةُ لا شأنَ لها به — كبقيّة أقسام
+ * الجمعية عند زاد (`charityServices`). ولو فُتح لها لعرَض جهاتٍ ومجالاتٍ
+ * لا تُقدَّم إليها خدمتُها أصلاً.
+ *
+ * **والثاني العلَم**: تجربةٌ على جمعيةٍ واحدةٍ أوّلاً
+ * (`CHARITY_FUNDRAISING_SCOPE`)، وهو حَجْرٌ مؤقّتٌ يُرفع بسطر.
+ *
+ * ويُقرآن معاً في الحارس، وفي الأفعال، وفي الشريط الجانبيِّ — فلا يُعرض
+ * رابطٌ يُردّ صاحبُه، ولا تُفتح صفحةٌ لا رابطَ لها.
+ */
+export async function fundraisingOpenFor(charity: { id: string; name: string }): Promise<boolean> {
+  if (!isCharityFundraisingOpen(charity.name)) return false;
+  return charityHasService(charity.id, SECTION_SERVICES.manage_resource_development);
+}
+
+/** حارسُ القسم: العضويّةُ، والصلاحيّةُ، وفتحُ القسم لهذه الجمعية. */
 export async function requireFundraisingPortal(nameParam: string) {
   const portal = await requirePortalPermission(nameParam, "view_fundraising");
   // ومن كتب العنوانَ في جمعيةٍ لم يُفتح لها القسمُ يُقال له «لا صفحة»: التبويبُ
   // عندها «قريباً»، فالصفحةُ غيرُ موجودةٍ في بوّابته حقّاً.
-  if (!isCharityFundraisingOpen(portal.charity.name)) notFound();
+  if (!(await fundraisingOpenFor(portal.charity))) notFound();
   return portal;
 }
 

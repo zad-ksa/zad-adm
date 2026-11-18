@@ -5,11 +5,10 @@ import { prisma } from "@/lib/db";
 import { getSession } from "@/lib/auth";
 import { encryptSecret } from "@/lib/encryption";
 import { cleanCredential } from "@/lib/donorOrg";
-import { isCharityFundraisingOpen } from "@/lib/featureFlags";
 import { effectiveCharityPermissions, hasCharityPermission } from "@/lib/charityPermissions";
 import { requireCharityMembership } from "@/lib/guards";
 import { logAudit } from "@/lib/auditLog";
-import { PORTAL_DONOR_KIND } from "@/lib/portalFundraising";
+import { PORTAL_DONOR_KIND, fundraisingOpenFor } from "@/lib/portalFundraising";
 
 /**
  * أفعالُ تنمية الموارد في بوّابة الجمعية.
@@ -42,9 +41,9 @@ async function requireFundraiser(charityId: string) {
 
     const charity = await prisma.charity.findUnique({
       where: { id: charityId },
-      select: { name: true },
+      select: { id: true, name: true },
     });
-    if (!charity || !isCharityFundraisingOpen(charity.name)) return null;
+    if (!charity || !(await fundraisingOpenFor(charity))) return null;
 
     return { session, charity };
   } catch {

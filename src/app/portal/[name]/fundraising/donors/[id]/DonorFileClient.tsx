@@ -3,14 +3,15 @@
 import { useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Building2, ExternalLink, FileText, Layers, Plus, Trash2 } from "lucide-react";
+import { Building2, ExternalLink, FileText, KeyRound, Layers, Plus, Trash2 } from "lucide-react";
 import { EmptyState, PageHeader, StatStrip } from "@/components/console/layout";
 import { Badge, MONO, btn, cx, field } from "@/components/console/ui";
-import { SecretValue } from "@/components/console/Copy";
+import { CopyButton, SecretValue } from "@/components/console/Copy";
 import Select from "@/components/console/Select";
 import { notify } from "@/components/console/toastBus";
 import { confirmAction } from "@/components/console/confirmBus";
 import { addPortalProposal, deletePortalProposal } from "@/app/actions/charityFundraising";
+import AccountSheet from "../../AccountSheet";
 import type { PortalFieldRow, PortalInitiativeOption } from "@/lib/portalFundraising";
 
 type Donor = {
@@ -55,6 +56,9 @@ export default function DonorFileClient({
 }) {
   const router = useRouter();
   const [busy, start] = useTransition();
+  // والحسابُ يُحرَّر من هنا لا بالرجوع إلى الجدول: رحلةُ صفحتين لتصحيح
+  // كلمةِ مرورٍ عملٌ زائد، واللوحةُ هي هي (`AccountSheet` المشتركة).
+  const [editingAccount, setEditingAccount] = useState(false);
   const base = `/portal/${encodeURIComponent(charityName)}/fundraising`;
   const proposals = fields.reduce((sum, f) => sum + f.proposals.length, 0);
 
@@ -78,7 +82,9 @@ export default function DonorFileClient({
         ]}
         icon={<Building2 className="size-6" />}
         title={donor.name}
-        description={donor.notes ?? donor.legacyFields ?? "جهة مانحة"}
+        // والوصفُ ملاحظةُ الجهة وحدَها: نصُّ المجالات القديمُ يُقرأ هنا وتُقرأ
+        // المجالاتُ صفوفاً أسفلَه، فيُفهم أنّهما خبران وهما واحد.
+        description={donor.notes ?? undefined}
         actions={
           <>
             {donor.url && (
@@ -93,6 +99,8 @@ export default function DonorFileClient({
         }
       />
 
+      {/* أربعُ بطاقاتٍ لا خمس: «يُفتح» و«يُغلق» سؤالٌ واحدٌ — متى تتبدّل
+          الحال؟ — فبطاقةٌ تتبدّل تسميتُها بحال الجهة تكفي. */}
       <StatStrip
         items={[
           {
@@ -101,20 +109,26 @@ export default function DonorFileClient({
             hint: donor.intakeReason,
             dot: donor.intakeStatus === "OPEN" ? "active" : "muted",
           },
-          { label: "يُفتح", value: donor.opensAt ?? "—" },
-          { label: "يُغلق", value: donor.closesAt ?? "—" },
+          {
+            label: donor.intakeStatus === "OPEN" ? "يغلق" : "يفتح",
+            value: (donor.intakeStatus === "OPEN" ? donor.closesAt : donor.opensAt) ?? "بلا موعد معلن",
+          },
           { label: "المشاريع المرفوعة", value: donor.grants },
           { label: "المشاريع المقترحة", value: proposals },
         ]}
       />
 
-      {/* حسابُ الجمعية عند الجهة — يُقرأ هنا ويُحرَّر من جدول الجهات. */}
+      {/* حسابُ الجمعية عند الجهة: يُقرأ ويُحرَّر في مكانه، وكلمةُ المرور
+          تُنسخ قبل أن تُكشف. */}
       <section className="flex flex-wrap items-center gap-x-8 gap-y-2 rounded-xl border border-slate-200 bg-white px-4 py-3 dark:border-slate-800 dark:bg-slate-900">
         <div>
           <p className="text-caption text-slate-500 dark:text-slate-400">اسم المستخدم</p>
           {donor.username ? (
-            <span className={cx(MONO, "text-body text-slate-800 dark:text-slate-100")} dir="ltr">
-              {donor.username}
+            <span className="inline-flex items-center gap-1.5">
+              <span className={cx(MONO, "text-body text-slate-800 dark:text-slate-100")} dir="ltr">
+                {donor.username}
+              </span>
+              <CopyButton value={donor.username} title="نسخ اسم المستخدم" />
             </span>
           ) : (
             <span className="text-body text-slate-400">لا حساب مسجل</span>
@@ -122,11 +136,23 @@ export default function DonorFileClient({
         </div>
         <div>
           <p className="text-caption text-slate-500 dark:text-slate-400">كلمة المرور</p>
-          <SecretValue value={donor.password} emptyLabel="—" />
+          {donor.password ? (
+            <span className="inline-flex items-center gap-1.5">
+              <CopyButton value={donor.password} title="نسخ كلمة المرور" />
+              <SecretValue value={donor.password} />
+            </span>
+          ) : (
+            <span className="text-body text-slate-400">—</span>
+          )}
         </div>
-        <Link href={base} className={cx(btn.secondary, "ms-auto")}>
-          إدارة الحساب
-        </Link>
+        <button
+          type="button"
+          onClick={() => setEditingAccount(true)}
+          className={cx(btn.secondary, "ms-auto")}
+        >
+          <KeyRound className="size-4" />
+          {donor.username ? "تعديل الحساب" : "إضافة حساب"}
+        </button>
       </section>
 
       {/* ── مجالاتُ المنح ───────────────────────────────────────────────── */}
@@ -162,6 +188,21 @@ export default function DonorFileClient({
           </div>
         )}
       </section>
+
+      {editingAccount && (
+        <AccountSheet
+          charityId={charityId}
+          donor={{ id: donor.id, name: donor.name, username: donor.username, password: donor.password }}
+          busy={busy}
+          onClose={() => setEditingAccount(false)}
+          onRun={(fn) =>
+            run(fn, () => {
+              setEditingAccount(false);
+              notify("ok", "حُفظ الحساب.");
+            })
+          }
+        />
+      )}
     </div>
   );
 }
@@ -207,7 +248,14 @@ function FieldCard({
     <article className="rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
-          <h3 className="text-body font-semibold text-slate-900 dark:text-slate-100">{row.name}</h3>
+          <h3 className="flex flex-wrap items-center gap-2 text-body font-semibold text-slate-900 dark:text-slate-100">
+            {row.name}
+            {row.proposals.length > 0 && (
+              <span className="text-meta font-normal text-slate-400">
+                {row.proposals.length} مشروع مقترح
+              </span>
+            )}
+          </h3>
           {row.description && (
             <p className="mt-0.5 text-caption leading-5 text-slate-500 dark:text-slate-400">{row.description}</p>
           )}

@@ -2,19 +2,21 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import { Coins, Search } from "lucide-react";
+import { Coins } from "lucide-react";
 import {
   EmptyState,
   PageHeader,
+  SearchField,
+  SortTh,
   StatStrip,
   TableShell,
-  Th,
   tableFrameClass,
   tbodyClass,
   tdClass,
   theadRowClass,
+  type SortDir,
 } from "@/components/console/layout";
-import { Badge, btn, cx, field } from "@/components/console/ui";
+import { Badge, MONO, btn, cx } from "@/components/console/ui";
 import Select from "@/components/console/Select";
 import { GRANT_STATUSES, grantStatusLabel } from "@/lib/donorOrg";
 import type { PortalGrantRow } from "@/lib/portalFundraising";
@@ -27,6 +29,9 @@ const TONE: Record<string, "good" | "warn" | "danger" | "neutral"> = {
 };
 
 const money = (n: number) => n.toLocaleString("ar-SA-u-nu-latn", { maximumFractionDigits: 0 });
+
+/** أعمدةُ الفرز — بالنقر على الرأس، كشاشات زاد. */
+type Column = "donor" | "project" | "amount" | "status" | "date";
 
 /**
  * منحُ الجمعية وحالاتُها — جامعةٌ لما رُفع إلى الجهات كلِّها.
@@ -44,16 +49,39 @@ export default function GrantsClient({
 }) {
   const [query, setQuery] = useState("");
   const [status, setStatus] = useState("all");
+  const [column, setColumn] = useState<Column>("date");
+  const [dir, setDir] = useState<SortDir>("desc");
+  const onSort = (next: Column, nextDir: SortDir) => {
+    setColumn(next);
+    setDir(nextDir);
+  };
   const base = `/portal/${encodeURIComponent(charityName)}/fundraising`;
 
   const shown = useMemo(() => {
     const q = query.trim();
-    return grants.filter(
+    const text = (a: string, b: string) => a.localeCompare(b, "ar");
+    const sign = dir === "asc" ? 1 : -1;
+    const list = grants.filter(
       (g) =>
         (status === "all" || g.status === status) &&
         (q === "" || g.initiativeName.includes(q) || g.donorName.includes(q))
     );
-  }, [grants, query, status]);
+    list.sort((a, b) => {
+      switch (column) {
+        case "amount":
+          return sign * (a.requestedAmount - b.requestedAmount);
+        case "donor":
+          return sign * text(a.donorName, b.donorName) || b.createdAtMs - a.createdAtMs;
+        case "project":
+          return sign * text(a.initiativeName, b.initiativeName) || b.createdAtMs - a.createdAtMs;
+        case "status":
+          return sign * text(a.status, b.status) || b.createdAtMs - a.createdAtMs;
+        default:
+          return sign * (a.createdAtMs - b.createdAtMs);
+      }
+    });
+    return list;
+  }, [grants, query, status, column, dir]);
 
   const requested = shown.reduce((sum, g) => sum + g.requestedAmount, 0);
   const approved = shown
@@ -76,22 +104,24 @@ export default function GrantsClient({
 
       <StatStrip
         items={[
-          { label: "عدد الطلبات", value: shown.length },
+          {
+            label: "عدد الطلبات",
+            value: shown.length,
+            hint: shown.length === grants.length ? undefined : `من ${grants.length} بعد التصفية`,
+          },
           { label: "إجمالي المطلوب", value: `${money(requested)} ر.س` },
           { label: "إجمالي المقبول", value: `${money(approved)} ر.س` },
         ]}
       />
 
       <div className="flex flex-wrap items-center gap-2">
-        <label className="relative min-w-56 flex-1">
-          <Search className="pointer-events-none absolute inset-y-0 start-3 my-auto size-4 text-slate-400" />
-          <input
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="ابحث باسم المشروع أو الجهة…"
-            className={cx(field, "ps-9")}
-          />
-        </label>
+        <SearchField
+          value={query}
+          onChange={setQuery}
+          label="بحث في المنح"
+          placeholder="ابحث باسم المشروع أو الجهة…"
+          className="min-w-56 flex-1"
+        />
         <Select
           value={status}
           onSelect={setStatus}
@@ -116,14 +146,30 @@ export default function GrantsClient({
           />
         </div>
       ) : (
-        <TableShell>
+        <TableShell
+          footer={
+            shown.length === grants.length
+              ? `${grants.length} طلب`
+              : `${shown.length} من ${grants.length} طلب`
+          }
+        >
           <thead>
             <tr className={theadRowClass}>
-              <Th>الجهة</Th>
-              <Th>المشروع</Th>
-              <Th>المبلغ المطلوب</Th>
-              <Th>الحالة</Th>
-              <Th>تاريخ الرفع</Th>
+              <SortTh id="donor" active={column} dir={dir} onSort={onSort}>
+                الجهة
+              </SortTh>
+              <SortTh id="project" active={column} dir={dir} onSort={onSort}>
+                المشروع
+              </SortTh>
+              <SortTh id="amount" active={column} dir={dir} onSort={onSort}>
+                المبلغ المطلوب (ريال)
+              </SortTh>
+              <SortTh id="status" active={column} dir={dir} onSort={onSort}>
+                الحالة
+              </SortTh>
+              <SortTh id="date" active={column} dir={dir} onSort={onSort}>
+                تاريخ الرفع
+              </SortTh>
             </tr>
           </thead>
           <tbody className={tbodyClass}>
@@ -131,11 +177,11 @@ export default function GrantsClient({
               <tr key={g.id}>
                 <td className={cx(tdClass, "font-medium text-slate-900 dark:text-slate-100")}>{g.donorName}</td>
                 <td className={tdClass}>{g.initiativeName}</td>
-                <td className={cx(tdClass, "tabular-nums")}>{money(g.requestedAmount)}</td>
+                <td className={cx(tdClass, MONO)}>{money(g.requestedAmount)}</td>
                 <td className={tdClass}>
                   <Badge tone={TONE[g.status] ?? "neutral"}>{grantStatusLabel(g.status)}</Badge>
                 </td>
-                <td className={cx(tdClass, "tabular-nums")}>{g.createdAt}</td>
+                <td className={cx(tdClass, MONO, "text-slate-500")}>{g.createdAt}</td>
               </tr>
             ))}
           </tbody>

@@ -4,6 +4,10 @@ import { requirePermission, authErrorResponse } from "@/lib/guards";
 import { prisma } from "@/lib/db";
 import { normalizeProjectBuilderOptions, buildProjectPrompt, type ProjectBuilderBudget } from "@/lib/projectBuilder";
 
+// وثيقةٌ كاملةٌ تستغرق دقائق: بلا هذا يقطعها Vercel عند مهلته الافتراضية فيُرجع
+// صفحةَ خطأٍ HTML بدل JSON، فتظهر للمستخدم «Unexpected token <».
+export const maxDuration = 300;
+
 /**
  * يصوغ وثيقة مبادرة جديدة بالذكاء الاصطناعي.
  *

@@ -42,6 +42,23 @@ import { MAX_PASTED_DOCUMENT_CHARS, type ProjectBuilderPreference } from "@/lib/
 import { exportProjectDocx } from "@/lib/exportProjectDocx";
 import DateField from "@/components/console/DateField";
 
+/**
+ * ردُّ الخادم JSON — أو رسالةٌ تُفهم إن لم يكن: مهلةٌ انقضت قبل اكتمال الوثيقة
+ * تُرجع صفحةَ خطأٍ HTML، فكانت تظهر للمستخدم «Unexpected token <».
+ */
+async function readJson(res: Response): Promise<any> {
+  const text = await res.text();
+  try {
+    return JSON.parse(text);
+  } catch {
+    if (res.status === 504 || /timeout/i.test(text)) {
+      throw new Error("استغرق إعداد الوثيقة وقتاً أطول من المسموح فتوقف الخادم. جرّب مرة أخرى، أو اختصر البرومبت أو عدد المحاور.");
+    }
+    throw new Error(`تعذّر قراءة رد الخادم (رمز ${res.status}). جرّب مرة أخرى.`);
+  }
+}
+
+
 // `field` يثبّت ارتفاع سطر واحد (h-9) — لا يصلح لمربع نص متعدد الأسطر، وتركيب
 // صنف h-auto بعده لا يضمن الغلبة لأن ترتيب أصناف Tailwind في الورقة المولَّدة
 // ليس بالضرورة ترتيب النص. فيُستبدل h-9 صراحةً بارتفاعٍ أدنى يتمدّد.
@@ -243,7 +260,7 @@ function CreateTab({
           directives,
         }),
       });
-      const data = await res.json();
+      const data = await readJson(res);
       if (!res.ok) throw new Error(data?.error || "تعذّر توليد الوثيقة");
       const selectedCharity = charities.find((c) => c.id === charityId) || null;
       // لا اسم محدَّد؟ عنوانٌ مؤقّت من فكرة المبادرة بدل عنوانٍ فارغ — قابل
@@ -485,7 +502,7 @@ function AnalyzeTab({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ text }),
       });
-      const data = await res.json();
+      const data = await readJson(res);
       if (!res.ok) throw new Error(data?.error || "تعذّر التحليل");
       setResult(data.result);
       setRemoveExtra({});
@@ -509,7 +526,7 @@ function AnalyzeTab({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ text, removals, additions, directives }),
       });
-      const data = await res.json();
+      const data = await readJson(res);
       if (!res.ok) throw new Error(data?.error || "تعذّرت إعادة البناء");
       onDone(data.content, "وثيقة معاد بناؤها", data.history || [], null, !!data.truncated);
     } catch (e: any) {
@@ -765,7 +782,7 @@ function PreviewPane({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ history, message: editReq.trim() }),
       });
-      const data = await res.json();
+      const data = await readJson(res);
       if (!res.ok) throw new Error(data?.error || "تعذّر التعديل");
       onRevised(data.content, data.history || history, !!data.truncated);
       setEditReq("");

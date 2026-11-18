@@ -4,6 +4,10 @@ import { requirePermission, authErrorResponse } from "@/lib/guards";
 import { prisma } from "@/lib/db";
 import { MAX_PASTED_DOCUMENT_CHARS } from "@/lib/projectBuilder";
 
+// وثيقةٌ كاملةٌ تستغرق دقائق: بلا هذا يقطعها Vercel عند مهلته الافتراضية فيُرجع
+// صفحةَ خطأٍ HTML بدل JSON، فتظهر للمستخدم «Unexpected token <».
+export const maxDuration = 300;
+
 /** يعيد بناء النص الملصوق (بعد التحليل) وفق الهيكل المعياري المُستخرَج من البرومبت العام الحالي، بما اختاره المستخدم من إزالة/إضافة/توجيهات. */
 export async function POST(req: NextRequest) {
   try {

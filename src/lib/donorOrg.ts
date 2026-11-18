@@ -195,3 +195,20 @@ export const GRANT_STATUSES = [
 export function grantStatusLabel(value: string): string {
   return GRANT_STATUSES.find((s) => s.value === value)?.label ?? value;
 }
+
+/**
+ * تاريخٌ للعرض في شاشات الجهات — ميلاديٌّ بأرقامٍ ثابتة.
+ *
+ * ويُصاغ في الخادم لا في المتصفّح: المنطقتان الزمنيتان قد تختلفان، فيختلف
+ * اليومُ المكتوبُ بين أوّل رسمٍ وثانيه. ومن هنا يقرؤه ملفُّ الجهة عند زادٍ
+ * وبوّابةُ الجمعية معاً، فلا صياغتان لتاريخٍ واحد.
+ */
+export function formatDonorDate(d: Date | string): string {
+  const date = typeof d === "string" ? new Date(d) : d;
+  return new Intl.DateTimeFormat("ar-SA-u-ca-gregory", {
+    timeZone: "UTC",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(date);
+}

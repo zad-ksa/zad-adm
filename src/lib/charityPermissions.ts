@@ -40,6 +40,7 @@ import { CHARITY_ATTENDANCE_ENABLED } from "./featureFlags.ts";
 const SERVICE = {
   MEDIA: "الإعلامية",
   GOVERNANCE: "الحوكمة",
+  FUNDRAISING: "التسويق وتنمية الموارد المالية",
 } as const;
 
 export type CharityPermissionDef = {
@@ -79,6 +80,14 @@ const SERVICE_PERMISSIONS: CharityPermissionDef[] = [
     label: "الحوكمة",
     service: SERVICE.GOVERNANCE,
     hint: "يرى أدلّةَ الحوكمة ومعاييرَها",
+  },
+  {
+    id: "view_fundraising",
+    label: "تنمية الموارد المالية",
+    service: SERVICE.FUNDRAISING,
+    // وفيها حساباتُ الدخول عند الجهات المانحة — فلا تُفتح لكلِّ عضوٍ بلا منح،
+    // كما تُفتح مكتبةُ النماذج والتقويم.
+    hint: "يرى الجهات المانحة وحسابات الدخول عندها، ويقترح مشاريع ويتابع المنح",
   },
 ];
 

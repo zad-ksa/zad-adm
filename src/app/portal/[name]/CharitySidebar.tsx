@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { CHARITY_ATTENDANCE_ENABLED, isCharityMailOpen } from "@/lib/featureFlags";
+import { CHARITY_ATTENDANCE_ENABLED, isCharityFundraisingOpen, isCharityMailOpen } from "@/lib/featureFlags";
 import { hasCharityPermission, seesCharityServicesTab } from "@/lib/charityPermissions";
 import { FolderOpen,
   X,
@@ -166,7 +166,12 @@ export default function CharitySidebar({
     // for a page that does not exist would tell whoever grants it that they had
     // controlled access to something — the mistake documented on `view_hr`.
     { id: "strategy", label: "الاستراتيجية", href: "#", comingSoon: true, icon: Target, show: true },
-    { id: "finance", label: "تنمية الموارد المالية", href: "#", comingSoon: true, icon: Coins, show: true },
+    // تنميةُ الموارد: مفتوحةٌ لجمعياتٍ بأعيانها أوّلاً (CHARITY_FUNDRAISING_SCOPE)
+    // كما فُتح البريد، ولمن مُنح صلاحيّتَها — ففيها حساباتُ الدخول عند الجهات.
+    // وحيث لم تُفتح يبقى التبويب «قريباً» بلا رابط، وصفحتُه تردّ من يكتب عنوانها.
+    isCharityFundraisingOpen(charityName) && can("view_fundraising")
+      ? { id: "finance", label: "تنمية الموارد المالية", href: `/portal/${encodeURIComponent(charityName)}/fundraising`, icon: Coins, show: true }
+      : { id: "finance", label: "تنمية الموارد المالية", href: "#", comingSoon: true, icon: Coins, show: true },
     // Always visible, like every other section here. Where it lands depends on
     // the feature flag: with attendance on hold the only page left inside is
     // the employees list, so everyone goes straight there rather than to a

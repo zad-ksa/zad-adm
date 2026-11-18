@@ -760,6 +760,26 @@ function GrantFieldsCard({
                 {f.description && (
                   <p className="mt-0.5 text-caption leading-5 text-slate-500 dark:text-slate-400">{f.description}</p>
                 )}
+                {/* ما اقترحته الجمعياتُ تحت هذا المجال من بوّابتها. */}
+                {f.proposals.length > 0 && (
+                  <ul className="mt-2 space-y-1">
+                    {f.proposals.map((p) => (
+                      <li key={p.id} className="text-caption leading-5 text-slate-600 dark:text-slate-300">
+                        <span className="text-slate-400">•</span> {p.name}
+                        <span className="text-meta text-slate-400">
+                          {" — "}
+                          {p.charityName}
+                          {p.fromPlan ? " · من الخطة التشغيلية" : " · من خارج الخطة"}
+                          {" · "}
+                          {p.createdAt}
+                        </span>
+                        {p.note && (
+                          <span className="block ps-3 text-meta text-slate-400">{p.note}</span>
+                        )}
+                      </li>
+                    ))}
+                  </ul>
+                )}
               </div>
               <div className="flex shrink-0 items-center gap-1">
                 {index > 0 && (

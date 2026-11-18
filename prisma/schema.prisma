@@ -449,6 +449,11 @@ model GrantProposal {
   initiative   Initiative? @relation(fields: [initiativeId], references: [id], onDelete: SetNull)
   name         String
   note         String?
+  /// PROPOSED | SUBMITTED | DEFERRED — مصيرُ المقترح، يضبطه فريقُ زاد.
+  ///
+  /// وبغيرها كان الاقتراحُ طريقاً مسدوداً: تكتبه الجمعيةُ ولا تعرف أرُفع أم
+  /// أُجِّل. والرفعُ يُعلَّم تلقائياً حين تُنشأ منحتُه من المقترح نفسِه.
+  status       String      @default("PROPOSED")
   /// كاتبُه من أعضاء الجمعية — ويبقى الصفُّ إن حُذف حسابُه.
   createdById  String?
   createdBy    CharityUser? @relation("GrantProposalAuthor", fields: [createdById], references: [id], onDelete: SetNull)

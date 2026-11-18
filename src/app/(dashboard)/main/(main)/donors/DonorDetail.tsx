@@ -33,14 +33,27 @@ import {
   importLegacyDonorFields,
   moveDonorField,
   saveDonorAccount,
+  setProposalStatus,
   updateDonorField,
 } from "@/app/actions/donorOrgs";
+import {
+  PROPOSAL_STATUSES,
+  proposalStatusLabel,
+  proposalStatusOf,
+  proposalStatusTone,
+} from "@/lib/donorFields";
 import { updateGrantApplicationStatus } from "@/app/actions/charity";
 import GrantSheet, { type EditableGrant } from "@/components/grants/GrantSheet";
 import { confirmAndDeleteGrant } from "@/components/grants/deleteGrant";
 import GrantStatusDialog, { type StatusTarget } from "@/components/grants/GrantStatusDialog";
 import DonorSheet from "./DonorSheet";
-import type { DonorAccountRow, DonorFieldRow, DonorGrantRow, DonorRow } from "./donorData";
+import type {
+  DonorAccountRow,
+  DonorFieldRow,
+  DonorGrantRow,
+  DonorProposalRow,
+  DonorRow,
+} from "./donorData";
 
 type Charity = { id: string; name: string; isInternal: boolean };
 
@@ -98,6 +111,9 @@ export default function DonorDetail({
   const [addingGrant, setAddingGrant] = useState(false);
   const [editingGrant, setEditingGrant] = useState<EditableGrant | null>(null);
   const [statusFor, setStatusFor] = useState<{ grant: StatusTarget; next: "APPROVED" | "CLOSED" } | null>(null);
+  // مقترحٌ يُرفع منحةً: تُفتح لوحةُ المنحة باسمه وجمعيته، ويُعلَّم «رُفع»
+  // بعد الحفظ — فلا يُطلب من أحدٍ أن يتذكّر خطوةً ثانية.
+  const [raising, setRaising] = useState<DonorProposalRow | null>(null);
 
   const [pickedCharities, setPickedCharities] = useState<string[]>([]);
   // حالاتٌ لا حالة: «المقبولة والمغلقة» سؤالٌ واحد، وكان يلزمه نظرتان بمُرشِّحٍ
@@ -325,7 +341,12 @@ export default function DonorDetail({
 
       {/* ── مجالاتُ المنح ───────────────────────────────────────────────── */}
       {tab === "fields" && (
-        <GrantFieldsCard org={org} fields={fields} onDone={() => startTransition(() => router.refresh())} />
+        <GrantFieldsCard
+          org={org}
+          fields={fields}
+          onDone={() => startTransition(() => router.refresh())}
+          onRaise={(p) => setRaising(p)}
+        />
       )}
 
       {/* ── حساباتُ الدخول ──────────────────────────────────────────────── */}
@@ -617,19 +638,26 @@ export default function DonorDetail({
         />
       )}
 
-      {(addingGrant || editingGrant) && (
+      {(addingGrant || editingGrant || raising) && (
         <GrantSheet
           grant={editingGrant ?? undefined}
           donor={{ id: org.id, name: org.name }}
           charities={charities}
+          prefill={raising ? { charityId: raising.charityId, initiativeName: raising.name } : undefined}
           onClose={() => {
             setAddingGrant(false);
             setEditingGrant(null);
+            setRaising(null);
           }}
           onSaved={() => {
+            const proposal = raising;
             setAddingGrant(false);
             setEditingGrant(null);
-            startTransition(() => router.refresh());
+            setRaising(null);
+            void (async () => {
+              if (proposal) await setProposalStatus(proposal.id, "SUBMITTED");
+              startTransition(() => router.refresh());
+            })();
           }}
           onDeleted={() => {
             setEditingGrant(null);
@@ -757,10 +785,13 @@ function GrantFieldsCard({
   org,
   fields,
   onDone,
+  onRaise,
 }: {
   org: DonorRow;
   fields: DonorFieldRow[];
   onDone: () => void;
+  /** رفعُ مقترحٍ منحةً — تفتح الصفحةُ لوحةَ المنحة مُعبَّأةً به. */
+  onRaise: (proposal: DonorProposalRow) => void;
 }) {
   const [adding, setAdding] = useState(false);
   const [name, setName] = useState("");
@@ -871,8 +902,29 @@ function GrantFieldsCard({
                         <li key={p.id} className="flex flex-wrap items-center gap-x-2 gap-y-1">
                           <Badge tone="neutral">{p.charityName}</Badge>
                           <span className="text-caption text-slate-700 dark:text-slate-200">{p.name}</span>
+                          <Badge tone={proposalStatusTone(p.status)}>{proposalStatusLabel(p.status)}</Badge>
                           <span className="text-meta text-slate-400">
                             {p.fromPlan ? "من الخطة التشغيلية" : "من خارج الخطة"} · {p.createdAt}
+                          </span>
+                          <span className="ms-auto flex items-center gap-1">
+                            {/* الرفعُ يملأ اللوحةَ باسم المشروع وجمعيته، ثم يُعلِّم
+                                المقترحَ «رُفع» — خطوتان كانتا تُطلبان من الذاكرة. */}
+                            {proposalStatusOf(p.status) !== "SUBMITTED" && (
+                              <button
+                                type="button"
+                                onClick={() => onRaise(p)}
+                                disabled={busy}
+                                className={btn.secondary}
+                              >
+                                <FileText className="size-3.5" /> رفعها منحة
+                              </button>
+                            )}
+                            <Select
+                              value={proposalStatusOf(p.status)}
+                              onSelect={(v) => run(() => setProposalStatus(p.id, v))}
+                              placeholder="الحال"
+                              options={PROPOSAL_STATUSES.map((s) => ({ value: s.value, label: s.label }))}
+                            />
                           </span>
                           {p.note && (
                             <span className="w-full text-meta text-slate-400">{p.note}</span>

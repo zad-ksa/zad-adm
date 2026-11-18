@@ -24,7 +24,7 @@ import { notify } from "@/components/console/toastBus";
 import AccountSheet from "./AccountSheet";
 import type { PortalDonorRow } from "@/lib/portalFundraising";
 
-type Column = "name" | "status" | "date" | "grants";
+type Column = "name" | "status" | "date" | "grants" | "fields";
 
 /**
  * جدولُ الجهات المانحة في بوّابة الجمعية.
@@ -69,6 +69,8 @@ export default function DonorsClient({
           return sign * text(a.intakeStatus, b.intakeStatus) || text(a.name, b.name);
         case "grants":
           return sign * (a.grants - b.grants) || text(a.name, b.name);
+        case "fields":
+          return sign * (a.fields - b.fields) || text(a.name, b.name);
         case "date":
           // وبلا موعدٍ تُدفع إلى الآخر في الاتّجاهين: «لا شيء» ليس أقدمَ تاريخ.
           if (!a.nextDate && !b.nextDate) return text(a.name, b.name);
@@ -103,11 +105,6 @@ export default function DonorsClient({
         icon={<Coins className="size-6" />}
         title="تنمية الموارد المالية"
         description="الجهات المانحة وحسابات جمعيتك عندها، ومجالات المنح في كل جهة."
-        actions={
-          <Link href={`/portal/${encodeURIComponent(charityName)}/fundraising/grants`} className={btn.secondary}>
-            المنح المرفوعة
-          </Link>
-        }
       />
 
       {/* الأعدادُ بطاقاتٌ كشاشات زاد لا سطرَ نصٍّ في الوصف: تُمسح بنظرة. */}
@@ -164,8 +161,12 @@ export default function DonorsClient({
               <SortTh id="date" active={column} dir={dir} onSort={(c, d) => { setColumn(c); setDir(d); }}>
                 الموعد
               </SortTh>
-              <Th>اسم المستخدم</Th>
-              <Th>كلمة المرور</Th>
+              {/* الحسابُ عمودٌ واحد: الاسمُ وكلمتُه يُستعملان معاً دائماً ولا
+                  يُقارن بهما بين الصفوف، فعمودان يُطيلان الجدول بلا فائدة. */}
+              <Th>الحساب</Th>
+              <SortTh id="fields" active={column} dir={dir} onSort={(c, d) => { setColumn(c); setDir(d); }}>
+                المجالات
+              </SortTh>
               <SortTh id="grants" active={column} dir={dir} onSort={(c, d) => { setColumn(c); setDir(d); }}>
                 المرفوع
               </SortTh>
@@ -207,26 +208,23 @@ export default function DonorsClient({
                 </td>
                 <td className={tdClass}>
                   {donor.username ? (
-                    <span className="inline-flex items-center gap-1.5">
-                      <span className={cx(MONO, "text-body text-slate-700 dark:text-slate-200")} dir="ltr">
-                        {donor.username}
+                    <span className="inline-flex items-center gap-2">
+                      <span className="inline-flex items-center gap-1.5">
+                        <span className={cx(MONO, "text-body text-slate-700 dark:text-slate-200")} dir="ltr">
+                          {donor.username}
+                        </span>
+                        <CopyButton value={donor.username} title="نسخ اسم المستخدم" />
                       </span>
-                      <CopyButton value={donor.username} title="نسخ اسم المستخدم" />
+                      <span className="inline-flex items-center gap-1.5 border-s border-slate-200 ps-2 dark:border-slate-800">
+                        <CopyButton value={donor.password ?? ""} title="نسخ كلمة المرور" />
+                        <SecretValue value={donor.password} />
+                      </span>
                     </span>
                   ) : (
                     <span className="text-slate-400 dark:text-slate-500">لا حساب</span>
                   )}
                 </td>
-                <td className={tdClass}>
-                  {donor.password ? (
-                    <span className="inline-flex items-center gap-1.5">
-                      <CopyButton value={donor.password} title="نسخ كلمة المرور" />
-                      <SecretValue value={donor.password} />
-                    </span>
-                  ) : (
-                    <span className="text-slate-400 dark:text-slate-500">—</span>
-                  )}
-                </td>
+                <td className={cx(tdClass, MONO, "text-slate-600 dark:text-slate-300")}>{donor.fields}</td>
                 <td className={cx(tdClass, MONO, "text-slate-600 dark:text-slate-300")}>{donor.grants}</td>
                 <td className={cx(tdClass, "whitespace-nowrap")}>
                   <button type="button" onClick={() => setEditing(donor)} className={btn.secondary}>

@@ -64,6 +64,8 @@ export type PortalDonorRow = {
   grants: number;
   /** مشاريعُها المقترحةُ في مجالات هذه الجهة. */
   proposals: number;
+  /** عددُ مجالات المنح في هذه الجهة — به تُعرف أين يُقترح. */
+  fields: number;
 };
 
 /**
@@ -89,8 +91,11 @@ export async function loadPortalDonors(charityId: string): Promise<PortalDonorRo
     },
   });
 
-  // المقترحاتُ تُعدُّ في استعلامٍ واحدٍ لا استعلامٍ لكلِّ جهة.
-  const proposals = await countProposalsByDonor(charityId);
+  // المقترحاتُ والمجالاتُ تُعدُّ في استعلامٍ واحدٍ لا استعلامٍ لكلِّ جهة.
+  const [proposals, fields] = await Promise.all([
+    countProposalsByDonor(charityId),
+    countFieldsByDonor(),
+  ]);
 
   return orgs.map((org) => {
     const intake = effectiveIntake(org.intakeStatus, org.opensAt, org.closesAt, now);
@@ -107,8 +112,23 @@ export async function loadPortalDonors(charityId: string): Promise<PortalDonorRo
       password: account ? decryptSecret(account.password) : null,
       grants: org._count.grants,
       proposals: proposals.get(org.id) ?? 0,
+      fields: fields.get(org.id) ?? 0,
     };
   });
+}
+
+/** عددُ المجالات لكلِّ جهة — محروسٌ حتى يُطبَّق جدولُ المجالات. */
+async function countFieldsByDonor(): Promise<Map<string, number>> {
+  try {
+    const rows = await prisma.donorField.groupBy({
+      by: ["donorOrgId"],
+      _count: { _all: true },
+    });
+    return new Map(rows.map((r) => [r.donorOrgId, r._count._all]));
+  } catch (error) {
+    console.error("countFieldsByDonor", error);
+    return new Map();
+  }
 }
 
 /** عددُ مقترحات الجمعية لكلِّ جهة — محروسٌ حتى يُطبَّق جدولُ المقترحات. */
@@ -136,6 +156,8 @@ export type PortalProposalRow = {
   id: string;
   name: string;
   note: string | null;
+  /** مصيرُه عند زاد: مقترحٌ · رُفع · مؤجَّل. */
+  status: string;
   /** مبادرةُ الخطة التشغيلية إن اختيرت — وإلّا مشروعٌ من خارجها. */
   fromPlan: boolean;
   createdAt: string;
@@ -220,6 +242,7 @@ async function loadPortalFields(charityId: string, donorOrgId: string): Promise<
             id: true,
             name: true,
             note: true,
+            status: true,
             initiativeId: true,
             createdAt: true,
             createdBy: { select: { name: true } },
@@ -236,6 +259,7 @@ async function loadPortalFields(charityId: string, donorOrgId: string): Promise<
         id: p.id,
         name: p.name,
         note: p.note,
+        status: p.status,
         fromPlan: p.initiativeId !== null,
         createdAt: formatDonorDate(p.createdAt),
         authorName: p.createdBy?.name ?? null,
@@ -264,6 +288,8 @@ export async function loadPortalInitiatives(charityId: string): Promise<PortalIn
 
 export type PortalGrantRow = {
   id: string;
+  /** جهتُها — به تُرشَّح الصفحةُ حين تُفتح من ملفِّ جهة. */
+  donorOrgId: string | null;
   donorName: string;
   initiativeName: string;
   requestedAmount: number;
@@ -293,12 +319,14 @@ export async function loadPortalGrants(charityId: string): Promise<PortalGrantRo
       status: true,
       createdAt: true,
       entityName: true,
+      donorOrgId: true,
       donorOrg: { select: { name: true } },
     },
   });
 
   return rows.map((g) => ({
     id: g.id,
+    donorOrgId: g.donorOrgId,
     donorName: g.donorOrg?.name ?? g.entityName,
     initiativeName: g.initiativeName,
     requestedAmount: g.requestedAmount,

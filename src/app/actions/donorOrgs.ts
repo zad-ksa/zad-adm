@@ -12,6 +12,7 @@ import { cleanDonorName, donorKindOf, intakeStatusOf, normalizeDonorName } from 
 import {
   cleanFieldDescription,
   cleanFieldName,
+  proposalStatusOf,
   sameFieldName,
   splitLegacyFields,
 } from "@/lib/donorFields";
@@ -473,5 +474,31 @@ export async function importLegacyDonorFields(donorOrgId: string): Promise<Resul
     return { ok: true, added: names.length };
   } catch (error) {
     return fieldError(error, "تعذر نقل المجالات");
+  }
+}
+
+/**
+ * مصيرُ مشروعٍ اقترحته جمعية: مقترحٌ، أو رُفع، أو مؤجَّل.
+ *
+ * **ويضبطه فريقُ زادٍ وحدَه**: الاقتراحُ قولُ الجمعية، والمصيرُ قرارُ من يرفع
+ * إلى الجهة. ولو ضبطته الجمعيةُ لصار الحقلُ رأياً لا خبراً.
+ *
+ * ويُعلَّم «رُفع» تلقائياً حين تُنشأ منحتُه من المقترح نفسِه — فلا يُطلب من
+ * أحدٍ أن يتذكّر خطوةً ثانيةً بعد الرفع.
+ */
+export async function setProposalStatus(id: string, status: string): Promise<Result> {
+  const session = await requireDonorEditor();
+  if (!session) return { ok: false, error: "غير مصرح" };
+
+  try {
+    const row = await prisma.grantProposal.update({
+      where: { id },
+      data: { status: proposalStatusOf(status) },
+      select: { donorField: { select: { donorOrgId: true } } },
+    });
+    revalidateDonors(row.donorField.donorOrgId);
+    return { ok: true };
+  } catch (error) {
+    return fieldError(error, "تعذر تغيير حال المقترح");
   }
 }

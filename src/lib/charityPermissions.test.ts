@@ -24,6 +24,7 @@ import {
 
 const MEDIA = "الإعلامية";
 const GOVERNANCE = "الحوكمة";
+const FUNDRAISING = "التسويق وتنمية الموارد المالية";
 
 /** خدماتُ زادٍ التسع كما في `SECTION_SERVICES` وصفوف `Service`. */
 const NINE = [
@@ -31,7 +32,7 @@ const NINE = [
   "الإسناد الحكومي",
   MEDIA,
   "التخطيط الاستراتيجي",
-  "التسويق وتنمية الموارد المالية",
+  FUNDRAISING,
   "التقنية",
   GOVERNANCE,
   "المالية",
@@ -43,7 +44,13 @@ test("كلُّ صلاحيّةِ خدمةٍ تتبع خدمةً من خدمات �
     assert.ok(p.service, `${p.id} بلا خدمة`);
     assert.ok(NINE.includes(p.service!), `${p.id} يتبع خدمةً مجهولة: ${p.service}`);
   }
-  assert.deepEqual(charityServicesWithPermissions(), [MEDIA, GOVERNANCE]);
+  assert.deepEqual(charityServicesWithPermissions(), [MEDIA, GOVERNANCE, FUNDRAISING]);
+});
+
+test("صلاحيّةُ تنمية الموارد: واحدةٌ تتبع خدمتَها", () => {
+  const ids = charityPermissionsOfService(FUNDRAISING).map((p) => p.id);
+  assert.deepEqual(ids, ["view_fundraising"]);
+  assert.equal(serviceOfCharityPermission("view_fundraising"), FUNDRAISING);
 });
 
 test("صلاحيّاتُ الإعلاميّة: طلباتُ التصاميم وتحريرُ الخطة", () => {
@@ -105,7 +112,7 @@ test("المنحُ لحساب الجمعية وحدَه", () => {
 
 test("المُنتقي يُبنى من خدمات الجمعية: ما لا تشمله لا يُعرض", () => {
   const all = charityPermissionGroups(NINE).map((g) => g.title);
-  assert.deepEqual(all, [MEDIA, GOVERNANCE, "صلاحيات الإدارة"]);
+  assert.deepEqual(all, [MEDIA, GOVERNANCE, FUNDRAISING, "صلاحيات الإدارة"]);
 
   const mediaOnly = charityPermissionGroups([MEDIA]);
   assert.deepEqual(mediaOnly.map((g) => g.title), [MEDIA, "صلاحيات الإدارة"]);

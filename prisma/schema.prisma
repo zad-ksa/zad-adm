@@ -25,6 +25,7 @@ enum CharitySize {
 
 model Charity {
   id                String    @id @default(uuid())
+  grantProposals    GrantProposal[]
   name              String    @unique
   establishmentDate String?
   licenseNumber     String?
@@ -210,6 +211,7 @@ enum CharityUserTitle {
 
 model CharityUser {
   id          String           @id @default(uuid())
+  grantProposals GrantProposal[] @relation("GrantProposalAuthor")
   name        String
   phone       String           @unique
   /// Login email and bcrypt hash — both optional, both meaningless alone.
@@ -420,8 +422,40 @@ model DonorField {
   order       Int      @default(0)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+  proposals   GrantProposal[]
 
   @@index([donorOrgId, order])
+}
+
+/// مشروعٌ تقترحه جمعيةٌ في مجالِ منحٍ عند جهة.
+///
+/// **وهو اقتراحٌ لا منحة**: المنحةُ (`GrantApplication`) وثيقةٌ رُفعت إلى
+/// الجهة بمبلغٍ وحالة، وهذا ما تقول الجمعيةُ إنّها تنوي رفعَه في هذا المجال —
+/// يقرؤه فريقُ زادٍ في ملف الجهة فيبني عليه. ولو كُتب في جدول المنح لاختلط
+/// المرفوعُ بالمقترح في كلِّ عدٍّ وتقرير.
+///
+/// **والمشروعُ من الخطة التشغيلية أو من خارجها**: `initiativeId` حين يُختار
+/// من مبادرات الجمعية، و`name` في الحالين — فاسمُ المبادرة وقتَ الاقتراح
+/// يبقى مكتوباً ولو أُعيدت تسميتُها أو حُذفت خطّتُها، كما في
+/// `GrantApplication.entityName`.
+model GrantProposal {
+  id           String      @id @default(uuid())
+  donorFieldId String
+  donorField   DonorField  @relation(fields: [donorFieldId], references: [id], onDelete: Cascade)
+  charityId    String
+  charity      Charity     @relation(fields: [charityId], references: [id], onDelete: Cascade)
+  initiativeId String?
+  initiative   Initiative? @relation(fields: [initiativeId], references: [id], onDelete: SetNull)
+  name         String
+  note         String?
+  /// كاتبُه من أعضاء الجمعية — ويبقى الصفُّ إن حُذف حسابُه.
+  createdById  String?
+  createdBy    CharityUser? @relation("GrantProposalAuthor", fields: [createdById], references: [id], onDelete: SetNull)
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+
+  @@index([donorFieldId, charityId])
+  @@index([charityId])
 }
 
 model DonorAccount {
@@ -2262,6 +2296,7 @@ model OperationalPlan {
 
 model Initiative {
   id            String             @id @default(uuid())
+  grantProposals GrantProposal[]
   planId        String
   plan          OperationalPlan    @relation(fields: [planId], references: [id], onDelete: Cascade)
   /// رقم المبادرة في الكشاف (العمود «م»)، وهو مفتاح مسار صفحتها.

@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/db";
 import { decryptSecret } from "@/lib/encryption";
-import { effectiveIntake, type DonorKind, type IntakeMode, type IntakeStatus } from "@/lib/donorOrg";
+import { effectiveIntake, formatDonorDate, type DonorKind, type IntakeMode, type IntakeStatus } from "@/lib/donorOrg";
 import type { DonorViewer } from "@/lib/donorScope";
 
 /**
@@ -38,15 +38,9 @@ export type DonorRow = {
 /** منحُ جهةٍ عند جمعية — تُحسب منها كلُّ أعداد الصفحة في المتصفّح. */
 export type GrantPair = { donorOrgId: string; charityId: string; count: number };
 
-export function formatDonorDate(d: Date | string): string {
-  const date = typeof d === "string" ? new Date(d) : d;
-  return new Intl.DateTimeFormat("ar-SA-u-ca-gregory", {
-    timeZone: "UTC",
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  }).format(date);
-}
+// والصياغةُ صارت في `lib/donorOrg` تقرؤها بوّابةُ الجمعية أيضاً، وتُعاد هنا
+// تصديراً حتى لا يُعاد كتابةُ كلِّ مُستدعٍ لها.
+export { formatDonorDate };
 
 const inputDate = (d: Date | null) => (d ? d.toISOString().slice(0, 10) : null);
 
@@ -122,11 +116,24 @@ export async function loadDonorList(viewer: DonorViewer, kind: DonorKind) {
   return { orgs: orgs.map((o) => toRow(o, now)), pairs };
 }
 
+/** مشروعٌ اقترحته جمعيةٌ في مجالٍ — يُقرأ في ملف الجهة عند زاد. */
+export type DonorProposalRow = {
+  id: string;
+  charityName: string;
+  name: string;
+  note: string | null;
+  /** من مبادرات خطّتها التشغيلية، أو مكتوبٌ من خارجها. */
+  fromPlan: boolean;
+  createdAt: string;
+};
+
 /** مجالُ منحٍ كما يُقرأ في ملف الجهة وفي بوّابة الجمعية. */
 export type DonorFieldRow = {
   id: string;
   name: string;
   description: string | null;
+  /** ما اقترحته جمعياتُ الرائي تحته — فارغةٌ في بوّابة الجمعية. */
+  proposals: DonorProposalRow[];
 };
 
 /**
@@ -136,13 +143,48 @@ export type DonorFieldRow = {
  * الجهة كلَّه (`prisma/sql/donor-grant-fields.sql`)، والصفحةُ تعمل كما كانت
  * بنصِّ المجالات القديم.
  */
-export async function loadDonorFields(donorOrgId: string): Promise<DonorFieldRow[]> {
+export async function loadDonorFields(
+  donorOrgId: string,
+  charityIds: string[] = []
+): Promise<DonorFieldRow[]> {
   try {
-    return await prisma.donorField.findMany({
+    const rows = await prisma.donorField.findMany({
       where: { donorOrgId },
       orderBy: [{ order: "asc" }, { createdAt: "asc" }],
-      select: { id: true, name: true, description: true },
+      select: {
+        id: true,
+        name: true,
+        description: true,
+        // ومقترحاتُ جمعيات الرائي وحدَها: نطاقُ الصفحة كلِّها — حساباتُها
+        // ومنحُها — فلا تُستثنى المقترحاتُ منه.
+        proposals: {
+          where: { charityId: { in: charityIds } },
+          orderBy: { createdAt: "asc" },
+          select: {
+            id: true,
+            name: true,
+            note: true,
+            initiativeId: true,
+            createdAt: true,
+            charity: { select: { name: true } },
+          },
+        },
+      },
     });
+
+    return rows.map((f) => ({
+      id: f.id,
+      name: f.name,
+      description: f.description,
+      proposals: f.proposals.map((p) => ({
+        id: p.id,
+        charityName: p.charity.name,
+        name: p.name,
+        note: p.note,
+        fromPlan: p.initiativeId !== null,
+        createdAt: formatDonorDate(p.createdAt),
+      })),
+    }));
   } catch (error) {
     console.error("loadDonorFields", error);
     return [];
@@ -295,6 +337,6 @@ export async function loadDonorDetail(viewer: DonorViewer, id: string) {
     kind: org.kind,
     accounts,
     grants,
-    fields: await loadDonorFields(id),
+    fields: await loadDonorFields(id, viewer.charityIds),
   };
 }

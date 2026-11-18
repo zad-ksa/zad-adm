@@ -73,3 +73,28 @@ export function isCharityMailOpen(charityName: string): boolean {
   if (scope === "NONE") return false;
   return scope.includes(charityName.trim());
 }
+
+/**
+ * تنمية الموارد المالية في بوّابة الجمعية — الجهاتُ المانحةُ ومجالاتُها
+ * والمشاريعُ المقترحةُ والمنح.
+ *
+ * ومفتوحٌ لجمعيةٍ واحدةٍ أوّلاً حتى يُجرَّب ببياناتٍ حيّة، كما فُعل ببريد
+ * الجمعيات: فالشاشةُ تعرض حساباتِ الدخول عند الجهات، وتجربتُها على جمعيةٍ
+ * تجريبيّةٍ أهونُ من تجربتها على تسع.
+ *
+ * وثلاثةُ أحوالٍ كحال البريد: `"ALL"` للجميع، و`"NONE"` إقفالٌ تامّ، وقائمةُ
+ * أسماءٍ للمسمَّين وحدَهم — وهو الحال اليوم.
+ */
+export const CHARITY_FUNDRAISING_SCOPE: "ALL" | "NONE" | readonly string[] = [
+  "جمعية تجريبية للتطوير",
+];
+
+/** انظر `scope` أعلاه: نسخةٌ مُوسَّعةٌ حتى لا يُضيِّق TypeScript الثابتَ فيُميت فرعيه. */
+const fundraisingScope = CHARITY_FUNDRAISING_SCOPE as "ALL" | "NONE" | readonly string[];
+
+/** هل فُتحت تنميةُ الموارد لهذه الجمعية بعينها؟ — بالاسم كما يُخزَّن. */
+export function isCharityFundraisingOpen(charityName: string): boolean {
+  if (fundraisingScope === "ALL") return true;
+  if (fundraisingScope === "NONE") return false;
+  return fundraisingScope.includes(charityName.trim());
+}

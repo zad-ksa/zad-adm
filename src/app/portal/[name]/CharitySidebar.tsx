@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { CHARITY_ATTENDANCE_ENABLED, isCharityFundraisingOpen, isCharityMailOpen } from "@/lib/featureFlags";
+import { CHARITY_ATTENDANCE_ENABLED, isCharityMailOpen } from "@/lib/featureFlags";
 import { hasCharityPermission, seesCharityServicesTab } from "@/lib/charityPermissions";
 import { FolderOpen,
   X,
@@ -90,6 +90,7 @@ export default function CharitySidebar({
   unreadMail = 0,
   mediaWaiting = 0,
   mediaPlanEnabled = false,
+  fundraisingEnabled = false,
 }: {
   charityName: string;
   isOpen: boolean;
@@ -103,6 +104,8 @@ export default function CharitySidebar({
   mediaWaiting?: number;
   /** مفتاحُ ظهور تبويب الخطّة — بيد زاد. */
   mediaPlanEnabled?: boolean;
+  /** تنميةُ الموارد: خدمةُ الجمعية والعلَم — يحسبهما التخطيط. */
+  fundraisingEnabled?: boolean;
 }) {
   const pathname = usePathname();
   const [activePath, setActivePath] = useState(decodeURIComponent(pathname));
@@ -166,10 +169,11 @@ export default function CharitySidebar({
     // for a page that does not exist would tell whoever grants it that they had
     // controlled access to something — the mistake documented on `view_hr`.
     { id: "strategy", label: "الاستراتيجية", href: "#", comingSoon: true, icon: Target, show: true },
-    // تنميةُ الموارد: مفتوحةٌ لجمعياتٍ بأعيانها أوّلاً (CHARITY_FUNDRAISING_SCOPE)
-    // كما فُتح البريد، ولمن مُنح صلاحيّتَها — ففيها حساباتُ الدخول عند الجهات.
+    // تنميةُ الموارد: تُعرض لجمعيةٍ تشملها خدمةُ «التسويق وتنمية الموارد
+    // المالية» (ومؤقّتاً للمفتوح لها بالعلَم)، ولعضوٍ مُفوَّضٍ بالخدمة مُنح
+    // صلاحيّتَها — فصلاحيّةُ خدمةٍ تخمد بلا تفويضها (effectiveCharityPermissions).
     // وحيث لم تُفتح يبقى التبويب «قريباً» بلا رابط، وصفحتُه تردّ من يكتب عنوانها.
-    isCharityFundraisingOpen(charityName) && can("view_fundraising")
+    fundraisingEnabled && can("view_fundraising")
       ? { id: "finance", label: "تنمية الموارد المالية", href: `/portal/${encodeURIComponent(charityName)}/fundraising`, icon: Coins, show: true }
       : { id: "finance", label: "تنمية الموارد المالية", href: "#", comingSoon: true, icon: Coins, show: true },
     // Always visible, like every other section here. Where it lands depends on

@@ -16,10 +16,24 @@ import { saveCharityMediaAccounts } from "@/app/actions/mediaPlan";
 type Platform = PlatformLike & { id: string; isActive: boolean };
 type Account = { platformKey: string; url: string };
 
+/**
+ * الموقعُ الإلكترونيُّ للجمعية — خانةٌ في الحسابات لا منصّةُ نشر: لا يُختار
+ * في منشور، فلا صفَّ له في `MediaPlatform`. ومفتاحُه محجوزٌ في الخادم.
+ */
+const WEBSITE: Platform = {
+  id: "website",
+  key: "website",
+  name: "الموقع الإلكتروني",
+  iconKey: "website",
+  logoUrl: null,
+  color: "#0f766e",
+  isActive: true,
+};
+
 export default function CharityAccounts({
   charityId,
   charityName,
-  platforms,
+  platforms: platformList,
   initialAccounts,
 }: {
   charityId: string;
@@ -27,6 +41,7 @@ export default function CharityAccounts({
   platforms: Platform[];
   initialAccounts: Account[];
 }) {
+  const platforms = [...platformList, WEBSITE];
   const [accounts, setAccounts] = useState(initialAccounts);
   const [editing, setEditing] = useState(false);
 
@@ -138,7 +153,7 @@ function AccountsSheet({
       <ul className="space-y-2">
         {platforms.map((platform) => (
           <li key={platform.key} className="flex items-center gap-2.5">
-            <span className="flex w-28 shrink-0 items-center gap-2">
+            <span className="flex w-36 shrink-0 items-center gap-2">
               <PlatformMark platform={platform} size={18} />
               <span className="truncate text-meta font-medium">{platform.name}</span>
             </span>

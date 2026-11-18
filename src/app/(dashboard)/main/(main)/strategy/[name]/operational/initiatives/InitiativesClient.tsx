@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useTransition } from "react";
+import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { CalendarRange, ListChecks, Pencil, Plus, Trash2 } from "lucide-react";
@@ -82,9 +82,11 @@ const headCell = "h-10 border-l border-slate-200 px-3 transition-colors dark:bor
  * إلى شهرٍ أو إلى المصروف الفعلي فقد اسمَ الصفّ الذي يقرؤه — فيصير الرقمُ
  * خبراً بلا صاحب. وهما يبقيان في مكانهما مهما لُفَّ.
  *
- * **وإزاحةُ الثاني عرضُ الأوّل** (`w-10` = `2.5rem` = `start-10`): رقمان
- * يُكتبان في موضعين ولا بدّ أن يتفقا، فلو زاد عرضُ عمود الرقم لظهر من تحته
- * ما يَلفّ. و`zoom` يُكبّر الاثنين معاً فلا يفترقان.
+ * **وإزاحةُ الثاني تُقاس لا تُخمَّن**: كانت ثابتةً على عرض `w-10` المكتوب،
+ * فظهر بين العمودين شريطٌ يَلفّ تحته نصُّ الأعمدة الأخرى — إذ عرضُ العمود في
+ * جدولٍ تلقائيِّ التوزيع ليس هو العرضَ المكتوب، و`zoom` يُغيّره كذلك. فيُقاس
+ * عرضُ عمود الرقم من ترويسته (`offsetWidth` بأرقام التخطيط لا بأرقام الشاشة،
+ * فيوافق إزاحةً تُكتب داخل نفس الـ`zoom`) ويُعاد قياسُه كلّما تغيّر.
  *
  * **ولهما خلفيّةٌ صريحةٌ غيرُ شفّافة**: الخليّةُ المثبَّتةُ موضوعةٌ، فتُرسم
  * فوق ما يَلفّ تحتها — وبخلفيّةٍ شفّافةٍ يُقرأ نصُّ عمودين في موضعٍ واحد.
@@ -97,7 +99,7 @@ const pinnedNumber = "sticky start-0 z-[1] print:static";
 // وحدُّ خليّةٍ مثبَّتةٍ قد لا يُرسم فيها — وهي الحيلةُ نفسُها التي تفصل
 // الترويسةَ الملتصقة.
 const pinnedName =
-  "sticky start-10 z-[1] shadow-[-1px_0_0_rgb(226_232_240)] dark:shadow-[-1px_0_0_rgb(30_41_59)] print:static print:shadow-none";
+  "sticky z-[1] shadow-[-1px_0_0_rgb(226_232_240)] dark:shadow-[-1px_0_0_rgb(30_41_59)] print:static print:shadow-none";
 const pinnedBg = (odd: boolean) =>
   odd
     ? "bg-slate-100 group-hover:bg-slate-200 dark:bg-slate-800 dark:group-hover:bg-slate-700"
@@ -153,6 +155,21 @@ export default function InitiativesClient({
   const [removing, setRemoving] = useState<InitiativeRow | null>(null);
   const [removingPlan, setRemovingPlan] = useState<PlanOption | null>(null);
   const [busy, startBusy] = useTransition();
+
+  // إزاحةُ عمود الاسم المثبَّت = عرضُ عمود الرقم كما رُسم فعلاً. و٤٠ قيمةٌ
+  // أوّليّةٌ للرسم الأوّل قبل القياس، لا قيمةٌ يُعتمد عليها.
+  const numberHeadRef = useRef<HTMLTableCellElement | null>(null);
+  const [numberWidth, setNumberWidth] = useState(40);
+  useEffect(() => {
+    const head = numberHeadRef.current;
+    if (!head) return;
+    const observer = new ResizeObserver(() => setNumberWidth(head.offsetWidth));
+    observer.observe(head);
+    return () => observer.disconnect();
+  }, []);
+  // والتكبيرُ (`zoom`) لا يُعاد له قياس: هو يُكبّر الإزاحةَ والعمودَ معاً، إذ
+  // كلاهما مكتوبٌ بأرقام التخطيط داخل الجدول المكبَّر.
+  const pinnedNameStyle = { insetInlineStart: numberWidth };
 
   const plan = plans.find((p) => p.id === selectedPlanId) ?? null;
   const today = useMemo(() => new Date(), []);
@@ -372,8 +389,14 @@ export default function InitiativesClient({
           <thead className="sticky top-0 z-[2] shadow-[0_1px_0_rgb(226_232_240)] dark:shadow-[0_1px_0_rgb(30_41_59)]">
             <tr className="border-b border-slate-200 bg-slate-50 font-semibold text-slate-500 transition-colors dark:border-slate-800 dark:bg-slate-900 dark:text-slate-400">
               {/* `z-[3]` فوق الترويسة الملتصقة (`z-[2]`) وفوق الخلايا المثبَّتة. */}
-              <th className={cx(headCell, "w-10", pinnedNumber, "z-[3] bg-slate-50 dark:bg-slate-900")}>م</th>
               <th
+                ref={numberHeadRef}
+                className={cx(headCell, "w-10", pinnedNumber, "z-[3] bg-slate-50 dark:bg-slate-900")}
+              >
+                م
+              </th>
+              <th
+                style={pinnedNameStyle}
                 className={cx(headCell, "min-w-[160px]", pinnedName, "z-[3] bg-slate-50 dark:bg-slate-900")}
               >
                 اسم المبادرة
@@ -431,7 +454,7 @@ export default function InitiativesClient({
                   >
                     {row.number}
                   </td>
-                  <td className={cx(cell, "text-right", pinnedName, pinnedBg(index % 2 === 1))}>
+                  <td style={pinnedNameStyle} className={cx(cell, "text-right", pinnedName, pinnedBg(index % 2 === 1))}>
                     <Link
                       href={`/main/strategy/${encodeURIComponent(charityName)}/operational/initiatives/${row.number}`}
                       className="font-medium text-primary transition-colors outline-none hover:underline focus-visible:ring-2 focus-visible:ring-primary/40 dark:text-teal-300"

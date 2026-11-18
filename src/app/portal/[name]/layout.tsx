@@ -4,6 +4,7 @@ import CharityLayoutClient from "./CharityLayoutClient";
 import { prisma } from "@/lib/db";
 import { getSession } from "@/lib/auth";
 import SetEmailBanner from "@/components/SetEmailBanner";
+import PortalPopupHost from "./PortalPopupHost";
 import { effectiveCharityPermissions } from "@/lib/charityPermissions";
 import { listCharityNotices } from "@/app/actions/charityNotifications";
 import { isMediaPlanEnabled } from "@/lib/mediaPlanToggle";
@@ -144,6 +145,8 @@ export default async function CharityLayout({
           <SetEmailBanner href={`/portal/${encodeURIComponent(decodedName)}/profile`} />
         </div>
       )}
+      {/* الإشعارُ الانبثاقيُّ: يسأل الخادمَ بمسار الصفحة المفتوحة. */}
+      <PortalPopupHost />
       {children}
     </CharityLayoutClient>
   );

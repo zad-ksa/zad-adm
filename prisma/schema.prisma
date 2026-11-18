@@ -212,6 +212,7 @@ enum CharityUserTitle {
 model CharityUser {
   id          String           @id @default(uuid())
   grantProposals GrantProposal[] @relation("GrantProposalAuthor")
+  popupsSeen  PortalPopupSeen[]
   name        String
   phone       String           @unique
   /// Login email and bcrypt hash — both optional, both meaningless alone.
@@ -608,6 +609,7 @@ model RoleBundle {
 }
 
 model Employee {
+  portalPopups  PortalPopup[] @relation("PortalPopupAuthor")
   id          String   @id @default(uuid())
   name        String
   phone       String   @unique
@@ -2742,4 +2744,48 @@ model CharityNotification {
   createdAt DateTime @default(now())
 
   @@index([charityUserId, isRead])
+}
+
+/// إشعارٌ انبثاقيٌّ يظهر لأعضاء الجمعيات حين يفتحون صفحةً بعينها في البوّابة.
+///
+/// **وهو غيرُ جرس الإشعارات**: الجرسُ خبرٌ يُقرأ متى شاء صاحبُه، وهذا يقف
+/// أمامه في الصفحة التي يَعنيه فيها — «قبل أن ترفع مشروعاً اقرأ هذا». ولذلك
+/// له موضعٌ (`pageKey`) وعمرٌ (`startsAt`/`endsAt`) وتكرار.
+///
+/// **والاستهدافُ بقائمةٍ فارغةٍ يعني الكلّ**: جمعيةٌ تُضاف بعد كتابة الإشعار
+/// تدخل فيه بلا تعديل، وهو المقصود في التعميم. ومن أراد جمعياتٍ بأعيانها
+/// سمّاها.
+model PortalPopup {
+  id          String   @id @default(uuid())
+  title       String
+  body        String   @db.Text
+  /// مفتاحُ الصفحة من `src/lib/portalPopups.ts` — و`ANY` لكلِّ صفحة.
+  pageKey     String   @default("ANY")
+  /// الجمعياتُ المستهدفة، وفارغةٌ تعني كلَّ الجمعيات.
+  charityIds  String[] @default([])
+  /// ONCE لمرّةٍ واحدةٍ لكلِّ مستخدم، EVERY في كلِّ زيارة.
+  repeatMode  String   @default("ONCE")
+  isActive    Boolean  @default(true)
+  startsAt    DateTime?
+  endsAt      DateTime?
+  createdById String?
+  createdBy   Employee? @relation("PortalPopupAuthor", fields: [createdById], references: [id], onDelete: SetNull)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  seen        PortalPopupSeen[]
+
+  @@index([isActive, pageKey])
+}
+
+/// من رأى الإشعارَ وأغلقه — به يُعرف ما لا يُعاد عرضُه.
+model PortalPopupSeen {
+  id            String      @id @default(uuid())
+  popupId       String
+  popup         PortalPopup @relation(fields: [popupId], references: [id], onDelete: Cascade)
+  charityUserId String
+  charityUser   CharityUser @relation(fields: [charityUserId], references: [id], onDelete: Cascade)
+  seenAt        DateTime    @default(now())
+
+  @@unique([popupId, charityUserId])
+  @@index([charityUserId])
 }

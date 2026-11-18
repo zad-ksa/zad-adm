@@ -6,6 +6,9 @@ import { ArrowDown, ArrowUp, Building2, CalendarClock, ExternalLink, FileText, K
 import {
   EmptyState,
   PageHeader,
+  SearchField,
+  Segmented,
+  SortTh,
   StatStrip,
   TableShell,
   Th,
@@ -13,6 +16,7 @@ import {
   tbodyClass,
   tdClass,
   theadRowClass,
+  type SortDir,
 } from "@/components/console/layout";
 import { Badge, MONO, btn, cx, field } from "@/components/console/ui";
 import { CopyButton, SecretValue } from "@/components/console/Copy";
@@ -39,17 +43,18 @@ import DonorSheet from "./DonorSheet";
 import type { DonorAccountRow, DonorFieldRow, DonorGrantRow, DonorRow } from "./donorData";
 
 type Charity = { id: string; name: string; isInternal: boolean };
-type GrantSort = "date-desc" | "date-asc" | "amount-desc" | "amount-asc" | "charity" | "status";
 
+/**
+ * أعمدةُ الفرز — والفرزُ بالنقر على الرأس (`SortTh`) لا بقائمةٍ منسدلة.
+ *
+ * وكانت قائمةً من ستّة أسطرٍ تُكتب يداً («الأحدث أولاً»، «الأكبر مبلغاً»،
+ * …)، وهي تُنسى عند إضافة عمود، وتخالف شاشةَ المنح الجامعة التي تفرز
+ * برؤوسها. والرأسُ هو المكانُ الذي يبحث فيه القارئُ عن الفرز أصلاً.
+ */
+type GrantColumn = "charity" | "initiative" | "amount" | "status" | "date";
 
-const GRANT_SORTS: { value: GrantSort; label: string }[] = [
-  { value: "date-desc", label: "الترتيب: الأحدث أولاً" },
-  { value: "date-asc", label: "الترتيب: الأقدم أولاً" },
-  { value: "amount-desc", label: "الترتيب: الأكبر مبلغاً" },
-  { value: "amount-asc", label: "الترتيب: الأصغر مبلغاً" },
-  { value: "charity", label: "الترتيب: الجمعية" },
-  { value: "status", label: "الترتيب: الحالة" },
-];
+/** تبويباتُ الصفحة — أقسامٌ أربعةٌ متساويةُ الوزن كانت تمريراً طويلاً. */
+type DonorTab = "fields" | "accounts" | "grants";
 
 const money = (n: number) => n.toLocaleString("ar-SA-u-nu-latn", { maximumFractionDigits: 0 });
 
@@ -99,9 +104,34 @@ export default function DonorDetail({
   // مفرد. وقائمةٌ فارغةٌ تعني «الكلّ» كمُرشِّح الجمعيات — فلا خيارَ «كل الحالات»
   // يُزاحم الحالاتِ في القائمة.
   const [pickedStatuses, setPickedStatuses] = useState<string[]>([]);
-  const [sort, setSort] = useState<GrantSort>("date-desc");
+  const [query, setQuery] = useState("");
+  const [column, setColumn] = useState<GrantColumn>("date");
+  const [dir, setDir] = useState<SortDir>("desc");
+  const [tab, setTab] = useState<DonorTab>("grants");
+
+  const onSort = (next: GrantColumn, nextDir: SortDir) => {
+    setColumn(next);
+    setDir(nextDir);
+  };
 
   const accountOf = useMemo(() => new Map(accounts.map((a) => [a.charityId, a])), [accounts]);
+
+  /**
+   * الجدولُ يعرض الموجودَ وحدَه.
+   *
+   * وكان صفّاً لكلِّ جمعيةٍ مسنَدةٍ ولو بلا حساب: تسعُ جمعياتٍ تعني تسعةَ
+   * صفوفٍ أكثرُها شُرَطٌ وزرُّ «إضافة حساب» مكرَّرٌ تسعاً — فراغٌ يُعرض كأنّه
+   * بيانات. وجمعياتُ ما بلا حسابٍ تُقال في سطرٍ واحدٍ تحته، والإضافةُ فعلٌ
+   * واحدٌ يختار جمعيتَه.
+   */
+  const withAccounts = useMemo(
+    () => charities.filter((c) => accountOf.has(c.id)),
+    [charities, accountOf]
+  );
+  const withoutAccounts = useMemo(
+    () => charities.filter((c) => !accountOf.has(c.id)),
+    [charities, accountOf]
+  );
 
   /** كم منحةً في كل حالة — بعد مُرشِّح الجمعيات وحدَه. */
   const statusCounts = useMemo(() => {
@@ -114,29 +144,32 @@ export default function DonorDetail({
   }, [grants, pickedCharities]);
 
   const shownGrants = useMemo(() => {
-    const dir = (a: string, b: string) => a.localeCompare(b, "ar");
+    const text = (a: string, b: string) => a.localeCompare(b, "ar");
+    const q = query.trim();
     const list = grants
       .filter((g) => (pickedCharities.length === 0 ? true : pickedCharities.includes(g.charityId)))
-      .filter((g) => (pickedStatuses.length === 0 ? true : pickedStatuses.includes(g.status)));
+      .filter((g) => (pickedStatuses.length === 0 ? true : pickedStatuses.includes(g.status)))
+      // والبحثُ في الاسمين معاً: القارئُ يتذكّر المبادرةَ أو الجمعية، ولا
+      // يعرف في أيِّ عمودٍ كُتب ما يتذكّره.
+      .filter((g) => q === "" || g.initiativeName.includes(q) || g.charityName.includes(q));
 
+    const sign = dir === "asc" ? 1 : -1;
     list.sort((a, b) => {
-      switch (sort) {
-        case "date-asc":
-          return a.createdAtMs - b.createdAtMs;
-        case "amount-desc":
-          return b.requestedAmount - a.requestedAmount;
-        case "amount-asc":
-          return a.requestedAmount - b.requestedAmount;
+      switch (column) {
+        case "amount":
+          return sign * (a.requestedAmount - b.requestedAmount);
         case "charity":
-          return dir(a.charityName, b.charityName) || b.createdAtMs - a.createdAtMs;
+          return sign * text(a.charityName, b.charityName) || b.createdAtMs - a.createdAtMs;
+        case "initiative":
+          return sign * text(a.initiativeName, b.initiativeName) || b.createdAtMs - a.createdAtMs;
         case "status":
-          return dir(a.status, b.status) || b.createdAtMs - a.createdAtMs;
+          return sign * text(a.status, b.status) || b.createdAtMs - a.createdAtMs;
         default:
-          return b.createdAtMs - a.createdAtMs;
+          return sign * (a.createdAtMs - b.createdAtMs);
       }
     });
     return list;
-  }, [grants, pickedCharities, pickedStatuses, sort]);
+  }, [grants, pickedCharities, pickedStatuses, query, column, dir]);
 
   const sumRequested = shownGrants.reduce((sum, g) => sum + g.requestedAmount, 0);
   const distinctCharities = new Set(shownGrants.map((g) => g.charityId)).size;
@@ -215,6 +248,10 @@ export default function DonorDetail({
         ]}
         icon={<Building2 className="size-6" />}
         title={org.name}
+        // والوصفُ ما لا يُقرأ في مكانٍ آخر: كان أسماءَ المجالات مفصولةً
+        // بنقاط، وهي مكرّرةٌ حرفاً بحرفٍ في بطاقة المجالات أسفلَه — فأغلى
+        // مساحةٍ في الصفحة تحمل خبراً يُقرأ مرّتين. وملاحظةُ الجهة لم تكن
+        // تُعرض في الصفحة أصلاً، وإنّما تُكتب في لوحة التعديل وتُنسى.
         description={
           <>
             {underDevelopment && (
@@ -222,19 +259,16 @@ export default function DonorDetail({
                 <Badge tone="gold">تحت التطوير</Badge>
               </span>
             )}
-            {fields.length > 0
-              ? fields.map((f) => f.name).join(" · ")
-              : (org.fields ?? "لا مجالاتَ دعمٍ مسجَّلة")}
+            {org.notes ?? null}
           </>
         }
         actions={
           <>
-            {org.url ? (
+            {/* ولا زرَّ معطَّلاً لرابطٍ غير مسجَّل: هدفُ نقرٍ لا يفعل شيئاً. */}
+            {org.url && (
               <a href={org.url} target="_blank" rel="noreferrer" className={btn.secondary}>
                 <ExternalLink className="size-4" /> زيارة الموقع
               </a>
-            ) : (
-              <span className={cx(btn.secondary, "pointer-events-none opacity-50")}>لا رابطَ مسجَّل</span>
             )}
             <button type="button" onClick={() => setEditingOrg(true)} className={btn.primary}>
               <Pencil className="size-4" /> تعديل
@@ -243,6 +277,9 @@ export default function DonorDetail({
         }
       />
 
+      {/* ثلاثُ بطاقاتٍ لا خمس: «الحالة» و«يُفتح» و«يُغلق» كُنّ ثلاثاً لسؤالٍ
+          واحد — أيمكن الرفعُ الآن، ومتى يتغيّر؟ فجُمعن في بطاقةٍ وبطاقةِ
+          موعدها القادم، وخمسُ بطاقاتٍ تتجاوز ما يُمسح بنظرة. */}
       <StatStrip
         items={[
           {
@@ -251,10 +288,15 @@ export default function DonorDetail({
             hint: org.intakeReason,
             dot: org.intakeStatus === "OPEN" ? "active" : "muted",
           },
-          { label: "يُفتح", value: org.opensAt ?? "—" },
-          { label: "يُغلق", value: org.closesAt ?? "—" },
-          { label: "جمعياتُك التي رفعت", value: scopedCharityCount },
-          { label: "إجماليُّ الطلبات", value: grants.length },
+          {
+            label: org.intakeStatus === "OPEN" ? "يُغلق" : "يُفتح",
+            value: (org.intakeStatus === "OPEN" ? org.closesAt : org.opensAt) ?? "بلا موعدٍ معلن",
+          },
+          {
+            label: "الطلبات المرفوعة",
+            value: grants.length,
+            hint: `من ${scopedCharityCount} من جمعياتك`,
+          },
         ]}
       />
 
@@ -265,22 +307,51 @@ export default function DonorDetail({
         </p>
       )}
 
+      {/* تبويبُ الأقسام: كانت أربعةً متساويةَ الوزن في تمريرٍ طويل، وصار
+          لكلٍّ بابُه وعددُه ظاهرٌ عليه — فيُعرف أين الخبرُ قبل أن يُمرَّر
+          إليه. وبياناتُ الجهة فوقها لا تُخبَّأ في تبويب: هي هُويّةُ الصفحة. */}
+      <Segmented
+        label="أقسام ملف الجهة"
+        value={tab}
+        onChange={setTab}
+        options={[
+          { id: "grants", label: `المنح (${grants.length})` },
+          { id: "fields", label: `مجالات المنح (${fields.length})` },
+          ...(showAccounts
+            ? [{ id: "accounts" as DonorTab, label: `حسابات الدخول (${accounts.length})` }]
+            : []),
+        ]}
+      />
+
       {/* ── مجالاتُ المنح ───────────────────────────────────────────────── */}
-      <GrantFieldsCard org={org} fields={fields} onDone={() => startTransition(() => router.refresh())} />
+      {tab === "fields" && (
+        <GrantFieldsCard org={org} fields={fields} onDone={() => startTransition(() => router.refresh())} />
+      )}
 
       {/* ── حساباتُ الدخول ──────────────────────────────────────────────── */}
-      {showAccounts && (
+      {tab === "accounts" && showAccounts && (
       <section className="space-y-3">
-        <div className="flex items-end justify-between gap-4">
+        <div className="flex flex-wrap items-end justify-between gap-3">
           <div>
             <h2 className="flex items-center gap-2 text-section font-semibold tracking-tight">
               <KeyRound className="size-4 text-primary dark:text-teal-300" />
               حسابات الدخول
             </h2>
             <p className="mt-0.5 text-body text-slate-500 dark:text-slate-400">
-              صفٌّ لكل جمعيةٍ من جمعياتك المسنَدة. وكلمةُ المرور مُغطّاةٌ حتى تُكشف.
+              حساباتُ جمعياتك المسجَّلةُ عند هذه الجهة. وكلمةُ المرور تُنسخ بلا كشفٍ على الشاشة.
             </p>
           </div>
+          {/* الإضافةُ فعلٌ واحدٌ يختار جمعيتَه، لا زرٌّ مكرَّرٌ في كلِّ صفٍّ فارغ. */}
+          {withoutAccounts.length > 0 && (
+            <Select
+              placeholder="إضافة حساب لجمعية…"
+              onSelect={(id) => {
+                const charity = withoutAccounts.find((c) => c.id === id);
+                if (charity) setAccountFor({ charity, row: null });
+              }}
+              options={withoutAccounts.map((c) => ({ value: c.id, label: c.name }))}
+            />
+          )}
         </div>
 
         {charities.length === 0 ? (
@@ -289,6 +360,14 @@ export default function DonorDetail({
               icon={<KeyRound className="size-4" />}
               title="لا جمعياتٍ مسنَدةً إليك"
               description="تُسنَد الجمعياتُ من إدارة الموظفين، ثم تظهر صفوفُها هنا."
+            />
+          </div>
+        ) : withAccounts.length === 0 ? (
+          <div className={tableFrameClass}>
+            <EmptyState
+              icon={<KeyRound className="size-4" />}
+              title="لا حساب مسجل لجمعياتك عند هذه الجهة"
+              description="اختر جمعية من «إضافة حساب لجمعية» أعلاه لتسجيل اسم المستخدم وكلمة المرور."
             />
           </div>
         ) : (
@@ -302,8 +381,8 @@ export default function DonorDetail({
               </tr>
             </thead>
             <tbody className={tbodyClass}>
-              {charities.map((c) => {
-                const row = accountOf.get(c.id) ?? null;
+              {withAccounts.map((c) => {
+                const row = accountOf.get(c.id)!;
                 return (
                   <tr key={c.id}>
                     <td className={cx(tdClass, "font-medium text-slate-900 dark:text-slate-100")}>
@@ -311,50 +390,39 @@ export default function DonorDetail({
                       {c.isInternal && <span className="ms-2 text-meta text-slate-400">كيانٌ داخلي</span>}
                     </td>
                     <td className={tdClass}>
-                      {row ? (
-                        <span className="inline-flex items-center gap-1.5">
-                          <span className={cx(MONO, "text-body text-slate-700 dark:text-slate-200")} dir="ltr">
-                            {row.username}
-                          </span>
-                          <CopyButton value={row.username} title="نسخ اسم المستخدم" />
+                      <span className="inline-flex items-center gap-1.5">
+                        <span className={cx(MONO, "text-body text-slate-700 dark:text-slate-200")} dir="ltr">
+                          {row.username}
                         </span>
-                      ) : (
-                        <span className="text-slate-400 dark:text-slate-500">—</span>
-                      )}
+                        <CopyButton value={row.username} title="نسخ اسم المستخدم" />
+                      </span>
                     </td>
                     <td className={tdClass}>
-                      <SecretValue value={row?.password ?? null} />
+                      {/* النسخُ قبل الكشف: الحاجةُ الغالبةُ لصقُها في بوّابة الجهة،
+                          وكشفُها على شاشةٍ مفتوحةٍ لا يلزم لذلك. */}
+                      <span className="inline-flex items-center gap-1.5">
+                        <CopyButton value={row.password} title="نسخ كلمة المرور" />
+                        <SecretValue value={row.password} />
+                      </span>
                     </td>
                     <td className={tdClass}>
                       <span className="flex items-center gap-1">
-                        {row ? (
-                          <>
-                            <button
-                              type="button"
-                              onClick={() => setAccountFor({ charity: c, row })}
-                              aria-label={`تعديل حساب ${c.name}`}
-                              className={btn.icon}
-                            >
-                              <Pencil className="size-3.5" />
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => removeAccount(row, c.name)}
-                              aria-label={`حذف حساب ${c.name}`}
-                              className={btn.iconDanger}
-                            >
-                              <Trash2 className="size-3.5" />
-                            </button>
-                          </>
-                        ) : (
-                          <button
-                            type="button"
-                            onClick={() => setAccountFor({ charity: c, row: null })}
-                            className={btn.secondary}
-                          >
-                            <Plus className="size-3.5" /> إضافة حساب
-                          </button>
-                        )}
+                        <button
+                          type="button"
+                          onClick={() => setAccountFor({ charity: c, row })}
+                          aria-label={`تعديل حساب ${c.name}`}
+                          className={btn.icon}
+                        >
+                          <Pencil className="size-3.5" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => removeAccount(row, c.name)}
+                          aria-label={`حذف حساب ${c.name}`}
+                          className={btn.iconDanger}
+                        >
+                          <Trash2 className="size-3.5" />
+                        </button>
                       </span>
                     </td>
                   </tr>
@@ -363,10 +431,19 @@ export default function DonorDetail({
             </tbody>
           </TableShell>
         )}
+
+        {/* وما بلا حسابٍ يُقال سطراً واحداً: خبرٌ يُقرأ، لا صفوفٌ تُمرَّر. */}
+        {withAccounts.length > 0 && withoutAccounts.length > 0 && (
+          <p className="text-caption text-slate-500 dark:text-slate-400">
+            بلا حساب مسجل ({withoutAccounts.length}):{" "}
+            {withoutAccounts.map((c) => c.name).join("، ")}
+          </p>
+        )}
       </section>
       )}
 
       {/* ── المنحُ المرفوعة ─────────────────────────────────────────────── */}
+      {tab === "grants" && (
       <section className="space-y-3">
         <div className="flex flex-wrap items-end justify-between gap-3">
           <div>
@@ -378,50 +455,55 @@ export default function DonorDetail({
               من جمعياتك المسنَدة — تُفرز وتُفلتر بجمعيةٍ أو أكثر.
             </p>
           </div>
-          <div className="flex flex-wrap items-center gap-2">
-            {/* الرفعُ من هنا والجهةُ مثبَّتةٌ، ومن صفحة منح الجمعية والجمعيةُ
-                مثبَّتة — فعلٌ واحدٌ (`addGrantApplication`) بوجهين، لا منطقٌ
-                ثانٍ يُكتب فيختلف عن الأوّل. */}
-            <button
-              type="button"
-              onClick={() => setAddingGrant(true)}
-              disabled={charities.length === 0}
-              title={charities.length === 0 ? "لا جمعياتٍ مسنَدةً إليك" : undefined}
-              className={cx(btn.primary, charities.length === 0 && "pointer-events-none opacity-50")}
-            >
-              <Plus className="size-4" /> إضافة منحة
-            </button>
-            <MultiSelect
-              label="الجمعيات"
-              placeholder="كل الجمعيات"
-              allLabel="كل الجمعيات"
-              countNoun="جمعيات"
-              values={pickedCharities}
-              onChange={setPickedCharities}
-              options={charities.map((c) => ({ value: c.id, label: c.name }))}
-            />
-            <MultiSelect
-              label="الحالات"
-              placeholder="كل الحالات"
-              allLabel="كل الحالات"
-              countNoun="حالات"
-              values={pickedStatuses}
-              onChange={setPickedStatuses}
-              // العددُ بجوار كل حالة: كم منحةً فيها — بعد مُرشِّح الجمعيات لا
-              // بعد مُرشِّح الحالات نفسِه، وإلّا صفَّرت أوّلُ نقرةٍ ما عداها.
-              options={GRANT_STATUSES.map((s) => ({
-                value: s.value,
-                label: s.label,
-                count: statusCounts.get(s.value) ?? 0,
-              }))}
-            />
-            <Select
-              value={sort}
-              onSelect={(v) => setSort(v as GrantSort)}
-              placeholder="الترتيب"
-              options={GRANT_SORTS.map((s) => ({ value: s.value, label: s.label }))}
-            />
-          </div>
+          {/* الإنشاءُ وحدَه مع العنوان: كان يقف بين ثلاثة مُرشِّحاتٍ في سطرٍ
+              واحد، فإذا التفّ السطرُ في شاشةٍ متوسّطةٍ ضاع الفعلُ بين الأدوات.
+              والرفعُ من هنا والجهةُ مثبَّتةٌ، ومن صفحة منح الجمعية والجمعيةُ
+              مثبَّتة — فعلٌ واحدٌ (`addGrantApplication`) بوجهين. */}
+          <button
+            type="button"
+            onClick={() => setAddingGrant(true)}
+            disabled={charities.length === 0}
+            title={charities.length === 0 ? "لا جمعياتٍ مسنَدةً إليك" : undefined}
+            className={cx(btn.primary, charities.length === 0 && "pointer-events-none opacity-50")}
+          >
+            <Plus className="size-4" /> إضافة منحة
+          </button>
+        </div>
+
+        {/* والتصفيةُ في شريطها: بحثٌ نصّيٌّ أوّلاً — هو أسرعُ من مُرشِّحين لمن
+            يتذكّر اسمَ المبادرة. */}
+        <div className="flex flex-wrap items-center gap-2">
+          <SearchField
+            value={query}
+            onChange={setQuery}
+            label="بحث في المنح"
+            placeholder="ابحث باسم المبادرة أو الجمعية…"
+            className="min-w-56 flex-1"
+          />
+          <MultiSelect
+            label="الجمعيات"
+            placeholder="كل الجمعيات"
+            allLabel="كل الجمعيات"
+            countNoun="جمعيات"
+            values={pickedCharities}
+            onChange={setPickedCharities}
+            options={charities.map((c) => ({ value: c.id, label: c.name }))}
+          />
+          <MultiSelect
+            label="الحالات"
+            placeholder="كل الحالات"
+            allLabel="كل الحالات"
+            countNoun="حالات"
+            values={pickedStatuses}
+            onChange={setPickedStatuses}
+            // العددُ بجوار كل حالة: كم منحةً فيها — بعد مُرشِّح الجمعيات لا
+            // بعد مُرشِّح الحالات نفسِه، وإلّا صفَّرت أوّلُ نقرةٍ ما عداها.
+            options={GRANT_STATUSES.map((s) => ({
+              value: s.value,
+              label: s.label,
+              count: statusCounts.get(s.value) ?? 0,
+            }))}
+          />
         </div>
 
         <TableShell
@@ -434,15 +516,30 @@ export default function DonorDetail({
               />
             ) : undefined
           }
-          footer={`${shownGrants.length} منحة · ${distinctCharities} جمعية · إجمالي المطلوب ${money(sumRequested)} ريال`}
+          footer={
+            shownGrants.length === grants.length
+              ? `${shownGrants.length} منحة · ${distinctCharities} جمعية · إجمالي المطلوب ${money(sumRequested)} ريال`
+              : `${shownGrants.length} من ${grants.length} منحة · ${distinctCharities} جمعية · إجمالي المطلوب ${money(sumRequested)} ريال`
+          }
         >
           <thead>
             <tr className={theadRowClass}>
-              <Th>الجمعية</Th>
-              <Th>المبادرة</Th>
-              <Th>المبلغ المطلوب</Th>
-              <Th>الحالة</Th>
-              <Th>تاريخ الرفع</Th>
+              <SortTh id="charity" active={column} dir={dir} onSort={onSort}>
+                الجمعية
+              </SortTh>
+              <SortTh id="initiative" active={column} dir={dir} onSort={onSort}>
+                المبادرة
+              </SortTh>
+              {/* والوحدةُ في الرأس لا في التذييل وحدَه: رقمٌ بلا وحدةٍ يُقرأ مرّتين. */}
+              <SortTh id="amount" active={column} dir={dir} onSort={onSort}>
+                المبلغ المطلوب (ريال)
+              </SortTh>
+              <SortTh id="status" active={column} dir={dir} onSort={onSort}>
+                الحالة
+              </SortTh>
+              <SortTh id="date" active={column} dir={dir} onSort={onSort}>
+                تاريخ الرفع
+              </SortTh>
               <Th className="w-px" />
             </tr>
           </thead>
@@ -505,6 +602,7 @@ export default function DonorDetail({
           </tbody>
         </TableShell>
       </section>
+      )}
 
       {editingOrg && (
         <DonorSheet
@@ -761,24 +859,28 @@ function GrantFieldsCard({
                   <p className="mt-0.5 text-caption leading-5 text-slate-500 dark:text-slate-400">{f.description}</p>
                 )}
                 {/* ما اقترحته الجمعياتُ تحت هذا المجال من بوّابتها. */}
+                {/* المقترحاتُ خبرٌ قادمٌ من جهةٍ أخرى — من الجمعية في بوّابتها —
+                    فتُفصل عن وصف المجال بإطارٍ وشارةِ صاحبها، ولا تُقرأ ذيلاً له. */}
                 {f.proposals.length > 0 && (
-                  <ul className="mt-2 space-y-1">
-                    {f.proposals.map((p) => (
-                      <li key={p.id} className="text-caption leading-5 text-slate-600 dark:text-slate-300">
-                        <span className="text-slate-400">•</span> {p.name}
-                        <span className="text-meta text-slate-400">
-                          {" — "}
-                          {p.charityName}
-                          {p.fromPlan ? " · من الخطة التشغيلية" : " · من خارج الخطة"}
-                          {" · "}
-                          {p.createdAt}
-                        </span>
-                        {p.note && (
-                          <span className="block ps-3 text-meta text-slate-400">{p.note}</span>
-                        )}
-                      </li>
-                    ))}
-                  </ul>
+                  <div className="mt-2 rounded-lg border border-slate-200 bg-slate-50/70 p-2 dark:border-slate-800 dark:bg-slate-800/40">
+                    <p className="mb-1.5 text-meta font-semibold text-slate-500 dark:text-slate-400">
+                      مشاريع مقترحة من الجمعيات ({f.proposals.length})
+                    </p>
+                    <ul className="space-y-1.5">
+                      {f.proposals.map((p) => (
+                        <li key={p.id} className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                          <Badge tone="neutral">{p.charityName}</Badge>
+                          <span className="text-caption text-slate-700 dark:text-slate-200">{p.name}</span>
+                          <span className="text-meta text-slate-400">
+                            {p.fromPlan ? "من الخطة التشغيلية" : "من خارج الخطة"} · {p.createdAt}
+                          </span>
+                          {p.note && (
+                            <span className="w-full text-meta text-slate-400">{p.note}</span>
+                          )}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
                 )}
               </div>
               <div className="flex shrink-0 items-center gap-1">

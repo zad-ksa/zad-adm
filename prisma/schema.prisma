@@ -396,8 +396,32 @@ model DonorOrg {
 
   accounts DonorAccount[]
   grants   GrantApplication[]
+  /// مجالاتُ المنح صفوفاً — انظر `DonorField`.
+  grantFields DonorField[]
 
   @@index([kind, name])
+}
+
+/// مجالُ منحٍ في جهةٍ مانحة: «التعليم»، «الإسكان»، «التمكين الاقتصادي».
+///
+/// **ولمَ صفوفٌ لا نصٌّ واحد**: كان `DonorOrg.fields` جملةً تُكتب في ملف
+/// الجهة فتُقرأ ولا تُستعمل. وبوّابةُ الجمعية تعرض تحت كلِّ مجالٍ مشاريعَها
+/// المقترحة فيه (`GrantProposal`)، ولا يُعلَّق شيءٌ على سطرٍ من نصّ.
+///
+/// والنصُّ القديم باقٍ في عموده لا يُحذف: فيه ما كُتب لستٍّ وستين جهة،
+/// ويُنقل إلى مجالاتٍ بزرٍّ في ملف الجهة متى شاء أهلُه.
+model DonorField {
+  id          String   @id @default(uuid())
+  donorOrgId  String
+  donorOrg    DonorOrg @relation(fields: [donorOrgId], references: [id], onDelete: Cascade)
+  name        String
+  /// وصفٌ اختياريّ: ما يُقبل في هذا المجال وما لا يُقبل.
+  description String?
+  order       Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([donorOrgId, order])
 }
 
 model DonorAccount {

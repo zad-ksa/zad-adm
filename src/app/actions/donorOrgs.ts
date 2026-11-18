@@ -9,6 +9,12 @@ import { SECTION_SERVICES, charityHasService } from "@/lib/charityServices";
 import { encryptSecret } from "@/lib/encryption";
 import { logAudit } from "@/lib/auditLog";
 import { cleanDonorName, donorKindOf, intakeStatusOf, normalizeDonorName } from "@/lib/donorOrg";
+import {
+  cleanFieldDescription,
+  cleanFieldName,
+  sameFieldName,
+  splitLegacyFields,
+} from "@/lib/donorFields";
 
 /**
  * أفعالُ الجهات المانحة.
@@ -282,5 +288,190 @@ export async function deleteDonorAccountRow(id: string): Promise<Result> {
   } catch (error) {
     console.error("Error deleting donor account:", error);
     return { ok: false, error: "تعذّر حذف الحساب" };
+  }
+}
+
+// ── مجالات المنح ────────────────────────────────────────────────────────────
+/**
+ * مجالاتُ المنح: تُضاف واحداً واحداً في ملف الجهة، وتُقرأ في بوّابة الجمعية.
+ *
+ * **وحارسُها حارسُ بيانات الجهة** (`requireDonorEditor`) بلا شرط إسناد:
+ * المجالُ خبرٌ عن الجهة لا عن جمعيةٍ بعينها، كاسمها ورابطها وحالة رفعها.
+ *
+ * **والترتيبُ عمودٌ لا ترتيبُ إدخال**: تُعرض في البوّابة بترتيبٍ يختاره
+ * كاتبُها، والإدخالُ لا يُعبّر عن الأهمية.
+ */
+async function nextFieldOrder(donorOrgId: string) {
+  const last = await prisma.donorField.findFirst({
+    where: { donorOrgId },
+    orderBy: { order: "desc" },
+    select: { order: true },
+  });
+  return (last?.order ?? 0) + 1;
+}
+
+/** رسالةُ العطب: الجدولُ قد لا يكون أُنشئ بعد، فيُقال السببُ باسم الملف. */
+function fieldError(error: unknown, fallback: string): Result {
+  console.error("donorField", error);
+  return {
+    ok: false,
+    error:
+      fallback + " — وان لم يطبق بعد prisma/sql/donor-grant-fields.sql فهذا سببه",
+  };
+}
+
+export async function addDonorField(
+  donorOrgId: string,
+  name: string,
+  description?: string | null
+): Promise<Result> {
+  const session = await requireDonorEditor();
+  if (!session) return { ok: false, error: "غير مصرح" };
+
+  const value = cleanFieldName(name);
+  if (!value) return { ok: false, error: "اسم المجال مطلوب" };
+
+  try {
+    const existing = await prisma.donorField.findMany({
+      where: { donorOrgId },
+      select: { name: true },
+    });
+    if (existing.some((f) => sameFieldName(f.name, value))) {
+      return { ok: false, error: "هذا المجال مضاف مسبقا" };
+    }
+
+    await prisma.donorField.create({
+      data: {
+        donorOrgId,
+        name: value,
+        description: cleanFieldDescription(description),
+        order: await nextFieldOrder(donorOrgId),
+      },
+    });
+    await logAudit({
+      actorType: "EMPLOYEE",
+      actorId: session.id,
+      actorName: session.name,
+      action: "CREATE",
+      targetType: "DonorField",
+      targetId: donorOrgId,
+      metadata: { name: value },
+    });
+    revalidateDonors(donorOrgId);
+    return { ok: true };
+  } catch (error) {
+    return fieldError(error, "تعذر اضافة المجال");
+  }
+}
+
+export async function updateDonorField(
+  id: string,
+  name: string,
+  description?: string | null
+): Promise<Result> {
+  const session = await requireDonorEditor();
+  if (!session) return { ok: false, error: "غير مصرح" };
+
+  const value = cleanFieldName(name);
+  if (!value) return { ok: false, error: "اسم المجال مطلوب" };
+
+  try {
+    const row = await prisma.donorField.update({
+      where: { id },
+      data: { name: value, description: cleanFieldDescription(description) },
+      select: { donorOrgId: true },
+    });
+    revalidateDonors(row.donorOrgId);
+    return { ok: true };
+  } catch (error) {
+    return fieldError(error, "تعذر حفظ المجال");
+  }
+}
+
+export async function deleteDonorField(id: string): Promise<Result> {
+  const session = await requireDonorEditor();
+  if (!session) return { ok: false, error: "غير مصرح" };
+
+  try {
+    const row = await prisma.donorField.delete({ where: { id }, select: { donorOrgId: true, name: true } });
+    await logAudit({
+      actorType: "EMPLOYEE",
+      actorId: session.id,
+      actorName: session.name,
+      action: "DELETE",
+      targetType: "DonorField",
+      targetId: row.donorOrgId,
+      metadata: { name: row.name },
+    });
+    revalidateDonors(row.donorOrgId);
+    return { ok: true };
+  } catch (error) {
+    return fieldError(error, "تعذر حذف المجال");
+  }
+}
+
+/** تبديلُ مجالٍ بجاره: الترتيبُ يُقرأ في البوّابة، فيُرتَّب هنا. */
+export async function moveDonorField(id: string, direction: "up" | "down"): Promise<Result> {
+  const session = await requireDonorEditor();
+  if (!session) return { ok: false, error: "غير مصرح" };
+
+  try {
+    const row = await prisma.donorField.findUnique({
+      where: { id },
+      select: { id: true, order: true, donorOrgId: true },
+    });
+    if (!row) return { ok: false, error: "المجال غير موجود" };
+
+    const neighbour = await prisma.donorField.findFirst({
+      where: {
+        donorOrgId: row.donorOrgId,
+        order: direction === "up" ? { lt: row.order } : { gt: row.order },
+      },
+      orderBy: { order: direction === "up" ? "desc" : "asc" },
+      select: { id: true, order: true },
+    });
+    if (!neighbour) return { ok: true };
+
+    await prisma.$transaction([
+      prisma.donorField.update({ where: { id: row.id }, data: { order: neighbour.order } }),
+      prisma.donorField.update({ where: { id: neighbour.id }, data: { order: row.order } }),
+    ]);
+    revalidateDonors(row.donorOrgId);
+    return { ok: true };
+  } catch (error) {
+    return fieldError(error, "تعذر ترتيب المجالات");
+  }
+}
+
+/**
+ * نقلُ النصِّ القديم إلى مجالات — بزرٍّ، لا هجرةً تُخمّن.
+ *
+ * والنصُّ يبقى بعد النقل: هو ما كُتب، وقد يُقطَّع تقطيعاً لا يرضاه كاتبُه
+ * فيصحّح المجالاتِ ويحذفُ ما شاء، والأصلُ أمامه. ومن نُقل مجالُه لا يُكرَّر.
+ */
+export async function importLegacyDonorFields(donorOrgId: string): Promise<Result & { added?: number }> {
+  const session = await requireDonorEditor();
+  if (!session) return { ok: false, error: "غير مصرح" };
+
+  try {
+    const org = await prisma.donorOrg.findUnique({
+      where: { id: donorOrgId },
+      select: { fields: true, grantFields: { select: { name: true } } },
+    });
+    if (!org) return { ok: false, error: "الجهة غير موجودة" };
+
+    const names = splitLegacyFields(org.fields).filter(
+      (name) => !org.grantFields.some((f) => sameFieldName(f.name, name))
+    );
+    if (names.length === 0) return { ok: false, error: "لا جديد في النص لينقل" };
+
+    let order = await nextFieldOrder(donorOrgId);
+    await prisma.donorField.createMany({
+      data: names.map((name) => ({ donorOrgId, name, order: order++ })),
+    });
+    revalidateDonors(donorOrgId);
+    return { ok: true, added: names.length };
+  } catch (error) {
+    return fieldError(error, "تعذر نقل المجالات");
   }
 }

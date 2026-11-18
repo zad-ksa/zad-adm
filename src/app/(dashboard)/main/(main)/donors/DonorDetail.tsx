@@ -2,7 +2,7 @@
 
 import { useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { Building2, CalendarClock, ExternalLink, FileText, KeyRound, Pencil, Plus, Trash2 } from "lucide-react";
+import { ArrowDown, ArrowUp, Building2, CalendarClock, ExternalLink, FileText, KeyRound, Layers, Pencil, Plus, Trash2, Wand2 } from "lucide-react";
 import {
   EmptyState,
   PageHeader,
@@ -22,13 +22,21 @@ import MultiSelect from "@/components/console/MultiSelect";
 import { notify } from "@/components/console/toastBus";
 import { confirmAction } from "@/components/console/confirmBus";
 import { GRANT_STATUSES, grantStatusLabel } from "@/lib/donorOrg";
-import { deleteDonorAccountRow, saveDonorAccount } from "@/app/actions/donorOrgs";
+import {
+  addDonorField,
+  deleteDonorAccountRow,
+  deleteDonorField,
+  importLegacyDonorFields,
+  moveDonorField,
+  saveDonorAccount,
+  updateDonorField,
+} from "@/app/actions/donorOrgs";
 import { updateGrantApplicationStatus } from "@/app/actions/charity";
 import GrantSheet, { type EditableGrant } from "@/components/grants/GrantSheet";
 import { confirmAndDeleteGrant } from "@/components/grants/deleteGrant";
 import GrantStatusDialog, { type StatusTarget } from "@/components/grants/GrantStatusDialog";
 import DonorSheet from "./DonorSheet";
-import type { DonorAccountRow, DonorGrantRow, DonorRow } from "./donorData";
+import type { DonorAccountRow, DonorFieldRow, DonorGrantRow, DonorRow } from "./donorData";
 
 type Charity = { id: string; name: string; isInternal: boolean };
 type GrantSort = "date-desc" | "date-asc" | "amount-desc" | "amount-asc" | "charity" | "status";
@@ -64,6 +72,7 @@ export default function DonorDetail({
   charities,
   accounts,
   grants,
+  fields,
   underDevelopment = false,
   showAccounts = true,
 }: {
@@ -72,6 +81,8 @@ export default function DonorDetail({
   charities: Charity[];
   accounts: DonorAccountRow[];
   grants: DonorGrantRow[];
+  /** مجالاتُ المنح صفوفاً — تُقرأ في بوّابة الجمعية وتُكتب هنا. */
+  fields: DonorFieldRow[];
   underDevelopment?: boolean;
   showAccounts?: boolean;
 }) {
@@ -211,7 +222,9 @@ export default function DonorDetail({
                 <Badge tone="gold">تحت التطوير</Badge>
               </span>
             )}
-            {org.fields ?? "لا مجالاتَ دعمٍ مسجَّلة"}
+            {fields.length > 0
+              ? fields.map((f) => f.name).join(" · ")
+              : (org.fields ?? "لا مجالاتَ دعمٍ مسجَّلة")}
           </>
         }
         actions={
@@ -251,6 +264,9 @@ export default function DonorDetail({
           الحالةُ محسوبةٌ من التاريخين: {org.intakeReason}. ولا تُضبط يدوياً ما دام لها موعدٌ مسجَّل.
         </p>
       )}
+
+      {/* ── مجالاتُ المنح ───────────────────────────────────────────────── */}
+      <GrantFieldsCard org={org} fields={fields} onDone={() => startTransition(() => router.refresh())} />
 
       {/* ── حساباتُ الدخول ──────────────────────────────────────────────── */}
       {showAccounts && (
@@ -625,5 +641,205 @@ function AccountSheet({
         </p>
       </div>
     </Sheet>
+  );
+}
+
+/**
+ * مجالاتُ المنح: تُضاف واحداً واحداً، وتُقرأ في بوّابة الجمعية.
+ *
+ * **ولمَ صفوفٌ لا نصّ**: كان المجالُ جملةً في ملف الجهة تُقرأ ولا تُستعمل.
+ * وبوّابةُ الجمعية تعرض تحت كلِّ مجالٍ مشاريعَها المقترحة فيه، ولا يُعلَّق
+ * مشروعٌ على سطرٍ من نصّ.
+ *
+ * **والنصُّ القديم يبقى معروضاً حتى يُنقل**: فيه ما كُتب لهذه الجهة، ونقلُه
+ * بزرٍّ يُقطّعه أسطراً وفواصلَ — ثم يُصحَّح ما قُطِّع خطأً ويُحذف، والأصلُ
+ * أمام القارئ لا يُمحى.
+ */
+function GrantFieldsCard({
+  org,
+  fields,
+  onDone,
+}: {
+  org: DonorRow;
+  fields: DonorFieldRow[];
+  onDone: () => void;
+}) {
+  const [adding, setAdding] = useState(false);
+  const [name, setName] = useState("");
+  const [description, setDescription] = useState("");
+  const [editing, setEditing] = useState<DonorFieldRow | null>(null);
+  const [busy, start] = useTransition();
+
+  const run = (fn: () => Promise<{ ok: boolean; error?: string }>, done?: () => void) =>
+    start(async () => {
+      const res = await fn();
+      if (!res.ok) {
+        notify("error", res.error ?? "تعذّرت العملية");
+        return;
+      }
+      done?.();
+      onDone();
+    });
+
+  const reset = () => {
+    setAdding(false);
+    setEditing(null);
+    setName("");
+    setDescription("");
+  };
+
+  const submit = () => {
+    if (editing) {
+      run(() => updateDonorField(editing.id, name, description), reset);
+      return;
+    }
+    run(() => addDonorField(org.id, name, description), reset);
+  };
+
+  return (
+    <section className="space-y-3">
+      <div className="flex flex-wrap items-end justify-between gap-4">
+        <div>
+          <h2 className="flex items-center gap-2 text-section font-semibold tracking-tight">
+            <Layers className="size-4 text-primary dark:text-teal-300" />
+            مجالات المنح
+          </h2>
+          <p className="mt-0.5 text-body text-slate-500 dark:text-slate-400">
+            تظهر للجمعيات في بوابتها، وترفع تحت كل مجال مشاريعها المقترحة.
+          </p>
+        </div>
+        {!adding && !editing && (
+          <button type="button" onClick={() => setAdding(true)} className={btn.secondary}>
+            <Plus className="size-4" /> إضافة مجال
+          </button>
+        )}
+      </div>
+
+      {(adding || editing) && (
+        <div className="space-y-2 rounded-xl border border-primary/15 bg-primary/[0.03] p-3 dark:border-teal-400/15 dark:bg-teal-400/[0.04]">
+          <div className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_minmax(0,2fr)]">
+            <input
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="اسم المجال — مثال: التعليم"
+              className={field}
+              autoFocus
+            />
+            <input
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder="وصف المجال (اختياري)"
+              className={field}
+            />
+          </div>
+          <div className="flex items-center gap-2">
+            <button type="button" disabled={!name.trim() || busy} onClick={submit} className={btn.primary}>
+              {editing ? "حفظ" : "إضافة"}
+            </button>
+            <button type="button" onClick={reset} disabled={busy} className={btn.secondary}>
+              إلغاء
+            </button>
+          </div>
+        </div>
+      )}
+
+      {fields.length === 0 ? (
+        <div className={tableFrameClass}>
+          <EmptyState
+            icon={<Layers className="size-4" />}
+            title="لا مجالات مضافة"
+            description="أضف مجالا ليظهر للجمعيات، وترفع تحته مشاريعها المقترحة."
+          />
+        </div>
+      ) : (
+        <ul className="divide-y divide-slate-200 overflow-hidden rounded-xl border border-slate-200 dark:divide-slate-800 dark:border-slate-800">
+          {fields.map((f, index) => (
+            <li key={f.id} className="flex items-start gap-3 bg-white px-3 py-2.5 dark:bg-slate-900">
+              <div className="min-w-0 flex-1">
+                <p className="text-body font-medium text-slate-900 dark:text-slate-100">{f.name}</p>
+                {f.description && (
+                  <p className="mt-0.5 text-caption leading-5 text-slate-500 dark:text-slate-400">{f.description}</p>
+                )}
+              </div>
+              <div className="flex shrink-0 items-center gap-1">
+                {index > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => run(() => moveDonorField(f.id, "up"))}
+                    disabled={busy}
+                    aria-label="أعلى"
+                    className={btn.icon}
+                  >
+                    <ArrowUp className="size-3.5" />
+                  </button>
+                )}
+                {index < fields.length - 1 && (
+                  <button
+                    type="button"
+                    onClick={() => run(() => moveDonorField(f.id, "down"))}
+                    disabled={busy}
+                    aria-label="أسفل"
+                    className={btn.icon}
+                  >
+                    <ArrowDown className="size-3.5" />
+                  </button>
+                )}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setEditing(f);
+                    setAdding(false);
+                    setName(f.name);
+                    setDescription(f.description ?? "");
+                  }}
+                  disabled={busy}
+                  aria-label="تعديل"
+                  className={btn.icon}
+                >
+                  <Pencil className="size-3.5" />
+                </button>
+                <button
+                  type="button"
+                  onClick={async () => {
+                    if (
+                      await confirmAction({
+                        title: `حذف مجال «${f.name}»؟`,
+                        message: "تبقى المشاريع المقترحة فيه محفوظة عند الجمعية، ولكن لا يظهر لها المجال.",
+                        confirmLabel: "حذف",
+                        tone: "danger",
+                      })
+                    ) {
+                      run(() => deleteDonorField(f.id));
+                    }
+                  }}
+                  disabled={busy}
+                  aria-label="حذف"
+                  className={cx(btn.icon, "text-rose-500 hover:text-rose-600")}
+                >
+                  <Trash2 className="size-3.5" />
+                </button>
+              </div>
+            </li>
+          ))}
+        </ul>
+      )}
+
+      {/* النصُّ القديم: يُعرض كما كُتب، ويُنقل بزرٍّ لا بهجرةٍ تُخمِّن. */}
+      {org.fields && (
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 dark:border-slate-800 dark:bg-slate-900/60">
+          <p className="min-w-0 flex-1 text-caption leading-5 text-slate-500 dark:text-slate-400">
+            <span className="font-semibold text-slate-600 dark:text-slate-300">النص القديم:</span> {org.fields}
+          </p>
+          <button
+            type="button"
+            disabled={busy}
+            onClick={() => run(() => importLegacyDonorFields(org.id))}
+            className={btn.secondary}
+          >
+            <Wand2 className="size-4" /> نقل الأسطر إلى مجالات
+          </button>
+        </div>
+      )}
+    </section>
   );
 }

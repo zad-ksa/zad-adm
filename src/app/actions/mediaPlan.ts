@@ -370,6 +370,8 @@ export async function saveCharityMediaAccounts(charityId: string, accounts: Reco
   }
 
   const known = new Set((await prisma.mediaPlatform.findMany({ select: { key: true } })).map((p) => p.key));
+  // الموقعُ الإلكترونيُّ ليس منصّةَ نشر، ومفتاحُه محجوزٌ هنا (`WEBSITE` في CharityAccounts).
+  known.add("website");
   const upserts: { platformKey: string; url: string }[] = [];
   const removals: string[] = [];
   for (const [platformKey, raw] of Object.entries(accounts ?? {})) {

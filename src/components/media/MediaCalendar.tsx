@@ -6,6 +6,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Image as ImageIcon,
+  ImageOff,
   Link2,
   Megaphone,
   Paperclip,
@@ -24,7 +25,8 @@ import {
 } from "@/lib/calendarGrid";
 import type { MediaAttachment } from "@/lib/mediaPostInput";
 import {
-  attentionMark,
+  shortStatus,
+  waitingOn,
   compareByTime,
   formatTime,
   statusLabel,
@@ -116,11 +118,31 @@ export const BADGE_TONE: Record<string, "warn" | "good" | "neutral"> = {
   neutral: "neutral",
 };
 
-/** وسمُ «ينتظرك» على البطاقة — وهو لجهةٍ واحدةٍ في الحالة الواحدة. */
+/**
+ * حالةُ المنشور على بطاقته: بانتظار الجمعية، أو بانتظار زاد، أو معتمد من
+ * الطرفين. والكهرمانيُّ لما ينتظر قارئَ البطاقة، والأخضرُ للمعتمد.
+ */
 function Mark({ status, side }: { status: MediaStatus; side: Side }) {
-  const mark = attentionMark(status, side);
-  if (!mark) return null;
-  return <span className="shrink-0 text-caption font-semibold text-amber-600 dark:text-amber-400">{mark}</span>;
+  const tone =
+    status === "FINAL"
+      ? "text-emerald-700 dark:text-emerald-400"
+      : waitingOn(status) === side
+        ? "text-amber-600 dark:text-amber-400"
+        : "text-slate-500 dark:text-slate-400";
+  return <span className={cx("shrink-0 text-[10px] font-semibold leading-4", tone)}>{shortStatus(status)}</span>;
+}
+
+/** هل أُرفقت صورة؟ — أيقونةٌ بلونٍ إن أُرفقت، وباهتةٌ مشطوبةٌ إن لم تُرفق. */
+function ImageMark({ has, size = 12 }: { has: boolean; size?: number }) {
+  return has ? (
+    <ImageIcon role="img" aria-label="مرفقة صورة" className="shrink-0 text-sky-600 dark:text-sky-400" style={{ width: size, height: size }}>
+      <title>مرفقة صورة</title>
+    </ImageIcon>
+  ) : (
+    <ImageOff role="img" aria-label="لا توجد صورة" className="shrink-0 text-slate-300 dark:text-slate-600" style={{ width: size, height: size }}>
+      <title>لا توجد صورة</title>
+    </ImageOff>
+  );
 }
 
 export function MonthView({
@@ -206,8 +228,11 @@ export function MonthView({
                         <span className="shrink-0 text-caption text-slate-400">{formatTime(post.scheduledAt)}</span>
                       )}
                     </span>
-                    <span className="mt-0.5 flex items-center justify-between">
-                      <PlatformRow platforms={marksOf(post.platforms)} size={12} max={4} />
+                    <span className="mt-0.5 flex items-center justify-between gap-1">
+                      <span className="flex items-center gap-1.5">
+                        <PlatformRow platforms={marksOf(post.platforms)} size={12} max={4} />
+                        <ImageMark has={!!post.imageUrl} />
+                      </span>
                       <Mark status={post.status} side={side} />
                     </span>
                   </button>
@@ -298,8 +323,9 @@ export function WeekView({
                         />
                       </span>
                     )}
-                    <span className="mt-1.5 block">
+                    <span className="mt-1.5 flex items-center gap-1.5">
                       <PlatformRow platforms={marksOf(post.platforms)} size={14} />
+                      {!post.imageUrl && <ImageMark has={false} size={14} />}
                     </span>
                   </button>
                 ))}

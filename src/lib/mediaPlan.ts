@@ -75,6 +75,12 @@ export function waitingOn(status: MediaStatus): Side | null {
   return null;
 }
 
+/** وسمُ الحالة القصيرُ على بطاقة التقويم — واحدٌ للطرفين. */
+export function shortStatus(status: MediaStatus): string {
+  if (status === MEDIA_STATUS.FINAL) return "معتمد من الطرفين";
+  return status === MEDIA_STATUS.PENDING_CHARITY ? "بانتظار الجمعية" : "بانتظار زاد";
+}
+
 /**
  * وسمٌ قصيرٌ على بطاقة المنشور في التقويم لمن ينتظره فعلٌ منه — أو لا وسم.
  */

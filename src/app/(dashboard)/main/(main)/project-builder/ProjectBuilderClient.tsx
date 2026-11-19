@@ -65,7 +65,8 @@ async function readGenerateStream(
   const decoder = new TextDecoder();
   let buffer = "";
   // والخادمُ أكمل من النصِّ بلا فراغه الأخير، فيُبنى عليه كذلك.
-  let content = before.trimEnd();
+  // والدفعةُ التالية تبدأ سطراً جديداً (السابقةُ قُطعت عند آخر سطرٍ كامل).
+  let content = before.trim() ? before.trimEnd() + "\n" : "";
   let done: { more: boolean; prompt: string } | null = null;
 
   const handle = (line: string) => {

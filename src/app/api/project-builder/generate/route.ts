@@ -2,6 +2,7 @@ import Anthropic from "@anthropic-ai/sdk";
 import { NextRequest, NextResponse } from "next/server";
 import { requirePermission, authErrorResponse } from "@/lib/guards";
 import { prisma } from "@/lib/db";
+import { AI_WRITING, CONTINUE_PROMPT } from "@/lib/aiModel";
 import { normalizeProjectBuilderOptions, buildProjectPrompt, type ProjectBuilderBudget } from "@/lib/projectBuilder";
 
 // وثيقةٌ كاملةٌ تستغرق دقائق: بلا هذا يقطعها Vercel عند مهلته الافتراضية فيُرجع
@@ -138,13 +139,15 @@ export async function POST(req: NextRequest) {
         const send = (obj: unknown) => controller.enqueue(encoder.encode(JSON.stringify(obj) + "\n"));
         try {
           const stream = client.messages.stream({
-            model: "claude-haiku-4-5-20251001",
+            ...AI_WRITING,
             max_tokens: SEGMENT_TOKENS,
             messages: partial
               ? [
                   { role: "user", content: prompt },
-                  // ما كُتب حتى الآن بدايةً لردّ النموذج: فيُكمله حرفاً بعد حرف.
+                  // ما كُتب حتى الآن ردٌّ سابق، ثم طلبُ إكماله (النموذج لا يقبل
+                  // أن يُكمل ردّاً مبدوءاً). والمتصفّحُ قطعه عند آخر سطرٍ كامل.
                   { role: "assistant", content: partial },
+                  { role: "user", content: CONTINUE_PROMPT },
                 ]
               : [{ role: "user", content: prompt }],
           });

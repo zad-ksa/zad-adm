@@ -1,4 +1,5 @@
 import Anthropic from "@anthropic-ai/sdk";
+import { AI_WRITING } from "@/lib/aiModel";
 import { NextRequest, NextResponse } from "next/server";
 import { requirePermission, authErrorResponse } from "@/lib/guards";
 
@@ -82,7 +83,7 @@ ${rawNotes}
     `.trim();
 
     const message = await client.messages.create({
-      model: "claude-haiku-4-5-20251001",
+      ...AI_WRITING,
       // A long محضر in Arabic blew past the old 4096 cap, and the cut-off text
       // was then fed to task extraction — so late tasks were lost twice over.
       max_tokens: 16000,

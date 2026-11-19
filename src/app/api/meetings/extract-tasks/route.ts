@@ -1,4 +1,5 @@
 import Anthropic from "@anthropic-ai/sdk";
+import { AI_WRITING } from "@/lib/aiModel";
 import { requirePermission, authErrorResponse } from "@/lib/guards";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -139,7 +140,7 @@ export async function POST(req: NextRequest) {
     // than the old 1024-token cap, which truncated the JSON mid-array and made
     // the whole extraction come back empty.
     const params = {
-      model: "claude-haiku-4-5-20251001" as const,
+      ...AI_WRITING,
       max_tokens: 16000,
       system: SYSTEM_PROMPT,
       messages: [{

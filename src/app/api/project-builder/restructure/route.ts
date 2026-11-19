@@ -1,4 +1,5 @@
 import Anthropic from "@anthropic-ai/sdk";
+import { AI_WRITING } from "@/lib/aiModel";
 import { NextRequest, NextResponse } from "next/server";
 import { requirePermission, authErrorResponse } from "@/lib/guards";
 import { prisma } from "@/lib/db";
@@ -65,7 +66,7 @@ export async function POST(req: NextRequest) {
 
     const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
     const message = await client.messages.create({
-      model: "claude-haiku-4-5-20251001",
+      ...AI_WRITING,
       max_tokens: 16000,
       messages: [{ role: "user", content: inst }],
     });

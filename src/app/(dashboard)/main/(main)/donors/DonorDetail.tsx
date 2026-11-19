@@ -22,6 +22,7 @@ import { Badge, MONO, btn, cx, field } from "@/components/console/ui";
 import { CopyButton, SecretValue } from "@/components/console/Copy";
 import { Sheet } from "@/components/console/overlays";
 import Select from "@/components/console/Select";
+import TagsField from "@/components/console/TagsField";
 import MultiSelect from "@/components/console/MultiSelect";
 import { notify } from "@/components/console/toastBus";
 import { confirmAction } from "@/components/console/confirmBus";
@@ -796,6 +797,7 @@ function GrantFieldsCard({
   const [adding, setAdding] = useState(false);
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
+  const [tags, setTags] = useState<string[]>([]);
   const [editing, setEditing] = useState<DonorFieldRow | null>(null);
   const [busy, start] = useTransition();
 
@@ -815,14 +817,15 @@ function GrantFieldsCard({
     setEditing(null);
     setName("");
     setDescription("");
+    setTags([]);
   };
 
   const submit = () => {
     if (editing) {
-      run(() => updateDonorField(editing.id, name, description), reset);
+      run(() => updateDonorField(editing.id, name, description, tags), reset);
       return;
     }
-    run(() => addDonorField(org.id, name, description), reset);
+    run(() => addDonorField(org.id, name, description, tags), reset);
   };
 
   return (
@@ -861,6 +864,13 @@ function GrantFieldsCard({
               className={field}
             />
           </div>
+          {/* والوسومُ بعد الوصف: الوصفُ جملةٌ تُقرأ، والوسمُ كلمةٌ تُقارَن. */}
+          <TagsField
+            values={tags}
+            onChange={setTags}
+            label="وسوم المجال"
+            placeholder="وسوم (اختياري) — اكتب وسما ثم اضغط Enter"
+          />
           <div className="flex items-center gap-2">
             <button type="button" disabled={!name.trim() || busy} onClick={submit} className={btn.primary}>
               {editing ? "حفظ" : "إضافة"}
@@ -888,6 +898,18 @@ function GrantFieldsCard({
                 <p className="text-body font-medium text-slate-900 dark:text-slate-100">{f.name}</p>
                 {f.description && (
                   <p className="mt-0.5 text-caption leading-5 text-slate-500 dark:text-slate-400">{f.description}</p>
+                )}
+                {f.tags.length > 0 && (
+                  <ul className="mt-1.5 flex flex-wrap gap-1">
+                    {f.tags.map((tag) => (
+                      <li
+                        key={tag}
+                        className="rounded-full border border-slate-200 px-2 py-0.5 text-meta text-slate-500 dark:border-slate-700 dark:text-slate-400"
+                      >
+                        {tag}
+                      </li>
+                    ))}
+                  </ul>
                 )}
                 {/* ما اقترحته الجمعياتُ تحت هذا المجال من بوّابتها. */}
                 {/* المقترحاتُ خبرٌ قادمٌ من جهةٍ أخرى — من الجمعية في بوّابتها —
@@ -965,6 +987,7 @@ function GrantFieldsCard({
                     setAdding(false);
                     setName(f.name);
                     setDescription(f.description ?? "");
+                    setTags(f.tags);
                   }}
                   disabled={busy}
                   aria-label="تعديل"

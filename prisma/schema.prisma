@@ -420,6 +420,8 @@ model DonorField {
   name        String
   /// وصفٌ اختياريّ: ما يُقبل في هذا المجال وما لا يُقبل.
   description String?
+  /// وسومٌ بعد الوصف: كلماتٌ قصيرةٌ تُقارَن، والوصفُ جملةٌ تُقرأ.
+  tags        String[] @default([])
   order       Int      @default(0)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt

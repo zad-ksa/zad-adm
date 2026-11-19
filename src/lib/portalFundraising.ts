@@ -168,6 +168,7 @@ export type PortalFieldRow = {
   id: string;
   name: string;
   description: string | null;
+  tags: string[];
   proposals: PortalProposalRow[];
 };
 
@@ -235,6 +236,7 @@ async function loadPortalFields(charityId: string, donorOrgId: string): Promise<
         id: true,
         name: true,
         description: true,
+        tags: true,
         proposals: {
           where: { charityId },
           orderBy: { createdAt: "asc" },
@@ -255,6 +257,7 @@ async function loadPortalFields(charityId: string, donorOrgId: string): Promise<
       id: f.id,
       name: f.name,
       description: f.description,
+      tags: f.tags,
       proposals: f.proposals.map((p) => ({
         id: p.id,
         name: p.name,

@@ -277,6 +277,19 @@ function FieldCard({
           {row.description && (
             <p className="mt-0.5 text-caption leading-5 text-slate-500 dark:text-slate-400">{row.description}</p>
           )}
+          {/* وسومُ المجال كما كتبتها زاد — تُقرأ ولا تُحرَّر هنا. */}
+          {row.tags.length > 0 && (
+            <ul className="mt-1.5 flex flex-wrap gap-1">
+              {row.tags.map((tag) => (
+                <li
+                  key={tag}
+                  className="rounded-full border border-slate-200 px-2 py-0.5 text-meta text-slate-500 dark:border-slate-700 dark:text-slate-400"
+                >
+                  {tag}
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
         {!adding && (
           <button type="button" onClick={() => setAdding(true)} className={btn.secondary}>

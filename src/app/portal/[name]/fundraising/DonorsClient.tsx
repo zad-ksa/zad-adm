@@ -24,7 +24,7 @@ import { notify } from "@/components/console/toastBus";
 import AccountSheet from "./AccountSheet";
 import type { PortalDonorRow } from "@/lib/portalFundraising";
 
-type Column = "name" | "status" | "date" | "grants" | "fields";
+type Column = "name" | "status" | "date" | "grants";
 
 /**
  * جدولُ الجهات المانحة في بوّابة الجمعية.
@@ -51,7 +51,9 @@ export default function DonorsClient({
   const router = useRouter();
   const [query, setQuery] = useState("");
   const [onlyOpen, setOnlyOpen] = useState(false);
-  const [column, setColumn] = useState<Column>("name");
+  // والترتيبُ الافتراضيُّ بالحالة والمفتوحُ أوّلاً: السؤالُ الأوّلُ في هذه
+  // الصفحة «أين أرفع الآن؟»، لا «أين الجهةُ في المعجم؟».
+  const [column, setColumn] = useState<Column>("status");
   const [dir, setDir] = useState<SortDir>("asc");
   const [editing, setEditing] = useState<PortalDonorRow | null>(null);
   const [busy, start] = useTransition();
@@ -59,6 +61,7 @@ export default function DonorsClient({
   const shown = useMemo(() => {
     const q = query.trim();
     const text = (a: string, b: string) => a.localeCompare(b, "ar");
+    const rank = (status: string) => (status === "OPEN" ? 0 : 1);
     const sign = dir === "asc" ? 1 : -1;
     const list = donors.filter(
       (d) => (!onlyOpen || d.intakeStatus === "OPEN") && (q === "" || d.name.includes(q))
@@ -66,11 +69,12 @@ export default function DonorsClient({
     list.sort((a, b) => {
       switch (column) {
         case "status":
-          return sign * text(a.intakeStatus, b.intakeStatus) || text(a.name, b.name);
+          // بالرتبة لا بالحروف: «CLOSED» يسبق «OPEN» في المعجم، والمقصودُ
+          // صاعداً أن يُقدَّم المفتوح.
+          return sign * (rank(a.intakeStatus) - rank(b.intakeStatus)) || text(a.name, b.name);
         case "grants":
           return sign * (a.grants - b.grants) || text(a.name, b.name);
-        case "fields":
-          return sign * (a.fields - b.fields) || text(a.name, b.name);
+
         case "date":
           // وبلا موعدٍ تُدفع إلى الآخر في الاتّجاهين: «لا شيء» ليس أقدمَ تاريخ.
           if (!a.nextDate && !b.nextDate) return text(a.name, b.name);
@@ -111,7 +115,15 @@ export default function DonorsClient({
       <StatStrip
         items={[
           { label: "الجهات المانحة", value: donors.length },
-          { label: "مفتوحة للرفع الآن", value: openCount, dot: openCount > 0 ? "active" : "muted" },
+          {
+            label: "مفتوحة للرفع الآن",
+            value: openCount,
+            dot: openCount > 0 ? "active" : "muted",
+            // والرقمُ يُنقر فيُرشِّح: من قرأ «١٢ مفتوحة» أراد رؤيتَها، فلا
+            // يُطلب منه أن يبحث عن زرٍّ ثانٍ يقول ما قاله الرقم.
+            onClick: () => setOnlyOpen((v) => !v),
+            selected: onlyOpen,
+          },
           { label: "لها حساب مسجل", value: withAccount, hint: `من ${donors.length} جهة` },
         ]}
       />
@@ -164,9 +176,6 @@ export default function DonorsClient({
               {/* الحسابُ عمودٌ واحد: الاسمُ وكلمتُه يُستعملان معاً دائماً ولا
                   يُقارن بهما بين الصفوف، فعمودان يُطيلان الجدول بلا فائدة. */}
               <Th>الحساب</Th>
-              <SortTh id="fields" active={column} dir={dir} onSort={(c, d) => { setColumn(c); setDir(d); }}>
-                المجالات
-              </SortTh>
               <SortTh id="grants" active={column} dir={dir} onSort={(c, d) => { setColumn(c); setDir(d); }}>
                 المرفوع
               </SortTh>
@@ -186,6 +195,19 @@ export default function DonorsClient({
                   {donor.proposals > 0 && (
                     <span className="ms-2 text-meta text-slate-400">{donor.proposals} مشروع مقترح</span>
                   )}
+                  {/* ومجالاتُ الجهة سطرٌ تحت اسمها كأنّها وصفُها: الاسمُ وحدَه
+                      لا يقول فيمَ تُنفق، وعددٌ مجرَّدٌ لا يقوله أيضاً. وحيث لم
+                      تُنقل المجالاتُ إلى صفوفٍ بعدُ يُقرأ نصُّها القديم. */}
+                  {donor.fieldNames.length > 0 ? (
+                    <p className="mt-0.5 text-meta font-normal leading-5 text-slate-500 dark:text-slate-400">
+                      {donor.fieldNames.slice(0, 4).join(" · ")}
+                      {donor.fieldNames.length > 4 && ` · و${donor.fieldNames.length - 4} غيرها`}
+                    </p>
+                  ) : donor.legacyFields ? (
+                    <p className="mt-0.5 line-clamp-2 text-meta font-normal leading-5 text-slate-400 dark:text-slate-500">
+                      {donor.legacyFields}
+                    </p>
+                  ) : null}
                 </td>
                 <td className={tdClass}>
                   <Badge tone={donor.intakeStatus === "OPEN" ? "good" : "neutral"}>
@@ -215,8 +237,8 @@ export default function DonorsClient({
                         </span>
                         <CopyButton value={donor.username} title="نسخ اسم المستخدم" />
                       </span>
-                      <span className="inline-flex items-center gap-1.5 border-s border-slate-200 ps-2 dark:border-slate-800">
-                        <CopyButton value={donor.password ?? ""} title="نسخ كلمة المرور" />
+                      <span className="border-s border-slate-200 ps-2 dark:border-slate-800">
+                        {/* ولا زرَّ نسخٍ هنا: `SecretValue` تحمل الكشفَ والنسخَ معاً. */}
                         <SecretValue value={donor.password} />
                       </span>
                     </span>
@@ -224,7 +246,7 @@ export default function DonorsClient({
                     <span className="text-slate-400 dark:text-slate-500">لا حساب</span>
                   )}
                 </td>
-                <td className={cx(tdClass, MONO, "text-slate-600 dark:text-slate-300")}>{donor.fields}</td>
+
                 <td className={cx(tdClass, MONO, "text-slate-600 dark:text-slate-300")}>{donor.grants}</td>
                 <td className={cx(tdClass, "whitespace-nowrap")}>
                   <button type="button" onClick={() => setEditing(donor)} className={btn.secondary}>

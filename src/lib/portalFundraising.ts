@@ -64,8 +64,15 @@ export type PortalDonorRow = {
   grants: number;
   /** مشاريعُها المقترحةُ في مجالات هذه الجهة. */
   proposals: number;
-  /** عددُ مجالات المنح في هذه الجهة — به تُعرف أين يُقترح. */
-  fields: number;
+  /**
+   * مجالاتُ منح الجهة بأسمائها — تُقرأ سطراً تحت اسمها كأنّها وصفُها.
+   *
+   * وأسماءٌ لا عدد: «٣» لا تقول أين يُقترح، و«التعليم · الصحة · الإسكان»
+   * تقوله بنظرة.
+   */
+  fieldNames: string[];
+  /** نصُّ مجالات الدعم القديم — يُقرأ حين لا مجالاتٍ مهيكلةً بعد. */
+  legacyFields: string | null;
 };
 
 /**
@@ -83,6 +90,7 @@ export async function loadPortalDonors(charityId: string): Promise<PortalDonorRo
       id: true,
       name: true,
       url: true,
+      fields: true,
       intakeStatus: true,
       opensAt: true,
       closesAt: true,
@@ -92,9 +100,9 @@ export async function loadPortalDonors(charityId: string): Promise<PortalDonorRo
   });
 
   // المقترحاتُ والمجالاتُ تُعدُّ في استعلامٍ واحدٍ لا استعلامٍ لكلِّ جهة.
-  const [proposals, fields] = await Promise.all([
+  const [proposals, fieldNames] = await Promise.all([
     countProposalsByDonor(charityId),
-    countFieldsByDonor(),
+    fieldNamesByDonor(),
   ]);
 
   return orgs.map((org) => {
@@ -112,21 +120,28 @@ export async function loadPortalDonors(charityId: string): Promise<PortalDonorRo
       password: account ? decryptSecret(account.password) : null,
       grants: org._count.grants,
       proposals: proposals.get(org.id) ?? 0,
-      fields: fields.get(org.id) ?? 0,
+      fieldNames: fieldNames.get(org.id) ?? [],
+      legacyFields: org.fields,
     };
   });
 }
 
-/** عددُ المجالات لكلِّ جهة — محروسٌ حتى يُطبَّق جدولُ المجالات. */
-async function countFieldsByDonor(): Promise<Map<string, number>> {
+/** أسماءُ المجالات لكلِّ جهة — محروسٌ حتى يُطبَّق جدولُ المجالات. */
+async function fieldNamesByDonor(): Promise<Map<string, string[]>> {
   try {
-    const rows = await prisma.donorField.groupBy({
-      by: ["donorOrgId"],
-      _count: { _all: true },
+    const rows = await prisma.donorField.findMany({
+      orderBy: [{ order: "asc" }, { createdAt: "asc" }],
+      select: { donorOrgId: true, name: true },
     });
-    return new Map(rows.map((r) => [r.donorOrgId, r._count._all]));
+    const map = new Map<string, string[]>();
+    for (const row of rows) {
+      const list = map.get(row.donorOrgId);
+      if (list) list.push(row.name);
+      else map.set(row.donorOrgId, [row.name]);
+    }
+    return map;
   } catch (error) {
-    console.error("countFieldsByDonor", error);
+    console.error("fieldNamesByDonor", error);
     return new Map();
   }
 }

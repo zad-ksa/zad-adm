@@ -2,8 +2,11 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import {
   MAX_FIELD_NAME,
+  MAX_FIELD_TAGS,
+  MAX_TAG,
   cleanFieldDescription,
   cleanFieldName,
+  cleanFieldTags,
   proposalStatusLabel,
   proposalStatusOf,
   proposalStatusTone,
@@ -51,4 +54,14 @@ test("حالُ المقترح: ثلاثةٌ، والمجهولُ يُقرأ «م
   assert.equal(proposalStatusLabel("DEFERRED"), "مؤجل");
   assert.equal(proposalStatusTone("SUBMITTED"), "good");
   assert.equal(proposalStatusTone(undefined), "neutral");
+});
+
+test("cleanFieldTags: يضمّ ويحدّ ويُسقط المكرَّر", () => {
+  assert.deepEqual(cleanFieldTags([" تعليم ", "تعليم", "صحة"]), ["تعليم", "صحة"]);
+  // والتعريفُ حرفٌ من الكلمة: «تعليم» و«التعليم» وسمان.
+  assert.deepEqual(cleanFieldTags(["تعليم", "التعليم"]), ["تعليم", "التعليم"]);
+  assert.deepEqual(cleanFieldTags(["", "   "]), []);
+  assert.deepEqual(cleanFieldTags(null), []);
+  assert.equal(cleanFieldTags(["أ".repeat(60)])[0].length, MAX_TAG);
+  assert.equal(cleanFieldTags(Array.from({ length: 30 }, (_, i) => `وسم ${i}`)).length, MAX_FIELD_TAGS);
 });

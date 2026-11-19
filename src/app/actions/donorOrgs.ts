@@ -12,6 +12,7 @@ import { cleanDonorName, donorKindOf, intakeStatusOf, normalizeDonorName } from 
 import {
   cleanFieldDescription,
   cleanFieldName,
+  cleanFieldTags,
   proposalStatusOf,
   sameFieldName,
   splitLegacyFields,
@@ -324,7 +325,8 @@ function fieldError(error: unknown, fallback: string): Result {
 export async function addDonorField(
   donorOrgId: string,
   name: string,
-  description?: string | null
+  description?: string | null,
+  tags?: string[]
 ): Promise<Result> {
   const session = await requireDonorEditor();
   if (!session) return { ok: false, error: "غير مصرح" };
@@ -346,6 +348,7 @@ export async function addDonorField(
         donorOrgId,
         name: value,
         description: cleanFieldDescription(description),
+        tags: cleanFieldTags(tags),
         order: await nextFieldOrder(donorOrgId),
       },
     });
@@ -368,7 +371,8 @@ export async function addDonorField(
 export async function updateDonorField(
   id: string,
   name: string,
-  description?: string | null
+  description?: string | null,
+  tags?: string[]
 ): Promise<Result> {
   const session = await requireDonorEditor();
   if (!session) return { ok: false, error: "غير مصرح" };
@@ -379,7 +383,11 @@ export async function updateDonorField(
   try {
     const row = await prisma.donorField.update({
       where: { id },
-      data: { name: value, description: cleanFieldDescription(description) },
+      data: {
+        name: value,
+        description: cleanFieldDescription(description),
+        tags: cleanFieldTags(tags),
+      },
       select: { donorOrgId: true },
     });
     revalidateDonors(row.donorOrgId);

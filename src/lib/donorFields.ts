@@ -82,3 +82,32 @@ export function proposalStatusLabel(value: string | null | undefined): string {
 export function proposalStatusTone(value: string | null | undefined): "neutral" | "good" | "warn" {
   return PROPOSAL_STATUSES.find((s) => s.value === proposalStatusOf(value))!.tone;
 }
+
+export const MAX_FIELD_TAGS = 12;
+export const MAX_TAG = 40;
+
+/**
+ * وسومُ المجال: كلماتٌ قصيرةٌ تُكتب بعد وصفه.
+ *
+ * **ولمَ وسومٌ ووصفٌ معاً**: الوصفُ جملةٌ تُقرأ، والوسمُ كلمةٌ تُقارَن —
+ * «يقبل التشغيلي» جملة، و«تشغيلي» وسمٌ تُمسح به الجهاتُ بنظرة.
+ *
+ * وتُنقّى كما يُنقّى اسمُ المجال: مسافاتٌ مضمومة، وطولٌ محدود، ولا مكرَّر
+ * بعد التسوية — و«تعليم» و«التعليم» وسمان لا واحد: التعريفُ حرفٌ من الكلمة
+ * لا زينةٌ تُحذف.
+ */
+export function cleanFieldTags(values: readonly string[] | null | undefined): string[] {
+  if (!values) return [];
+  const out: string[] = [];
+  const seen = new Set<string>();
+  for (const raw of values) {
+    const value = raw.replace(/s+/g, " ").trim().slice(0, MAX_TAG);
+    if (!value) continue;
+    const key = value.replace(/s+/g, "").toLowerCase();
+    if (seen.has(key)) continue;
+    seen.add(key);
+    out.push(value);
+    if (out.length >= MAX_FIELD_TAGS) break;
+  }
+  return out;
+}

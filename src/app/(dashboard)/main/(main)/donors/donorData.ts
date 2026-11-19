@@ -135,6 +135,8 @@ export type DonorFieldRow = {
   id: string;
   name: string;
   description: string | null;
+  /** وسومٌ بعد الوصف — كلماتٌ تُقارَن. */
+  tags: string[];
   /** ما اقترحته جمعياتُ الرائي تحته — فارغةٌ في بوّابة الجمعية. */
   proposals: DonorProposalRow[];
 };
@@ -158,6 +160,7 @@ export async function loadDonorFields(
         id: true,
         name: true,
         description: true,
+        tags: true,
         // ومقترحاتُ جمعيات الرائي وحدَها: نطاقُ الصفحة كلِّها — حساباتُها
         // ومنحُها — فلا تُستثنى المقترحاتُ منه.
         proposals: {
@@ -181,6 +184,7 @@ export async function loadDonorFields(
       id: f.id,
       name: f.name,
       description: f.description,
+      tags: f.tags,
       proposals: f.proposals.map((p) => ({
         id: p.id,
         charityId: p.charityId,

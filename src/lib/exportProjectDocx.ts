@@ -40,10 +40,13 @@ function runs(text: string, opts: { bold?: boolean; color?: string; size?: numbe
     });
 }
 
-function para(text: string, opts: { bold?: boolean; color?: string; size?: number; after?: number; bullet?: boolean; underlineGold?: boolean } = {}) {
+function para(
+  text: string,
+  opts: { bold?: boolean; color?: string; size?: number; after?: number; bullet?: boolean; underlineGold?: boolean; center?: boolean } = {}
+) {
   return new Paragraph({
     bidirectional: true,
-    alignment: AlignmentType.RIGHT,
+    alignment: opts.center ? AlignmentType.CENTER : AlignmentType.RIGHT,
     spacing: { after: opts.after ?? 120, line: 360 },
     bullet: opts.bullet ? { level: 0 } : undefined,
     border: opts.underlineGold
@@ -110,10 +113,13 @@ export function markdownToDocx(md: string, { plainBullets = false }: { plainBull
     if (!line || /^-{3,}$/.test(line)) continue;
 
     let m: RegExpMatchArray | null;
-    if ((m = line.match(/^#\s+(.*)/))) children.push(para(m[1], { bold: true, color: NAVY, size: 36, after: 240 }));
+    // العناوين كلُّها في الوسط — قرارُ تنسيقٍ يُفرض هنا لا في البرومبت.
+    if ((m = line.match(/^#\s+(.*)/)))
+      children.push(para(m[1], { bold: true, color: NAVY, size: 36, after: 240, center: true }));
     else if ((m = line.match(/^##\s+(.*)/)))
-      children.push(para(m[1], { bold: true, color: NAVY, size: 30, after: 160, underlineGold: true }));
-    else if ((m = line.match(/^#{3,}\s+(.*)/))) children.push(para(m[1], { bold: true, color: GOLD, size: 26 }));
+      children.push(para(m[1], { bold: true, color: NAVY, size: 30, after: 160, underlineGold: true, center: true }));
+    else if ((m = line.match(/^#{3,}\s+(.*)/)))
+      children.push(para(m[1], { bold: true, color: GOLD, size: 26, center: true }));
     else if ((m = line.match(/^[-*•]\s+(.*)/)))
       children.push(plainBullets ? para(`• ${m[1]}`) : para(m[1], { bullet: true }));
     else children.push(para(line));

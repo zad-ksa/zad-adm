@@ -1,16 +1,13 @@
-import Anthropic from "@anthropic-ai/sdk";
 import { NextRequest, NextResponse } from "next/server";
 import { requirePermission, authErrorResponse } from "@/lib/guards";
 import { prisma } from "@/lib/db";
-import { AI_WRITING, CONTINUE_PROMPT } from "@/lib/aiModel";
+import { streamDocument } from "@/lib/aiDocumentStream";
 import { normalizeProjectBuilderOptions, buildProjectPrompt, type ProjectBuilderBudget } from "@/lib/projectBuilder";
 
 // وثيقةٌ كاملةٌ تستغرق دقائق: بلا هذا يقطعها Vercel عند مهلته الافتراضية فيُرجع
 // صفحةَ خطأٍ HTML بدل JSON، فتظهر للمستخدم «Unexpected token <».
 export const maxDuration = 300;
 
-/** رموزُ الدفعة الواحدة: نحو دقيقتين من الكتابة، فتبقى كلُّ دفعةٍ دون المهلة بفارقٍ واسع. */
-const SEGMENT_TOKENS = 6000;
 
 /**
  * يصوغ وثيقة مبادرة جديدة بالذكاء الاصطناعي.
@@ -119,56 +116,10 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "مفتاح الذكاء الاصطناعي غير مضبوط في الخادم" }, { status: 500 });
     }
 
-    const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
-
-    // **الوثيقةُ تُكتب على دفعات**: وثيقةٌ عربيّةٌ بعشرين محوراً تتجاوز مهلةَ
-    // الخادم (٣٠٠ ثانية) لو كُتبت في طلبٍ واحد. فكلُّ طلبٍ يكتب دفعةً محدودة
-    // (`SEGMENT_TOKENS`)، والمتصفّحُ يطلب التالية بما كُتب حتى الآن (`partial`)
-    // فيُكمل النموذجُ من حيث وقف. والبرومبتُ يُبنى هنا في كلِّ دفعةٍ من البيانات
-    // نفسِها، لا يُرسَل من المتصفّح.
-    //
-    // وتُبثّ الدفعةُ سطراً سطراً (NDJSON) كما تُكتب، كلُّ سطرٍ كائنٌ واحد:
-    //   { t: "delta", text }                 قطعةٌ جديدة من النصّ
-    //   { t: "done", more, prompt }          انتهت الدفعة؛ `more` = بقي ما يُكتب
-    //   { t: "error", error }                تعذّر الإكمال بعد البدء
-    // وأخطاءُ ما قبل البدء (صلاحية، بيانات ناقصة) تبقى JSON عادياً بحالته.
+    // الوثيقةُ تُكتب في طلبٍ واحدٍ ما أمكن، ولا تُقسَّم إلا إن قاربت مهلةَ الخادم
+    // (`streamDocument`). والبرومبتُ يُبنى هنا في كلِّ دفعةٍ من البيانات نفسِها، لا يُرسَل من المتصفّح.
     const partial = typeof body.partial === "string" ? body.partial.trimEnd() : "";
-    const encoder = new TextEncoder();
-    const responseBody = new ReadableStream<Uint8Array>({
-      async start(controller) {
-        const send = (obj: unknown) => controller.enqueue(encoder.encode(JSON.stringify(obj) + "\n"));
-        try {
-          const stream = client.messages.stream({
-            ...AI_WRITING,
-            max_tokens: SEGMENT_TOKENS,
-            messages: partial
-              ? [
-                  { role: "user", content: prompt },
-                  // ما كُتب حتى الآن ردٌّ سابق، ثم طلبُ إكماله (النموذج لا يقبل
-                  // أن يُكمل ردّاً مبدوءاً). والمتصفّحُ قطعه عند آخر سطرٍ كامل.
-                  { role: "assistant", content: partial },
-                  { role: "user", content: CONTINUE_PROMPT },
-                ]
-              : [{ role: "user", content: prompt }],
-          });
-          stream.on("text", (text) => send({ t: "delta", text }));
-          const message = await stream.finalMessage();
-          send({ t: "done", more: message.stop_reason === "max_tokens", prompt });
-        } catch (err: any) {
-          console.error("Project builder generate stream error:", err);
-          send({ t: "error", error: err?.message || "حدث خطأ أثناء الاتصال بالذكاء الاصطناعي" });
-        } finally {
-          controller.close();
-        }
-      },
-    });
-
-    return new Response(responseBody, {
-      headers: {
-        "Content-Type": "application/x-ndjson; charset=utf-8",
-        "Cache-Control": "no-store",
-      },
-    });
+    return streamDocument([{ role: "user", content: prompt }], partial);
   } catch (err: any) {
     console.error("Project builder generate error:", err);
     return NextResponse.json(

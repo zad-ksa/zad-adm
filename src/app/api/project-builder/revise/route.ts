@@ -1,5 +1,4 @@
-import Anthropic from "@anthropic-ai/sdk";
-import { AI_WRITING } from "@/lib/aiModel";
+import { streamDocument } from "@/lib/aiDocumentStream";
 import { NextRequest, NextResponse } from "next/server";
 import { requirePermission, authErrorResponse } from "@/lib/guards";
 
@@ -47,22 +46,9 @@ export async function POST(req: NextRequest) {
 
     const messages = [...safeHistory, { role: "user" as const, content: message.trim() }];
 
-    const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
-    const result = await client.messages.create({
-      ...AI_WRITING,
-      max_tokens: 16000,
-      messages,
-    });
-
-    const textBlock = result.content.find((b) => b.type === "text");
-    const content = textBlock?.type === "text" ? textBlock.text : "";
-    if (!content) return NextResponse.json({ error: "لم يُنتج الذكاء الاصطناعي أي نص" }, { status: 502 });
-
-    return NextResponse.json({
-      content,
-      truncated: result.stop_reason === "max_tokens",
-      history: [...messages, { role: "assistant", content }],
-    });
+    // الوثيقةُ المعدَّلة تُكتب كاملةً، وقد تطول — فتُبثّ وتُكمل كالتوليد.
+    const partial = typeof body.partial === "string" ? body.partial.trimEnd() : "";
+    return streamDocument(messages, partial);
   } catch (err: any) {
     console.error("Project builder revise error:", err);
     return NextResponse.json(

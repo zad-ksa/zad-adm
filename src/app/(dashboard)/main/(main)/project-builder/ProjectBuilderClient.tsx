@@ -56,7 +56,7 @@ async function readGenerateStream(
   onText: (full: string) => void,
   /** ما كُتب في الدفعات السابقة — تُكمله هذه الدفعة. */
   before = ""
-): Promise<{ content: string; more: boolean; prompt: string }> {
+): Promise<{ content: string; more: boolean; base: HistoryMsg[] }> {
   if (!(res.headers.get("content-type") || "").includes("ndjson") || !res.body) {
     const data = await readJson(res);
     throw new Error(data?.error || "تعذّر توليد الوثيقة");
@@ -67,7 +67,7 @@ async function readGenerateStream(
   // والخادمُ أكمل من النصِّ بلا فراغه الأخير، فيُبنى عليه كذلك.
   // والدفعةُ التالية تبدأ سطراً جديداً (السابقةُ قُطعت عند آخر سطرٍ كامل).
   let content = before.trim() ? before.trimEnd() + "\n" : "";
-  let done: { more: boolean; prompt: string } | null = null;
+  let done: { more: boolean; base: HistoryMsg[] } | null = null;
 
   const handle = (line: string) => {
     if (!line.trim()) return;
@@ -76,7 +76,7 @@ async function readGenerateStream(
       content += msg.text;
       onText(content);
     } else if (msg.t === "done") {
-      done = { more: !!msg.more, prompt: String(msg.prompt || "") };
+      done = { more: !!msg.more, base: Array.isArray(msg.base) ? msg.base : [] };
     } else if (msg.t === "error") {
       throw new Error(msg.error || "تعذّر إكمال الوثيقة");
     }
@@ -94,7 +94,7 @@ async function readGenerateStream(
   }
   handle(buffer);
 
-  const finished = done as { more: boolean; prompt: string } | null;
+  const finished = done as { more: boolean; base: HistoryMsg[] } | null;
   if (!finished) {
     // انقطع البثُّ قبل «done» — مهلةُ الخادم أو الشبكة.
     throw new Error(
@@ -104,7 +104,43 @@ async function readGenerateStream(
     );
   }
   if (!content) throw new Error("لم يُنتج الذكاء الاصطناعي أي نص");
-  return { content, more: finished.more, prompt: finished.prompt };
+  return { content, more: finished.more, base: finished.base };
+}
+
+/**
+ * يكتب وثيقةً كاملةً عبر أحد مسارات الكتابة (توليد، تعديل، إعادة بناء). الخادمُ
+ * يكتبها في طلبٍ واحدٍ ما أمكن؛ فإن قاربت مهلتَه أوقفها، فتُقطع هنا عند آخر فقرةٍ
+ * كاملة ويُطلب إكمالُها — فلا تُبنى دفعةٌ على كلمةٍ أو جدولٍ مبتور.
+ */
+async function writeDocument(
+  url: string,
+  request: Record<string, unknown>,
+  onText: (full: string) => void = () => {}
+): Promise<{ content: string; truncated: boolean; history: HistoryMsg[] }> {
+  const MAX_SEGMENTS = 6;
+  let data = { content: "", more: true, base: [] as HistoryMsg[] };
+  for (let segment = 0; segment < MAX_SEGMENTS && data.more; segment++) {
+    const res = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(segment === 0 ? request : { ...request, partial: data.content }),
+    });
+    data = await readGenerateStream(res, onText, data.content);
+    if (data.more) {
+      // آخرُ فقرةٍ كاملة: الفقراتُ والجداولُ تفصلها أسطرٌ فارغة، فلا يُقطع جدولٌ في وسطه.
+      const para = data.content.lastIndexOf("\n\n");
+      const line = data.content.lastIndexOf("\n");
+      const cut = para > 0 ? para : line;
+      if (cut > 0) data.content = data.content.slice(0, cut).trimEnd() + "\n";
+      onText(data.content);
+    }
+  }
+  return {
+    content: data.content,
+    // بقي ما يُكتب بعد آخر دفعة: الوثيقةُ مقطوعة.
+    truncated: data.more,
+    history: [...data.base, { role: "assistant", content: data.content }],
+  };
 }
 
 async function readJson(res: Response): Promise<any> {
@@ -320,40 +356,12 @@ function CreateTab({
         budget,
         directives,
       };
-      // الوثيقةُ تُكتب دفعاتٍ: كلُّ دفعةٍ تُكمل ما قبلها، حتى يكتمل النصّ أو تبلغ
-      // الحدَّ الأعلى — فلا تتجاوز أيٌّ منها مهلةَ الخادم.
-      const MAX_SEGMENTS = 5;
-      let data = { content: "", more: true, prompt: "" };
-      for (let segment = 0; segment < MAX_SEGMENTS && data.more; segment++) {
-        const res = await fetch("/api/project-builder/generate", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(segment === 0 ? request : { ...request, partial: data.content }),
-        });
-        data = await readGenerateStream(res, setLiveText, data.content);
-        // الدفعةُ تنقطع عند حدِّها ولو في منتصف كلمة («**قاعدة ب»)، فيُكمل النموذجُ
-        // في سطرٍ جديد وتنكسر الكلمة والغامق. فيُحذف السطرُ الناقص الأخير لتبدأ
-        // الدفعةُ التالية سطراً كاملاً.
-        if (data.more) {
-          const cut = data.content.lastIndexOf("\n");
-          if (cut > 0) data.content = data.content.slice(0, cut + 1);
-        }
-      }
+      const doc = await writeDocument("/api/project-builder/generate", request, setLiveText);
       const selectedCharity = charities.find((c) => c.id === charityId) || null;
       // لا اسم محدَّد؟ عنوانٌ مؤقّت من فكرة المبادرة بدل عنوانٍ فارغ — قابل
       // للتعديل لاحقاً من نافذة "حفظ في سجلّي" على أي حال.
       const title = programName.trim() || programIdea.trim().slice(0, 40) || "وثيقة مبادرة";
-      onPreview(
-        data.content,
-        title,
-        [
-          { role: "user", content: data.prompt },
-          { role: "assistant", content: data.content },
-        ],
-        selectedCharity,
-        // بقي ما يُكتب بعد آخر دفعة: الوثيقةُ مقطوعة.
-        data.more
-      );
+      onPreview(doc.content, title, doc.history, selectedCharity, doc.truncated);
     } catch (e: any) {
       setError(e.message || "حدث خطأ غير متوقع");
     } finally {
@@ -646,14 +654,8 @@ function AnalyzeTab({
     const removals = (result.extra || []).filter((_, i) => removeExtra[i]).map((e) => e.item);
     const additions = (result.missing || []).filter((_, i) => addMissing[i]).map((m) => `${m.section}: ${m.suggestion}`);
     try {
-      const res = await fetch("/api/project-builder/restructure", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text, removals, additions, directives }),
-      });
-      const data = await readJson(res);
-      if (!res.ok) throw new Error(data?.error || "تعذّرت إعادة البناء");
-      onDone(data.content, "وثيقة معاد بناؤها", data.history || [], null, !!data.truncated);
+      const doc = await writeDocument("/api/project-builder/restructure", { text, removals, additions, directives });
+      onDone(doc.content, "وثيقة معاد بناؤها", doc.history, null, doc.truncated);
     } catch (e: any) {
       setError(e.message || "حدث خطأ أثناء إعادة البناء");
     } finally {
@@ -902,14 +904,8 @@ function PreviewPane({
     if (!editReq.trim()) return;
     setRevising(true);
     try {
-      const res = await fetch("/api/project-builder/revise", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ history, message: editReq.trim() }),
-      });
-      const data = await readJson(res);
-      if (!res.ok) throw new Error(data?.error || "تعذّر التعديل");
-      onRevised(data.content, data.history || history, !!data.truncated);
+      const doc = await writeDocument("/api/project-builder/revise", { history, message: editReq.trim() });
+      onRevised(doc.content, doc.history, doc.truncated);
       setEditReq("");
     } catch (e: any) {
       notify("error", e.message || "حدث خطأ أثناء التعديل");

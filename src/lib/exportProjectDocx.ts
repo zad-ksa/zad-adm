@@ -76,27 +76,51 @@ function buildTable(rows: string[]) {
   const cols = Math.max(...cells.map((r) => r.length));
   const border = { style: BorderStyle.SINGLE, size: 4, color: "BFBFBF" } as const;
 
+  const cell = (text: string, opts: { header?: boolean; group?: boolean; span?: number }) =>
+    new TableCell({
+      columnSpan: opts.span && opts.span > 1 ? opts.span : undefined,
+      borders: { top: border, bottom: border, left: border, right: border },
+      shading: opts.header
+        ? { type: ShadingType.CLEAR, fill: NAVY, color: "auto" }
+        : opts.group
+          ? { type: ShadingType.CLEAR, fill: "EEF1F6", color: "auto" }
+          : undefined,
+      margins: { top: 80, bottom: 80, left: 100, right: 100 },
+      children: [
+        para(text.replace(/^\*\*(.*)\*\*$/, "$1"), {
+          bold: opts.header || opts.group,
+          color: opts.header ? "FFFFFF" : undefined,
+          size: 22,
+          after: 0,
+          center: true,
+        }),
+      ],
+    });
+
   return new Table({
     visuallyRightToLeft: true,
     width: { size: 100, type: WidthType.PERCENTAGE },
-    rows: cells.map(
-      (row, ri) =>
-        new TableRow({
-          tableHeader: ri === 0,
-          children: Array.from(
-            { length: cols },
-            (_, ci) =>
-              new TableCell({
-                borders: { top: border, bottom: border, left: border, right: border },
-                shading: ri === 0 ? { type: ShadingType.CLEAR, fill: NAVY, color: "auto" } : undefined,
-                margins: { top: 80, bottom: 80, left: 100, right: 100 },
-                children: [
-                  para(row[ci] || "", { bold: ri === 0, color: ri === 0 ? "FFFFFF" : undefined, size: 22, after: 0 }),
-                ],
-              })
-          ),
-        })
-    ),
+    rows: cells.map((raw, ri) => {
+      const row = Array.from({ length: cols }, (_, ci) => raw[ci] ?? "");
+      if (ri === 0) return new TableRow({ tableHeader: true, children: row.map((t) => cell(t, { header: true })) });
+
+      // صفُّ تصنيفٍ أو مجموعٍ («٢ | العبوات والتغليف | | | |»، «| المجموع الجزئي | | | ٢٢٨,٠٥٠»):
+      // خانتان فارغتان فأكثر — فكلُّ خانةٍ ذاتِ نصٍّ تُدمج مع الفارغات بعدها، والفارغاتُ
+      // في أوّل الصفّ تُضمّ إلى أوّل خانةٍ ذاتِ نصّ.
+      const empties = row.filter((t) => !t).length;
+      const filled = row.some((t) => t);
+      if (empties >= 2 && filled && cols > 2) {
+        const spans: { text: string; span: number }[] = [];
+        let lead = 0;
+        for (const t of row) {
+          if (t) spans.push({ text: t, span: 1 + lead }), (lead = 0);
+          else if (spans.length) spans[spans.length - 1].span++;
+          else lead++;
+        }
+        return new TableRow({ children: spans.map((s) => cell(s.text, { group: true, span: s.span })) });
+      }
+      return new TableRow({ children: row.map((t) => cell(t, {})) });
+    }),
   });
 }
 

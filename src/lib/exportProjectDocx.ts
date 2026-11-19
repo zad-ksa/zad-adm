@@ -47,6 +47,8 @@ function para(
     color?: string;
     size?: number;
     after?: number;
+    /** فراغٌ فوق الفقرة (بالـtwip) — العناوين تنفصل به عمّا قبلها. */
+    before?: number;
     bullet?: boolean;
     underlineGold?: boolean;
     center?: boolean;
@@ -59,7 +61,7 @@ function para(
     keepNext: opts.keepNext,
     keepLines: opts.keepNext,
     alignment: opts.center ? AlignmentType.CENTER : AlignmentType.RIGHT,
-    spacing: { after: opts.after ?? 120, line: 360 },
+    spacing: { before: opts.before ?? 0, after: opts.after ?? 120, line: 360 },
     bullet: opts.bullet ? { level: 0 } : undefined,
     border: opts.underlineGold
       ? { bottom: { style: BorderStyle.SINGLE, size: 8, color: GOLD, space: 4 } }
@@ -127,17 +129,26 @@ export function markdownToDocx(md: string, { plainBullets = false }: { plainBull
     let m: RegExpMatchArray | null;
     // العناوين كلُّها في الوسط — قرارُ تنسيقٍ يُفرض هنا لا في البرومبت.
     if ((m = line.match(/^#\s+(.*)/)))
-      children.push(para(m[1], { bold: true, color: NAVY, size: 36, after: 240, center: true, keepNext: true }));
+      children.push(para(m[1], { bold: true, color: NAVY, size: 36, before: 240, after: 240, center: true, keepNext: true }));
     else if ((m = line.match(/^##\s+(.*)/)))
       children.push(
-        para(m[1], { bold: true, color: NAVY, size: 30, after: 160, underlineGold: true, center: true, keepNext: true })
+        para(m[1], {
+          bold: true,
+          color: NAVY,
+          size: 30,
+          before: 360,
+          after: 160,
+          underlineGold: true,
+          center: true,
+          keepNext: true,
+        })
       );
     else if ((m = line.match(/^#{3,}\s+(.*)/)))
-      children.push(para(m[1], { bold: true, color: GOLD, size: 26, center: true, keepNext: true }));
+      children.push(para(m[1], { bold: true, color: GOLD, size: 26, before: 240, center: true, keepNext: true }));
     else if ((m = line.match(/^[-*•]\s+(.*)/)))
       children.push(plainBullets ? para(`• ${m[1]}`) : para(m[1], { bullet: true }));
     // سطرٌ غامقٌ كلُّه أو منتهٍ بنقطتين («**الهدف العام:**») عنوانٌ صغير — يلزم ما بعده.
-    else if (/^\*\*[^*]+\*\*:?$/.test(line) || /^[^|]{1,60}:$/.test(line)) children.push(para(line, { keepNext: true }));
+    else if (/^\*\*[^*]+\*\*:?$/.test(line) || /^[^|]{1,60}:$/.test(line)) children.push(para(line, { before: 160, keepNext: true }));
     else children.push(para(line));
   }
   flushTable();

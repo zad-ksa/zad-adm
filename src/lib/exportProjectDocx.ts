@@ -42,10 +42,22 @@ function runs(text: string, opts: { bold?: boolean; color?: string; size?: numbe
 
 function para(
   text: string,
-  opts: { bold?: boolean; color?: string; size?: number; after?: number; bullet?: boolean; underlineGold?: boolean; center?: boolean } = {}
+  opts: {
+    bold?: boolean;
+    color?: string;
+    size?: number;
+    after?: number;
+    bullet?: boolean;
+    underlineGold?: boolean;
+    center?: boolean;
+    /** عنوانٌ لا يُترك وحده آخرَ الصفحة: Word ينقله مع ما بعده إلى الصفحة التالية. */
+    keepNext?: boolean;
+  } = {}
 ) {
   return new Paragraph({
     bidirectional: true,
+    keepNext: opts.keepNext,
+    keepLines: opts.keepNext,
     alignment: opts.center ? AlignmentType.CENTER : AlignmentType.RIGHT,
     spacing: { after: opts.after ?? 120, line: 360 },
     bullet: opts.bullet ? { level: 0 } : undefined,
@@ -115,13 +127,17 @@ export function markdownToDocx(md: string, { plainBullets = false }: { plainBull
     let m: RegExpMatchArray | null;
     // العناوين كلُّها في الوسط — قرارُ تنسيقٍ يُفرض هنا لا في البرومبت.
     if ((m = line.match(/^#\s+(.*)/)))
-      children.push(para(m[1], { bold: true, color: NAVY, size: 36, after: 240, center: true }));
+      children.push(para(m[1], { bold: true, color: NAVY, size: 36, after: 240, center: true, keepNext: true }));
     else if ((m = line.match(/^##\s+(.*)/)))
-      children.push(para(m[1], { bold: true, color: NAVY, size: 30, after: 160, underlineGold: true, center: true }));
+      children.push(
+        para(m[1], { bold: true, color: NAVY, size: 30, after: 160, underlineGold: true, center: true, keepNext: true })
+      );
     else if ((m = line.match(/^#{3,}\s+(.*)/)))
-      children.push(para(m[1], { bold: true, color: GOLD, size: 26, center: true }));
+      children.push(para(m[1], { bold: true, color: GOLD, size: 26, center: true, keepNext: true }));
     else if ((m = line.match(/^[-*•]\s+(.*)/)))
       children.push(plainBullets ? para(`• ${m[1]}`) : para(m[1], { bullet: true }));
+    // سطرٌ غامقٌ كلُّه أو منتهٍ بنقطتين («**الهدف العام:**») عنوانٌ صغير — يلزم ما بعده.
+    else if (/^\*\*[^*]+\*\*:?$/.test(line) || /^[^|]{1,60}:$/.test(line)) children.push(para(line, { keepNext: true }));
     else children.push(para(line));
   }
   flushTable();

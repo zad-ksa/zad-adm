@@ -139,14 +139,8 @@ export default function DonorFileClient({
         </div>
         <div>
           <p className="text-caption text-slate-500 dark:text-slate-400">كلمة المرور</p>
-          {donor.password ? (
-            <span className="inline-flex items-center gap-1.5">
-              <CopyButton value={donor.password} title="نسخ كلمة المرور" />
-              <SecretValue value={donor.password} />
-            </span>
-          ) : (
-            <span className="text-body text-slate-400">—</span>
-          )}
+          {/* و`SecretValue` تحمل الكشفَ والنسخَ معاً — فلا زرَّ ثانٍ بجانبها. */}
+          <SecretValue value={donor.password} emptyLabel="—" />
         </div>
         <button
           type="button"

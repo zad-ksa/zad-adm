@@ -420,12 +420,9 @@ export default function DonorDetail({
                       </span>
                     </td>
                     <td className={tdClass}>
-                      {/* النسخُ قبل الكشف: الحاجةُ الغالبةُ لصقُها في بوّابة الجهة،
-                          وكشفُها على شاشةٍ مفتوحةٍ لا يلزم لذلك. */}
-                      <span className="inline-flex items-center gap-1.5">
-                        <CopyButton value={row.password} title="نسخ كلمة المرور" />
-                        <SecretValue value={row.password} />
-                      </span>
+                      {/* والنسخُ قبل الكشف من `SecretValue` نفسِها: فيها الزرّان،
+                          فزرٌّ ثانٍ بجانبها تكرار. */}
+                      <SecretValue value={row.password} />
                     </td>
                     <td className={tdClass}>
                       <span className="flex items-center gap-1">

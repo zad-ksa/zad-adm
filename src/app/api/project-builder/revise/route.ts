@@ -2,6 +2,10 @@ import Anthropic from "@anthropic-ai/sdk";
 import { NextRequest, NextResponse } from "next/server";
 import { requirePermission, authErrorResponse } from "@/lib/guards";
 
+// وثيقةٌ كاملةٌ تستغرق دقائق: بلا هذا يقطعها Vercel عند مهلته الافتراضية فيُرجع
+// صفحةَ خطأٍ HTML بدل JSON، فتظهر للمستخدم «Unexpected token <».
+export const maxDuration = 300;
+
 /**
  * يكمل محادثة توليد وثيقة قائمة بطلب تعديل — بلا إعادة بناء البرومبت العام،
  * فقط استئناف ما أعاده /generate (أو /analyze عند "إعادة بناء الوثيقة").

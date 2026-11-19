@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Sparkles,
   Search,
@@ -41,6 +41,82 @@ import {
 import { MAX_PASTED_DOCUMENT_CHARS, type ProjectBuilderPreference } from "@/lib/projectBuilder";
 import { exportProjectDocx } from "@/lib/exportProjectDocx";
 import DateField from "@/components/console/DateField";
+
+/**
+ * ردُّ الخادم JSON — أو رسالةٌ تُفهم إن لم يكن: مهلةٌ انقضت قبل اكتمال الوثيقة
+ * تُرجع صفحةَ خطأٍ HTML، فكانت تظهر للمستخدم «Unexpected token <».
+ */
+/**
+ * قراءةُ وثيقةٍ تُبثّ سطراً سطراً من /generate، مع إبلاغ الشاشة بكل قطعة.
+ * وإن لم يكن الردُّ بثّاً (خطأُ صلاحيةٍ أو بياناتٍ قبل البدء) قُرئ JSON ورُمي خطؤه.
+ */
+async function readGenerateStream(
+  res: Response,
+  onText: (full: string) => void,
+  /** ما كُتب في الدفعات السابقة — تُكمله هذه الدفعة. */
+  before = ""
+): Promise<{ content: string; more: boolean; prompt: string }> {
+  if (!(res.headers.get("content-type") || "").includes("ndjson") || !res.body) {
+    const data = await readJson(res);
+    throw new Error(data?.error || "تعذّر توليد الوثيقة");
+  }
+  const reader = res.body.getReader();
+  const decoder = new TextDecoder();
+  let buffer = "";
+  // والخادمُ أكمل من النصِّ بلا فراغه الأخير، فيُبنى عليه كذلك.
+  let content = before.trimEnd();
+  let done: { more: boolean; prompt: string } | null = null;
+
+  const handle = (line: string) => {
+    if (!line.trim()) return;
+    const msg = JSON.parse(line);
+    if (msg.t === "delta") {
+      content += msg.text;
+      onText(content);
+    } else if (msg.t === "done") {
+      done = { more: !!msg.more, prompt: String(msg.prompt || "") };
+    } else if (msg.t === "error") {
+      throw new Error(msg.error || "تعذّر إكمال الوثيقة");
+    }
+  };
+
+  for (;;) {
+    const { value, done: ended } = await reader.read();
+    if (value) buffer += decoder.decode(value, { stream: true });
+    let nl: number;
+    while ((nl = buffer.indexOf("\n")) >= 0) {
+      handle(buffer.slice(0, nl));
+      buffer = buffer.slice(nl + 1);
+    }
+    if (ended) break;
+  }
+  handle(buffer);
+
+  const finished = done as { more: boolean; prompt: string } | null;
+  if (!finished) {
+    // انقطع البثُّ قبل «done» — مهلةُ الخادم أو الشبكة.
+    throw new Error(
+      content
+        ? "انقطع الاتصال قبل اكتمال الوثيقة. جرّب مرة أخرى."
+        : "استغرق إعداد الوثيقة وقتاً أطول من المسموح فتوقف الخادم. جرّب مرة أخرى."
+    );
+  }
+  if (!content) throw new Error("لم يُنتج الذكاء الاصطناعي أي نص");
+  return { content, more: finished.more, prompt: finished.prompt };
+}
+
+async function readJson(res: Response): Promise<any> {
+  const text = await res.text();
+  try {
+    return JSON.parse(text);
+  } catch {
+    if (res.status === 504 || /timeout/i.test(text)) {
+      throw new Error("استغرق إعداد الوثيقة وقتاً أطول من المسموح فتوقف الخادم. جرّب مرة أخرى، أو اختصر البرومبت أو عدد المحاور.");
+    }
+    throw new Error(`تعذّر قراءة رد الخادم (رمز ${res.status}). جرّب مرة أخرى.`);
+  }
+}
+
 
 // `field` يثبّت ارتفاع سطر واحد (h-9) — لا يصلح لمربع نص متعدد الأسطر، وتركيب
 // صنف h-auto بعده لا يضمن الغلبة لأن ترتيب أصناف Tailwind في الورقة المولَّدة
@@ -183,6 +259,8 @@ function CreateTab({
   const [budget, setBudget] = useState({ include: true, total: "", reserve: false });
   const [directives, setDirectives] = useState<string[]>([]);
   const [submitting, setSubmitting] = useState(false);
+  // ما كُتب من الوثيقة حتى الآن — يُعرض حيّاً أثناء الصياغة.
+  const [liveText, setLiveText] = useState("");
   const [error, setError] = useState("");
 
   useEffect(() => {
@@ -221,35 +299,52 @@ function CreateTab({
 
   const handleSubmit = async () => {
     setError("");
+    setLiveText("");
     setSubmitting(true);
     try {
-      const res = await fetch("/api/project-builder/generate", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          charityId,
-          programName: programName.trim(),
-          programIdea: programIdea.trim(),
-          // فارغ = استعمل القيمة المحفوظة في ملفّ الجمعية؛ غير فارغ = تجاوزها
-          // لهذه الوثيقة فقط، بلا أي تعديل على الملفّ نفسه.
-          cityOverride: cityOverride.trim(),
-          beneficiariesCount: beneficiariesCount.trim(),
-          programDuration: programDuration.trim(),
-          targetCategory: targetCategory.trim(),
-          startDate,
-          endDate,
-          preferences: Object.keys(preferences).filter((k) => preferences[k]),
-          budget,
-          directives,
-        }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data?.error || "تعذّر توليد الوثيقة");
+      const request = {
+        charityId,
+        programName: programName.trim(),
+        programIdea: programIdea.trim(),
+        // فارغ = استعمل القيمة المحفوظة في ملفّ الجمعية؛ غير فارغ = تجاوزها
+        // لهذه الوثيقة فقط، بلا أي تعديل على الملفّ نفسه.
+        cityOverride: cityOverride.trim(),
+        beneficiariesCount: beneficiariesCount.trim(),
+        programDuration: programDuration.trim(),
+        targetCategory: targetCategory.trim(),
+        startDate,
+        endDate,
+        preferences: Object.keys(preferences).filter((k) => preferences[k]),
+        budget,
+        directives,
+      };
+      // الوثيقةُ تُكتب دفعاتٍ: كلُّ دفعةٍ تُكمل ما قبلها، حتى يكتمل النصّ أو تبلغ
+      // الحدَّ الأعلى — فلا تتجاوز أيٌّ منها مهلةَ الخادم.
+      const MAX_SEGMENTS = 5;
+      let data = { content: "", more: true, prompt: "" };
+      for (let segment = 0; segment < MAX_SEGMENTS && data.more; segment++) {
+        const res = await fetch("/api/project-builder/generate", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(segment === 0 ? request : { ...request, partial: data.content }),
+        });
+        data = await readGenerateStream(res, setLiveText, data.content);
+      }
       const selectedCharity = charities.find((c) => c.id === charityId) || null;
       // لا اسم محدَّد؟ عنوانٌ مؤقّت من فكرة المبادرة بدل عنوانٍ فارغ — قابل
       // للتعديل لاحقاً من نافذة "حفظ في سجلّي" على أي حال.
       const title = programName.trim() || programIdea.trim().slice(0, 40) || "وثيقة مبادرة";
-      onPreview(data.content, title, data.history || [], selectedCharity, !!data.truncated);
+      onPreview(
+        data.content,
+        title,
+        [
+          { role: "user", content: data.prompt },
+          { role: "assistant", content: data.content },
+        ],
+        selectedCharity,
+        // بقي ما يُكتب بعد آخر دفعة: الوثيقةُ مقطوعة.
+        data.more
+      );
     } catch (e: any) {
       setError(e.message || "حدث خطأ غير متوقع");
     } finally {
@@ -446,10 +541,13 @@ function CreateTab({
 
       {error && <Note tone="warn">{error}</Note>}
 
+      {submitting && liveText && <LiveDraft text={liveText} />}
+
       <button type="button" onClick={handleSubmit} disabled={!ready || submitting} className={`${btn.primary} w-full`}>
         {submitting ? (
           <>
-            <Loader2 className="size-4 animate-spin" /> جارٍ الصياغة…
+            <Loader2 className="size-4 animate-spin" />{" "}
+            {liveText ? `جارٍ الكتابة… ${countWords(liveText)} كلمة` : "جارٍ الصياغة…"}
           </>
         ) : (
           <>
@@ -457,6 +555,41 @@ function CreateTab({
           </>
         )}
       </button>
+    </div>
+  );
+}
+
+/** عددُ كلمات النصّ — مؤشّرُ تقدّمٍ يُفهم بلا معرفةٍ بالرموز. */
+function countWords(text: string) {
+  return text.split(/\s+/).filter(Boolean).length;
+}
+
+/**
+ * الوثيقةُ وهي تُكتب: آخرُ ما كُتب ظاهرٌ دائماً، والمحورُ الجاري في رأسها.
+ */
+function LiveDraft({ text }: { text: string }) {
+  const ref = useRef<HTMLPreElement>(null);
+  useEffect(() => {
+    const el = ref.current;
+    if (el) el.scrollTop = el.scrollHeight;
+  }, [text]);
+  const headings = text.match(/^#{1,3} .+$/gm) ?? [];
+  const current = headings.length ? headings[headings.length - 1].replace(/^#+\s*/, "") : "";
+  return (
+    <div className="overflow-hidden rounded-xl border border-primary/25 bg-primary/5">
+      <div className="flex items-center justify-between gap-2 border-b border-primary/15 px-4 py-2 text-meta">
+        <span className="font-semibold text-primary dark:text-teal-300">
+          الوثيقة قيد الكتابة{current ? ` — ${current}` : ""}
+        </span>
+        <span className="text-slate-500 dark:text-slate-400">{headings.length} عنوان</span>
+      </div>
+      <pre
+        ref={ref}
+        dir="rtl"
+        className="max-h-72 overflow-y-auto whitespace-pre-wrap px-4 py-3 font-sans text-meta leading-6 text-slate-700 dark:text-slate-200"
+      >
+        {text}
+      </pre>
     </div>
   );
 }
@@ -485,7 +618,7 @@ function AnalyzeTab({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ text }),
       });
-      const data = await res.json();
+      const data = await readJson(res);
       if (!res.ok) throw new Error(data?.error || "تعذّر التحليل");
       setResult(data.result);
       setRemoveExtra({});
@@ -509,7 +642,7 @@ function AnalyzeTab({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ text, removals, additions, directives }),
       });
-      const data = await res.json();
+      const data = await readJson(res);
       if (!res.ok) throw new Error(data?.error || "تعذّرت إعادة البناء");
       onDone(data.content, "وثيقة معاد بناؤها", data.history || [], null, !!data.truncated);
     } catch (e: any) {
@@ -765,7 +898,7 @@ function PreviewPane({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ history, message: editReq.trim() }),
       });
-      const data = await res.json();
+      const data = await readJson(res);
       if (!res.ok) throw new Error(data?.error || "تعذّر التعديل");
       onRevised(data.content, data.history || history, !!data.truncated);
       setEditReq("");

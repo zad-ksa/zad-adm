@@ -4,6 +4,13 @@ import { requirePermission, authErrorResponse } from "@/lib/guards";
 import { prisma } from "@/lib/db";
 import { normalizeProjectBuilderOptions, buildProjectPrompt, type ProjectBuilderBudget } from "@/lib/projectBuilder";
 
+// وثيقةٌ كاملةٌ تستغرق دقائق: بلا هذا يقطعها Vercel عند مهلته الافتراضية فيُرجع
+// صفحةَ خطأٍ HTML بدل JSON، فتظهر للمستخدم «Unexpected token <».
+export const maxDuration = 300;
+
+/** رموزُ الدفعة الواحدة: نحو دقيقتين من الكتابة، فتبقى كلُّ دفعةٍ دون المهلة بفارقٍ واسع. */
+const SEGMENT_TOKENS = 6000;
+
 /**
  * يصوغ وثيقة مبادرة جديدة بالذكاء الاصطناعي.
  *
@@ -112,27 +119,52 @@ export async function POST(req: NextRequest) {
     }
 
     const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
-    const message = await client.messages.create({
-      model: "claude-haiku-4-5-20251001",
-      // وثيقة مبادرة كاملة بأربعة عشر عنصراً مفصّلاً (جداول، مصفوفات، ميزانية) تتجاوز
-      // غالباً 8000 رمزاً بالعربية فتُقطَع قبل آخر عنصر (الميزانية) بصمت — هذا السقف
-      // لا يكلّف شيئاً إضافياً ما لم يُستعمَل فعلاً، فرفعه آمن.
-      max_tokens: 16000,
-      messages: [{ role: "user", content: prompt }],
+
+    // **الوثيقةُ تُكتب على دفعات**: وثيقةٌ عربيّةٌ بعشرين محوراً تتجاوز مهلةَ
+    // الخادم (٣٠٠ ثانية) لو كُتبت في طلبٍ واحد. فكلُّ طلبٍ يكتب دفعةً محدودة
+    // (`SEGMENT_TOKENS`)، والمتصفّحُ يطلب التالية بما كُتب حتى الآن (`partial`)
+    // فيُكمل النموذجُ من حيث وقف. والبرومبتُ يُبنى هنا في كلِّ دفعةٍ من البيانات
+    // نفسِها، لا يُرسَل من المتصفّح.
+    //
+    // وتُبثّ الدفعةُ سطراً سطراً (NDJSON) كما تُكتب، كلُّ سطرٍ كائنٌ واحد:
+    //   { t: "delta", text }                 قطعةٌ جديدة من النصّ
+    //   { t: "done", more, prompt }          انتهت الدفعة؛ `more` = بقي ما يُكتب
+    //   { t: "error", error }                تعذّر الإكمال بعد البدء
+    // وأخطاءُ ما قبل البدء (صلاحية، بيانات ناقصة) تبقى JSON عادياً بحالته.
+    const partial = typeof body.partial === "string" ? body.partial.trimEnd() : "";
+    const encoder = new TextEncoder();
+    const responseBody = new ReadableStream<Uint8Array>({
+      async start(controller) {
+        const send = (obj: unknown) => controller.enqueue(encoder.encode(JSON.stringify(obj) + "\n"));
+        try {
+          const stream = client.messages.stream({
+            model: "claude-haiku-4-5-20251001",
+            max_tokens: SEGMENT_TOKENS,
+            messages: partial
+              ? [
+                  { role: "user", content: prompt },
+                  // ما كُتب حتى الآن بدايةً لردّ النموذج: فيُكمله حرفاً بعد حرف.
+                  { role: "assistant", content: partial },
+                ]
+              : [{ role: "user", content: prompt }],
+          });
+          stream.on("text", (text) => send({ t: "delta", text }));
+          const message = await stream.finalMessage();
+          send({ t: "done", more: message.stop_reason === "max_tokens", prompt });
+        } catch (err: any) {
+          console.error("Project builder generate stream error:", err);
+          send({ t: "error", error: err?.message || "حدث خطأ أثناء الاتصال بالذكاء الاصطناعي" });
+        } finally {
+          controller.close();
+        }
+      },
     });
 
-    const textBlock = message.content.find((b) => b.type === "text");
-    const content = textBlock?.type === "text" ? textBlock.text : "";
-    if (!content) return NextResponse.json({ error: "لم يُنتج الذكاء الاصطناعي أي نص" }, { status: 502 });
-
-    return NextResponse.json({
-      content,
-      truncated: message.stop_reason === "max_tokens",
-      // يُحفظ على العميل ليُستأنف منه عند طلب تعديل لاحق — بلا إعادة إرسال القالب.
-      history: [
-        { role: "user", content: prompt },
-        { role: "assistant", content },
-      ],
+    return new Response(responseBody, {
+      headers: {
+        "Content-Type": "application/x-ndjson; charset=utf-8",
+        "Cache-Control": "no-store",
+      },
     });
   } catch (err: any) {
     console.error("Project builder generate error:", err);

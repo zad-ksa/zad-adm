@@ -6,6 +6,8 @@ import { prisma } from "@/lib/db";
 import { revalidatePath } from "next/cache";
 import { requirePermission } from "@/lib/guards";
 import { logAudit } from "@/lib/auditLog";
+import { providerOf } from "@/lib/storage";
+import { storagePublicBase } from "@/lib/b2";
 import { normalizeProjectBuilderOptions, type ProjectBuilderOptions } from "@/lib/projectBuilder";
 
 const OPTIONS_KEY = "PROJECT_BUILDER_OPTIONS";
@@ -212,6 +214,16 @@ export async function getProjectBuilderCharityProfile(charityId: string) {
   }
 }
 
+/** كليشةُ الجمعية لتنزيل الوثيقة عليها — أو لا شيء إن لم تُرفع لها كليشة. */
+export async function getProjectBuilderLetterhead(charityId: string) {
+  await requirePermission("use_project_builder");
+  const profile = await prisma.projectBuilderCharityProfile.findUnique({
+    where: { charityId },
+    select: { letterheadUrl: true, letterheadName: true },
+  });
+  return profile?.letterheadUrl ? { url: profile.letterheadUrl, name: profile.letterheadName } : null;
+}
+
 /** للمتحكم: كل الجمعيات مع حالة ملفّها — ليرى مَن أُعدّت له البيانات ومَن لا. */
 export async function listProjectBuilderCharityProfiles() {
   await requirePermission("manage_project_builder");
@@ -229,7 +241,15 @@ export async function listProjectBuilderCharityProfiles() {
 
 export async function upsertProjectBuilderCharityProfile(
   charityId: string,
-  data: { vision: string; mission: string; strategicGoals: string; field: string; city: string }
+  data: {
+    vision: string;
+    mission: string;
+    strategicGoals: string;
+    field: string;
+    city: string;
+    letterheadUrl?: string | null;
+    letterheadName?: string | null;
+  }
 ) {
   let session;
   try {
@@ -237,6 +257,15 @@ export async function upsertProjectBuilderCharityProfile(
   } catch {
     return { success: false, error: "غير مصرح" };
   }
+
+  // الكليشةُ ملفٌّ من مخزننا وحدَه، ومستندُ Word حديث: رابطٌ آخرُ يُكتب باليد
+  // لا يُجلب منه شيءٌ عند التنزيل.
+  const letterheadUrl = (data.letterheadUrl ?? "").trim() || null;
+  if (letterheadUrl) {
+    if (!providerOf(letterheadUrl, storagePublicBase())) return { success: false, error: "رابط الكليشة غير صالح" };
+    if (!/\.docx$/i.test(data.letterheadName ?? "")) return { success: false, error: "الكليشة يجب أن تكون ملف Word بصيغة ‎.docx" };
+  }
+  data = { ...data, letterheadUrl, letterheadName: letterheadUrl ? (data.letterheadName ?? "").trim() || null : null };
 
   try {
     const profile = await prisma.projectBuilderCharityProfile.upsert({

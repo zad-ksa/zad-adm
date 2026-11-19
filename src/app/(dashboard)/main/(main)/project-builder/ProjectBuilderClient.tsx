@@ -31,6 +31,7 @@ import { confirmAction } from "@/components/console/confirmBus";
 import {
   getProjectBuilderCharities,
   getProjectBuilderCharityProfile,
+  getProjectBuilderLetterhead,
   getProjectBuilderPreferences,
   listMyProjectBuilderDocuments,
   getProjectBuilderDocument,
@@ -912,9 +913,20 @@ function PreviewPane({
   const handleExport = async () => {
     setExporting(true);
     try {
-      await exportProjectDocx(content, fileName || "وثيقة المبادرة");
-    } catch {
-      notify("error", "تعذّر إنشاء ملف الوورد.");
+      // كليشةُ الجمعية إن كانت لها كليشة: تُجلب من مخزننا عبر الخادم (نفسِ
+      // النطاق، فلا عائقَ CORS)، وتُصبّ فيها الوثيقة.
+      let letterhead: ArrayBuffer | null = null;
+      if (docCharity) {
+        const lh = await getProjectBuilderLetterhead(docCharity.id);
+        if (lh) {
+          const res = await fetch(`/api/files/download?url=${encodeURIComponent(lh.url)}`);
+          if (!res.ok) throw new Error("تعذّر تحميل كليشة الجمعية");
+          letterhead = await res.arrayBuffer();
+        }
+      }
+      await exportProjectDocx(content, fileName || "وثيقة المبادرة", letterhead);
+    } catch (e) {
+      notify("error", e instanceof Error && e.message ? e.message : "تعذّر إنشاء ملف الوورد.");
     } finally {
       setExporting(false);
     }

@@ -159,6 +159,10 @@ model ProjectBuilderCharityProfile {
   strategicGoals String?
   field          String?
   city           String?
+  /// كليشةُ الجمعية: مستندُ وورد تُصبّ فيه وثيقةُ المبادرة عند تنزيلها — رأسُه
+  /// وتذييلُه وهوامشُه وخلفيّتُه تبقى كما هي.
+  letterheadUrl  String?
+  letterheadName String?
   updatedAt      DateTime @updatedAt
   updatedById    String?
 }

@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Save, History, Eye, RotateCcw, Pencil, Trash2, CheckCircle2, Circle, Loader2, Plus } from "lucide-react";
+import { Save, History, Eye, RotateCcw, Pencil, Trash2, CheckCircle2, Circle, Loader2, Plus, FileText, Upload, X } from "lucide-react";
+import { uploadFile } from "@/lib/clientUpload";
 import { Dialog } from "@/components/console/Dialog";
 import { btn, field, Field, Note, Badge, SectionHeader } from "@/components/console/ui";
 import { notify } from "@/components/console/toastBus";
@@ -26,6 +27,8 @@ type CharityProfileFields = {
   strategicGoals: string | null;
   field: string | null;
   city: string | null;
+  letterheadUrl?: string | null;
+  letterheadName?: string | null;
 };
 type CharityRow = { id: string; name: string; projectBuilderProfile: CharityProfileFields | null };
 type PromptVersionSummary = {
@@ -426,7 +429,7 @@ function CharityProfileDialog({
   onClose: () => void;
   onSaved: (profile: CharityProfileFields | null) => void;
 }) {
-  const [form, setForm] = useState<Record<keyof CharityProfileFields, string>>({
+  const [form, setForm] = useState<Record<"vision" | "mission" | "strategicGoals" | "field" | "city", string>>({
     vision: charity.projectBuilderProfile?.vision || "",
     mission: charity.projectBuilderProfile?.mission || "",
     strategicGoals: charity.projectBuilderProfile?.strategicGoals || "",
@@ -434,14 +437,41 @@ function CharityProfileDialog({
     city: charity.projectBuilderProfile?.city || "",
   });
   const [saving, setSaving] = useState(false);
+  const [letterhead, setLetterhead] = useState<{ url: string; name: string } | null>(
+    charity.projectBuilderProfile?.letterheadUrl
+      ? { url: charity.projectBuilderProfile.letterheadUrl, name: charity.projectBuilderProfile.letterheadName || "الكليشة.docx" }
+      : null
+  );
+  const [uploading, setUploading] = useState(false);
 
-  const set = (k: keyof CharityProfileFields) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
+  const pickLetterhead = async (file: File | undefined) => {
+    if (!file) return;
+    if (!/\.docx$/i.test(file.name)) {
+      notify("error", "الكليشة يجب أن تكون ملف Word بصيغة .docx — احفظها من Word بهذه الصيغة.");
+      return;
+    }
+    setUploading(true);
+    try {
+      const uploaded = await uploadFile(file, "project_letterhead");
+      setLetterhead({ url: uploaded.url, name: file.name });
+    } catch (e) {
+      notify("error", e instanceof Error ? e.message : "تعذّر رفع الكليشة");
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const set = (k: "vision" | "mission" | "strategicGoals" | "field" | "city") => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
     setForm((p) => ({ ...p, [k]: e.target.value }));
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
-    const res = await upsertProjectBuilderCharityProfile(charity.id, form);
+    const res = await upsertProjectBuilderCharityProfile(charity.id, {
+      ...form,
+      letterheadUrl: letterhead?.url ?? null,
+      letterheadName: letterhead?.name ?? null,
+    });
     setSaving(false);
     if (res.success) {
       notify("ok", `حُفظت معلومات «${charity.name}».`);
@@ -459,14 +489,14 @@ function CharityProfileDialog({
       title={`معلومات «${charity.name}» الثابتة`}
       description="تُعبّأ تلقائياً في الأداة عند اختيار هذه الجمعية، ولا يعدّلها أحدٌ غيرك."
       size="lg"
-      busy={saving}
+      busy={saving || uploading}
       onSubmit={handleSubmit}
       footer={
         <>
           <button type="button" onClick={onClose} disabled={saving} className={btn.secondary}>
             إلغاء
           </button>
-          <button type="submit" disabled={saving} className={btn.primary}>
+          <button type="submit" disabled={saving || uploading} className={btn.primary}>
             {saving ? <Loader2 className="size-4 animate-spin" /> : <Save className="size-4" />} حفظ
           </button>
         </>
@@ -489,6 +519,44 @@ function CharityProfileDialog({
           <Field id="cp-city" label="المنطقة / المدينة">
             <input id="cp-city" value={form.city} onChange={set("city")} placeholder="مثال: الرياض" className={field} />
           </Field>
+        </div>
+
+        <div className="space-y-2 rounded-lg border border-dashed border-slate-300 p-3 dark:border-slate-700">
+          <div className="text-body font-medium text-slate-700 dark:text-slate-300">كليشة الجمعية (اختياري)</div>
+          <p className="text-caption text-slate-500 dark:text-slate-400">
+            مستند Word ‎(.docx) فيه رأس الجمعية وتذييلها وشعارها. عند تنزيل وثيقة المبادرة بصيغة Word تُكتب داخل هذه
+            الكليشة، فيبقى الرأس والتذييل والهوامش كما صُمّمت.
+          </p>
+          {letterhead ? (
+            <div className="flex items-center gap-2 rounded-md border border-slate-200 px-3 py-2 dark:border-slate-700">
+              <FileText className="size-4 shrink-0 text-primary" />
+              <a
+                href={letterhead.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="min-w-0 flex-1 truncate text-meta text-primary hover:underline"
+              >
+                {letterhead.name}
+              </a>
+              <button type="button" onClick={() => setLetterhead(null)} className={btn.icon} title="إزالة الكليشة">
+                <X className="size-4" />
+              </button>
+            </div>
+          ) : null}
+          <label className={`${btn.secondary} cursor-pointer`}>
+            {uploading ? <Loader2 className="size-4 animate-spin" /> : <Upload className="size-4" />}
+            {letterhead ? "استبدال الكليشة" : "رفع الكليشة"}
+            <input
+              type="file"
+              accept=".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+              className="hidden"
+              disabled={uploading}
+              onChange={(e) => {
+                void pickLetterhead(e.target.files?.[0]);
+                e.target.value = "";
+              }}
+            />
+          </label>
         </div>
       </div>
     </Dialog>

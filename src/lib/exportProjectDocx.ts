@@ -15,6 +15,7 @@ import {
   BorderStyle,
   ShadingType,
 } from "docx";
+import { mergeIntoLetterhead } from "./letterheadDocx";
 
 const NAVY = "1F3864";
 const GOLD = "BF8F00";
@@ -82,7 +83,11 @@ function buildTable(rows: string[]) {
   });
 }
 
-export function markdownToDocx(md: string) {
+/**
+ * @param plainBullets نقاطٌ مكتوبةٌ «• » لا قائمةٌ من Word: القائمةُ تحتاج تعريفَ
+ *   ترقيمٍ لا تحمله الكليشة، فتُكتب النقطةُ نصّاً حين تُصبّ فيها.
+ */
+export function markdownToDocx(md: string, { plainBullets = false }: { plainBullets?: boolean } = {}) {
   const lines = md.replace(/\r/g, "").split("\n");
   const children: (Paragraph | Table)[] = [];
   let tableBuf: string[] = [];
@@ -109,7 +114,8 @@ export function markdownToDocx(md: string) {
     else if ((m = line.match(/^##\s+(.*)/)))
       children.push(para(m[1], { bold: true, color: NAVY, size: 30, after: 160, underlineGold: true }));
     else if ((m = line.match(/^#{3,}\s+(.*)/))) children.push(para(m[1], { bold: true, color: GOLD, size: 26 }));
-    else if ((m = line.match(/^[-*•]\s+(.*)/))) children.push(para(m[1], { bullet: true }));
+    else if ((m = line.match(/^[-*•]\s+(.*)/)))
+      children.push(plainBullets ? para(`• ${m[1]}`) : para(m[1], { bullet: true }));
     else children.push(para(line));
   }
   flushTable();
@@ -125,9 +131,17 @@ export function markdownToDocx(md: string) {
   });
 }
 
-/** الاستدعاء من زر التصدير: await exportProjectDocx(content, programName) */
-export async function exportProjectDocx(markdown: string, fileName = "وثيقة المبادرة") {
-  const blob = await Packer.toBlob(markdownToDocx(markdown));
+/**
+ * الاستدعاء من زر التصدير: await exportProjectDocx(content, programName, letterhead)
+ * و`letterhead` مستندُ كليشة الجمعية إن كان لها كليشة — فتُصبّ الوثيقةُ فيه.
+ */
+export async function exportProjectDocx(
+  markdown: string,
+  fileName = "وثيقة المبادرة",
+  letterhead?: ArrayBuffer | null
+) {
+  const generated = await Packer.toBlob(markdownToDocx(markdown, { plainBullets: !!letterhead }));
+  const blob = letterhead ? await mergeIntoLetterhead(generated, letterhead) : generated;
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;

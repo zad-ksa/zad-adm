@@ -31,7 +31,6 @@ import { confirmAction } from "@/components/console/confirmBus";
 import {
   getProjectBuilderCharities,
   getProjectBuilderCharityProfile,
-  getProjectBuilderLetterhead,
   getProjectBuilderPreferences,
   listMyProjectBuilderDocuments,
   getProjectBuilderDocument,
@@ -41,6 +40,7 @@ import {
 } from "@/app/actions/projectBuilder";
 import { MAX_PASTED_DOCUMENT_CHARS, type ProjectBuilderPreference } from "@/lib/projectBuilder";
 import { exportProjectDocx } from "@/lib/exportProjectDocx";
+import { DocPreview, loadLetterhead } from "./DocPreview";
 import DateField from "@/components/console/DateField";
 
 /**
@@ -558,7 +558,7 @@ function CreateTab({
 
       {error && <Note tone="warn">{error}</Note>}
 
-      {submitting && liveText && <LiveDraft text={liveText} />}
+      {submitting && liveText && <LiveDraft text={liveText} charityId={charityId} />}
 
       <button type="button" onClick={handleSubmit} disabled={!ready || submitting} className={`${btn.primary} w-full`}>
         {submitting ? (
@@ -584,12 +584,7 @@ function countWords(text: string) {
 /**
  * الوثيقةُ وهي تُكتب: آخرُ ما كُتب ظاهرٌ دائماً، والمحورُ الجاري في رأسها.
  */
-function LiveDraft({ text }: { text: string }) {
-  const ref = useRef<HTMLPreElement>(null);
-  useEffect(() => {
-    const el = ref.current;
-    if (el) el.scrollTop = el.scrollHeight;
-  }, [text]);
+function LiveDraft({ text, charityId }: { text: string; charityId: string }) {
   const headings = text.match(/^#{1,3} .+$/gm) ?? [];
   const current = headings.length ? headings[headings.length - 1].replace(/^#+\s*/, "") : "";
   return (
@@ -600,13 +595,7 @@ function LiveDraft({ text }: { text: string }) {
         </span>
         <span className="text-slate-500 dark:text-slate-400">{headings.length} عنوان</span>
       </div>
-      <pre
-        ref={ref}
-        dir="rtl"
-        className="max-h-72 overflow-y-auto whitespace-pre-wrap px-4 py-3 font-sans text-meta leading-6 text-slate-700 dark:text-slate-200"
-      >
-        {text}
-      </pre>
+      <DocPreview content={text} charityId={charityId || null} live className="rounded-none border-0" />
     </div>
   );
 }
@@ -919,15 +908,7 @@ function PreviewPane({
     try {
       // كليشةُ الجمعية إن كانت لها كليشة: تُجلب من مخزننا عبر الخادم (نفسِ
       // النطاق، فلا عائقَ CORS)، وتُصبّ فيها الوثيقة.
-      let letterhead: ArrayBuffer | null = null;
-      if (docCharity) {
-        const lh = await getProjectBuilderLetterhead(docCharity.id);
-        if (lh) {
-          const res = await fetch(`/api/files/download?url=${encodeURIComponent(lh.url)}`);
-          if (!res.ok) throw new Error("تعذّر تحميل كليشة الجمعية");
-          letterhead = await res.arrayBuffer();
-        }
-      }
+      const letterhead = docCharity ? await loadLetterhead(docCharity.id) : null;
       await exportProjectDocx(content, fileName || "وثيقة المبادرة", letterhead);
     } catch (e) {
       notify("error", e instanceof Error && e.message ? e.message : "تعذّر إنشاء ملف الوورد.");
@@ -991,9 +972,7 @@ function PreviewPane({
         </Note>
       )}
 
-      <div className="max-h-[520px] overflow-y-auto rounded-xl border border-slate-200 bg-slate-50 p-5 text-body leading-7 whitespace-pre-wrap dark:border-slate-800 dark:bg-slate-950">
-        {content}
-      </div>
+      <DocPreview content={content} charityId={docCharity?.id ?? null} />
 
       <div className="flex items-start gap-2">
         <textarea

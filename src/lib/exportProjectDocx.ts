@@ -192,13 +192,18 @@ export function markdownToDocx(md: string, { plainBullets = false }: { plainBull
  * الاستدعاء من زر التصدير: await exportProjectDocx(content, programName, letterhead)
  * و`letterhead` مستندُ كليشة الجمعية إن كان لها كليشة — فتُصبّ الوثيقةُ فيه.
  */
+/** ملفُّ Word الوثيقة — مصبوباً في الكليشة إن أُعطيت. المعاينةُ والتنزيلُ يبنيان منه، فما يُرى هو ما يُنزَّل. */
+export async function buildProjectDocx(markdown: string, letterhead?: ArrayBuffer | null): Promise<Blob> {
+  const generated = await Packer.toBlob(markdownToDocx(markdown, { plainBullets: !!letterhead }));
+  return letterhead ? mergeIntoLetterhead(generated, letterhead) : generated;
+}
+
 export async function exportProjectDocx(
   markdown: string,
   fileName = "وثيقة المبادرة",
   letterhead?: ArrayBuffer | null
 ) {
-  const generated = await Packer.toBlob(markdownToDocx(markdown, { plainBullets: !!letterhead }));
-  const blob = letterhead ? await mergeIntoLetterhead(generated, letterhead) : generated;
+  const blob = await buildProjectDocx(markdown, letterhead);
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;

@@ -142,7 +142,7 @@ export function markdownToDocx(md: string, { plainBullets = false }: { plainBull
   };
 
   for (const raw of lines) {
-    const line = raw.trim();
+    const line = raw.trim().replace(/[ \t ]{2,}/g, " "); // فراغاتٌ متتالية تبدو فجوةً في Word
     if (line.startsWith("|")) {
       tableBuf.push(line);
       continue;

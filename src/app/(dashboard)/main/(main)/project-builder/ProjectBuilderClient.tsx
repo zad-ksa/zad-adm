@@ -330,6 +330,13 @@ function CreateTab({
           body: JSON.stringify(segment === 0 ? request : { ...request, partial: data.content }),
         });
         data = await readGenerateStream(res, setLiveText, data.content);
+        // الدفعةُ تنقطع عند حدِّها ولو في منتصف كلمة («**قاعدة ب»)، فيُكمل النموذجُ
+        // في سطرٍ جديد وتنكسر الكلمة والغامق. فيُحذف السطرُ الناقص الأخير لتبدأ
+        // الدفعةُ التالية سطراً كاملاً.
+        if (data.more) {
+          const cut = data.content.lastIndexOf("\n");
+          if (cut > 0) data.content = data.content.slice(0, cut + 1);
+        }
       }
       const selectedCharity = charities.find((c) => c.id === charityId) || null;
       // لا اسم محدَّد؟ عنوانٌ مؤقّت من فكرة المبادرة بدل عنوانٍ فارغ — قابل

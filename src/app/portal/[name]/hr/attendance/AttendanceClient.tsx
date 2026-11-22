@@ -24,7 +24,8 @@ import {
   WEEKDAY_LABELS,
 } from "@/lib/attendanceTime";
 import { readPosition } from "@/lib/readPosition";
-import { Banner, Chip, HrCard, SectionHead, fs } from "../ui";
+import { HrCard, SectionHead } from "../ui";
+import { Badge, Note, btn } from "@/components/console/ui";
 
 type DayRecord = {
   status: string;
@@ -58,8 +59,8 @@ function riyadhDate(iso: string): string {
   }).format(new Date(iso));
 }
 
-const statusTone: Record<string, "primary" | "warn" | "danger" | "neutral"> = {
-  PRESENT: "primary",
+const statusTone: Record<string, "brand" | "warn" | "danger" | "neutral"> = {
+  PRESENT: "brand",
   LATE: "warn",
   EARLY_LEAVE: "warn",
   ABSENT: "danger",
@@ -133,48 +134,47 @@ export default function AttendanceClient({
       {/* The gate outranks every other notice: when attendance is closed there
           is nothing to fix about work sites or anything else. */}
       {!isAttendanceOpen ? (
-        <Banner tone="warn" icon={Lock}>
+        <Note tone="warn" icon={<Lock className="size-3.5" />}>
           التحضير غير مفعّل في هذه الجمعية بعد. سيبدأ تسجيل الحضور فور تفعيله من مسؤول
           الموارد البشرية.
-        </Banner>
+        </Note>
       ) : todayHolidayName ? (
-        <Banner tone="ok" icon={CalendarOff}>
+        <Note tone="good" icon={<CalendarOff className="size-3.5" />}>
           اليوم إجازة: {todayHolidayName}. لا حاجة لتسجيل الحضور، ولا يُحتسب غياباً.
-        </Banner>
+        </Note>
       ) : todayLeaveType ? (
-        <Banner tone="ok" icon={CalendarOff}>
+        <Note tone="good" icon={<CalendarOff className="size-3.5" />}>
           أنت في إجازة {LEAVE_TYPE_LABELS[todayLeaveType] ?? ""} اليوم. لا يُحتسب غياباً.
-        </Banner>
+        </Note>
       ) : (
         !hasWorkSite && (
-          <Banner tone="warn" icon={AlertTriangle}>
+          <Note tone="warn" icon={<AlertTriangle className="size-3.5" />}>
             لم يتم تحديد موقع العمل بعد. يرجى مراجعة مدير النظام في الجمعية.
-          </Banner>
+          </Note>
         )
       )}
       {error && (
-        <Banner tone="danger" icon={AlertTriangle}>
+        <Note tone="danger" icon={<AlertTriangle className="size-3.5" />}>
           {error}
-        </Banner>
+        </Note>
       )}
       {notice && !error && (
-        <Banner tone="ok" icon={Check}>
+        <Note tone="good" icon={<Check className="size-3.5" />}>
           {notice}
-        </Banner>
+        </Note>
       )}
 
       {/* ── Bento: the action owns 7 of 12; today's readout takes the rest ── */}
-      <section className="grid grid-cols-12 gap-4 hr-reveal">
+      <section className="grid grid-cols-12 gap-4">
         <div className="col-span-12 lg:col-span-7">
           <HrCard className="p-6 h-full flex flex-col justify-between gap-6">
             <div className="flex items-start justify-between gap-4">
               <div>
-                <p className="hr-eyebrow text-primary/60 dark:text-teal-400/60" style={fs.eyebrow}>
+                <p className="text-primary/60 dark:text-teal-400/60 text-caption">
                   {isDone ? "اكتمل اليوم" : hasCheckedIn ? "الخطوة التالية" : "ابدأ يومك"}
                 </p>
                 <h2
-                  className="font-bold text-slate-900 dark:text-slate-50 mt-2"
-                  style={fs.h2}
+                  className="text-section font-bold text-slate-900 dark:text-slate-50 mt-2"
                 >
                   {isDone
                     ? "تم تسجيل حضورك وانصرافك"
@@ -183,19 +183,14 @@ export default function AttendanceClient({
                       : "تسجيل الحضور"}
                 </h2>
               </div>
-              {!isWorkDay && <Chip>اليوم ليس يوم عمل</Chip>}
+              {!isWorkDay && <Badge tone="neutral">اليوم ليس يوم عمل</Badge>}
             </div>
 
             {!hasCheckedIn ? (
               <button
                 onClick={() => submit("in")}
                 disabled={!isAttendanceOpen || !hasWorkSite || busy !== null || isPending}
-                style={fs.h3}
-                className="w-full flex items-center justify-center gap-2 py-6 rounded-2xl font-bold text-white
-                           bg-gradient-to-b from-[#17857c] via-primary to-[#0c645d]
-                           shadow-[var(--hr-shadow-cta)] hover:shadow-[var(--hr-shadow-cta-hover)]
-                           active:translate-y-px disabled:opacity-50 disabled:pointer-events-none
-                           transition-[box-shadow,transform] duration-300"
+                className={btn.primaryBlock}
               >
                 {busy === "in" ? (
                   <Loader2 className="w-6 h-6 animate-spin" />
@@ -208,15 +203,7 @@ export default function AttendanceClient({
               <button
                 onClick={() => submit("out")}
                 disabled={busy !== null || isPending}
-                style={fs.h3}
-                className="w-full flex items-center justify-center gap-2 py-6 rounded-2xl font-bold
-                           text-slate-700 dark:text-slate-100
-                           bg-gradient-to-b from-white to-slate-50 dark:from-white/[0.06] dark:to-white/[0.02]
-                           shadow-[inset_0_0_0_1px_rgb(15_118_110_/_.20)]
-                           dark:shadow-[inset_0_0_0_1px_rgb(45_212_191_/_.22)]
-                           hover:shadow-[inset_0_0_0_1px_rgb(15_118_110_/_.36),0_12px_28px_-16px_rgb(15_118_110_/_.40)]
-                           active:translate-y-px disabled:opacity-50 disabled:pointer-events-none
-                           transition-[box-shadow,transform] duration-300"
+                className={btn.secondaryBlock}
               >
                 {busy === "out" ? (
                   <Loader2 className="w-6 h-6 animate-spin" />
@@ -227,12 +214,9 @@ export default function AttendanceClient({
               </button>
             ) : (
               <div
-                className="w-full flex items-center justify-center gap-2 py-6 rounded-2xl font-bold
-                           text-emerald-700 dark:text-emerald-300 bg-emerald-500/[0.06]
-                           shadow-[var(--hr-shadow-ok)]"
-                style={fs.h3}
+                className="flex w-full items-center justify-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 py-4 text-title font-semibold text-emerald-800 dark:border-emerald-500/20 dark:bg-emerald-500/10 dark:text-emerald-300"
               >
-                <Check className="w-6 h-6" />
+                <Check className="text-title w-6 h-6" />
                 اكتمل تسجيل اليوم
               </div>
             )}
@@ -240,10 +224,9 @@ export default function AttendanceClient({
             {/* Explaining the permission request before the browser fires it
                 makes the prompt far less likely to be dismissed out of suspicion. */}
             <p
-              className="flex items-start gap-2 text-slate-400 dark:text-slate-500 leading-relaxed"
-              style={fs.meta}
+              className="text-meta flex items-start gap-2 text-slate-400 dark:text-slate-500 leading-relaxed"
             >
-              <span className="hr-icon-lead">
+              <span>
                 <MapPin className="w-4 h-4" />
               </span>
               <span>
@@ -266,30 +249,29 @@ export default function AttendanceClient({
                 <div
                   key={row.label}
                   className="flex items-baseline justify-between gap-4 pb-4
-                             shadow-[inset_0_-1px_0_0_rgb(100_116_139_/_.10)]"
+ shadow-[inset_0_-1px_0_0_rgb(100_116_139_/_.10)]"
                 >
-                  <dt className="text-slate-400 dark:text-slate-500" style={fs.meta}>
+                  <dt className="text-slate-400 dark:text-slate-500 text-meta">
                     {row.label}
                   </dt>
                   <dd
-                    className="font-bold text-slate-800 dark:text-slate-100 tabular-nums"
-                    style={fs.h3}
+                    className="text-title font-bold text-slate-800 dark:text-slate-100 tabular-nums"
                   >
                     {row.value}
                   </dd>
                 </div>
               ))}
               <div className="flex items-baseline justify-between gap-4">
-                <dt className="text-slate-400 dark:text-slate-500" style={fs.meta}>
+                <dt className="text-slate-400 dark:text-slate-500 text-meta">
                   الحالة
                 </dt>
                 <dd>
                   {initialRecord ? (
-                    <Chip tone={statusTone[initialRecord.status] ?? "neutral"}>
+                    <Badge tone={statusTone[initialRecord.status] ?? "neutral"}>
                       {ATTENDANCE_STATUS_LABELS[initialRecord.status] ?? initialRecord.status}
-                    </Chip>
+                    </Badge>
                   ) : (
-                    <Chip>لم يُسجَّل بعد</Chip>
+                    <Badge tone="neutral">لم يُسجَّل بعد</Badge>
                   )}
                 </dd>
               </div>
@@ -297,24 +279,23 @@ export default function AttendanceClient({
 
             <div className="space-y-2 pt-2">
               <p
-                className="flex items-center gap-2 text-slate-400 dark:text-slate-500"
-                style={fs.meta}
+                className="text-meta flex items-center gap-2 text-slate-400 dark:text-slate-500"
               >
                 <Clock className="w-4 h-4 shrink-0" />
                 <span className="tabular-nums" dir="ltr">
                   {schedule.startTime} — {schedule.endTime}
                 </span>
               </p>
-              <p className="text-slate-400 dark:text-slate-500 pr-6" style={fs.meta}>
+              <p className="text-slate-400 dark:text-slate-500 pr-6 text-meta">
                 {workDayNames}
               </p>
             </div>
 
             {requiresCharityNetwork && (
-              <Banner tone="warn" icon={Wifi}>
+              <Note tone="warn" icon={<Wifi className="size-3.5" />}>
                 جمعيتك تشترط التسجيل من داخل شبكة الجمعية. تأكد من الاتصال بشبكة المقر (وليس بيانات
                 الجوال).
-              </Banner>
+              </Note>
             )}
           </HrCard>
         </div>
@@ -324,14 +305,14 @@ export default function AttendanceClient({
           the manager: the person who forgot is the one who can say what time
           they actually left. */}
       {monthRecords.some((r) => r.autoClosedAt) && (
-        <Banner tone="warn" icon={MoonStar}>
+        <Note tone="warn" icon={<MoonStar className="size-3.5" />}>
           {monthRecords.filter((r) => r.autoClosedAt).length} يوم لم تسجّل انصرافك فيه،
           وأُغلق آلياً على وقت نهاية الدوام. راجع مسؤول الموارد البشرية لتصحيحه.
-        </Banner>
+        </Note>
       )}
 
       {/* ── Month log ────────────────────────────────────────────────────── */}
-      <HrCard className="hr-reveal">
+      <HrCard>
         <div className="p-6 pb-4">
           <SectionHead
             icon={History}
@@ -341,7 +322,7 @@ export default function AttendanceClient({
         </div>
 
         {monthRecords.length === 0 ? (
-          <p className="px-6 pb-8 text-center text-slate-400" style={fs.body}>
+          <p className="px-6 pb-8 text-center text-slate-400 text-body">
             لا يوجد سجل حضور هذا الشهر
           </p>
         ) : (
@@ -350,33 +331,31 @@ export default function AttendanceClient({
               <li
                 key={r.workDate}
                 className="flex flex-wrap items-center gap-4 px-6 py-4
-                           shadow-[inset_0_1px_0_0_rgb(100_116_139_/_.10)]
+ shadow-[inset_0_1px_0_0_rgb(100_116_139_/_.10)]
                            transition-colors duration-300
                            hover:bg-primary/[0.02] dark:hover:bg-teal-400/[0.02]"
               >
                 <span
-                  className="min-w-[96px] font-medium text-slate-700 dark:text-slate-200"
-                  style={fs.body}
+                  className="text-body min-w-[96px] font-medium text-slate-700 dark:text-slate-200"
                 >
                   {riyadhDate(r.workDate)}
                 </span>
                 <span
-                  className="text-slate-400 dark:text-slate-500 tabular-nums"
-                  style={fs.meta}
+                  className="text-meta text-slate-400 dark:text-slate-500 tabular-nums"
                   dir="ltr"
                 >
                   {riyadhTime(r.checkInAt)} — {riyadhTime(r.checkOutAt)}
                 </span>
                 {r.autoClosedAt && (
-                  <Chip tone="warn">
+                  <Badge tone="warn">
                     <MoonStar className="w-3 h-3" />
                     أُغلق تلقائياً
-                  </Chip>
+                  </Badge>
                 )}
                 <span className="mr-auto">
-                  <Chip tone={statusTone[r.status] ?? "neutral"}>
+                  <Badge tone={statusTone[r.status] ?? "neutral"}>
                     {ATTENDANCE_STATUS_LABELS[r.status] ?? r.status}
-                  </Chip>
+                  </Badge>
                 </span>
               </li>
             ))}

@@ -4,7 +4,8 @@ import { useState } from "react";
 import { confirmAction } from "@/components/console/confirmBus";
 import { CalendarOff, Loader2, Plus, Trash2, X } from "lucide-react";
 import { saveCharityHoliday, deleteCharityHoliday } from "@/app/actions/attendance";
-import { Chip, Field, HrCard, SectionHead, ctaClass, fs, ghostClass, inputClass } from "../ui";
+import { Field, HrCard, SectionHead } from "../ui";
+import { Badge, btn, field } from "@/components/console/ui";
 import DateField from "@/components/console/DateField";
 
 export type Holiday = {
@@ -98,7 +99,7 @@ export default function HolidaysPanel({
   }
 
   return (
-    <HrCard className="hr-reveal">
+    <HrCard>
       <div className="p-6 pb-4">
         <SectionHead
           icon={CalendarOff}
@@ -106,24 +107,24 @@ export default function HolidaysPanel({
           hint={holidays.length > 0 ? `${holidays.length} إجازة` : undefined}
           action={
             isOpen ? (
-              <button onClick={reset} className={ghostClass} style={fs.meta}>
+              <button onClick={reset} className={btn.secondary}>
                 <X className="w-4 h-4" />
               </button>
             ) : (
-              <button onClick={() => setIsOpen(true)} className={ghostClass} style={fs.meta}>
+              <button onClick={() => setIsOpen(true)} className={btn.secondary}>
                 <Plus className="w-3.5 h-3.5" />
                 إضافة
               </button>
             )
           }
         />
-        <p className="text-slate-400 dark:text-slate-500 mt-2" style={fs.meta}>
+        <p className="text-slate-400 dark:text-slate-500 mt-2 text-meta">
           أيام لا يُحتسب فيها حضور ولا غياب على أحد، ولا تُخصم من رصيد إجازات الموظفين.
         </p>
       </div>
 
       {error && (
-        <p className="px-6 pb-3 text-rose-600 dark:text-rose-400 font-semibold" style={fs.meta}>
+        <p className="px-6 pb-3 text-rose-600 dark:text-rose-400 font-semibold text-meta">
           {error}
         </p>
       )}
@@ -135,11 +136,10 @@ export default function HolidaysPanel({
               value={form.name}
               onChange={(e) => setForm({ ...form, name: e.target.value })}
               placeholder="مثال: عيد الفطر"
-              className={inputClass}
-              style={fs.body}
+              className={field}
             />
           </Field>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="text-body grid grid-cols-2 gap-3">
             <Field label="من">
               <DateField value={form.startDate} onChange={(v) => setForm({ ...form, startDate: v })} />
             </Field>
@@ -150,17 +150,16 @@ export default function HolidaysPanel({
           <button
             onClick={submit}
             disabled={!form.name.trim() || !form.startDate || busy !== null}
-            className={ctaClass}
-            style={fs.body}
+            className={btn.primary}
           >
-            {busy === "save" && <Loader2 className="w-4 h-4 animate-spin" />}
+            {busy === "save" && <Loader2 className="text-body w-4 h-4 animate-spin" />}
             {editingId ? "حفظ التعديل" : "إضافة الإجازة"}
           </button>
         </div>
       )}
 
       {holidays.length === 0 ? (
-        <p className="px-6 pb-8 text-slate-400 dark:text-slate-500" style={fs.body}>
+        <p className="px-6 pb-8 text-slate-400 dark:text-slate-500 text-body">
           لم تُضَف إجازات بعد.
         </p>
       ) : (
@@ -169,15 +168,14 @@ export default function HolidaysPanel({
             <li
               key={holiday.id}
               className="flex flex-wrap items-center gap-3 px-6 py-4
-                         shadow-[inset_0_1px_0_0_rgb(100_116_139_/_.10)]"
+ shadow-[inset_0_1px_0_0_rgb(100_116_139_/_.10)]"
             >
               <span
-                className="font-semibold text-slate-700 dark:text-slate-200"
-                style={fs.body}
+                className="text-body font-semibold text-slate-700 dark:text-slate-200"
               >
                 {holiday.name}
               </span>
-              <Chip>{formatRange(holiday.startDate, holiday.endDate)}</Chip>
+              <Badge tone="neutral">{formatRange(holiday.startDate, holiday.endDate)}</Badge>
               <span className="mr-auto flex items-center gap-1">
                 <button
                   onClick={() => {
@@ -190,15 +188,14 @@ export default function HolidaysPanel({
                     setIsOpen(true);
                     setError(null);
                   }}
-                  className={ghostClass}
-                  style={fs.meta}
+                  className={btn.secondary}
                 >
                   تعديل
                 </button>
                 <button
                   onClick={() => remove(holiday)}
                   disabled={busy === holiday.id}
-                  className="h-9 w-9 flex items-center justify-center rounded-xl text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 transition-colors disabled:opacity-50"
+                  className="text-meta h-9 w-9 flex items-center justify-center rounded-xl text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 transition-colors disabled:opacity-50"
                   title="حذف"
                 >
                   {busy === holiday.id ? (

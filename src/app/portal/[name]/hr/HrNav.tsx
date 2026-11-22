@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { CalendarCheck, ChartColumn, Settings, Users } from "lucide-react";
-import { fs } from "./ui";
+
 import { CHARITY_ATTENDANCE_ENABLED } from "@/lib/featureFlags";
 
 /**
@@ -13,9 +13,8 @@ import { CHARITY_ATTENDANCE_ENABLED } from "@/lib/featureFlags";
  * (resolveCharityPortal) and each page re-checks its own permission, so a hidden
  * tab is not a protection.
  *
- * The hover treatment is the `.hr-navlink` rule — an underline that grows from
- * the inline-start edge rather than fading in, so it reads as intentional
- * rather than as an accidental hover state.
+ * وشكلُه شكلُ `Tabs` من العدّة — خطٌّ تحت المُفعَّل — غير أنّ حلقاته روابطُ
+ * صفحاتٍ لا أزرارُ عرضٍ في الصفحة نفسها، فلا تصلح `Tabs` نفسُها.
  */
 export default function HrNav({
   charityName,
@@ -60,7 +59,7 @@ export default function HrNav({
   return (
     <nav
       aria-label="أقسام الموارد البشرية"
-      className="hr-rule flex flex-wrap gap-2 pb-2"
+      className="flex flex-wrap gap-6 border-b border-slate-200 dark:border-slate-800"
     >
       {tabs.map((tab) => {
         const isActive = tab.exact ? pathname === tab.href : pathname.startsWith(tab.href);
@@ -70,14 +69,13 @@ export default function HrNav({
             href={tab.href}
             data-active={isActive}
             aria-current={isActive ? "page" : undefined}
-            style={fs.body}
-            className={`hr-navlink flex items-center gap-2 px-4 py-2 rounded-xl font-medium ${
+            className={`-mb-px flex h-10 shrink-0 items-center gap-2 whitespace-nowrap border-b-2 text-body font-medium transition-colors outline-none focus-visible:ring-2 focus-visible:ring-primary/40 ${
               isActive
-                ? "text-primary dark:text-teal-400 bg-primary/[0.06] dark:bg-teal-400/[0.06]"
-                : "text-slate-500 dark:text-slate-400 hover:text-primary dark:hover:text-teal-400"
+                ? "border-primary text-slate-900 dark:border-teal-400 dark:text-slate-100"
+                : "border-transparent text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100"
             }`}
           >
-            <tab.icon className="w-4 h-4 shrink-0" />
+            <tab.icon className="size-4 shrink-0" />
             <span>{tab.label}</span>
           </Link>
         );

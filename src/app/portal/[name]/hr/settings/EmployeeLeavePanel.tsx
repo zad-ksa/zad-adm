@@ -10,7 +10,8 @@ import {
   saveLeaveAllowance,
 } from "@/app/actions/attendance";
 import { LEAVE_TYPE_LABELS } from "@/lib/attendanceTime";
-import { Chip, Field, HrCard, SectionHead, ctaClass, fs, ghostClass, inputClass } from "../ui";
+import { Field, HrCard, SectionHead } from "../ui";
+import { Badge, btn, field } from "@/components/console/ui";
 import DateField from "@/components/console/DateField";
 
 export type LeaveRow = {
@@ -126,7 +127,7 @@ export default function EmployeeLeavePanel({
   }
 
   return (
-    <HrCard className="hr-reveal">
+    <HrCard>
       <div className="p-6 pb-4">
         <SectionHead
           icon={CalendarHeart}
@@ -134,30 +135,29 @@ export default function EmployeeLeavePanel({
           hint={leaves.length > 0 ? `${leaves.length} إجازة` : undefined}
           action={
             isOpen ? (
-              <button onClick={() => setIsOpen(false)} className={ghostClass} style={fs.meta}>
+              <button onClick={() => setIsOpen(false)} className={btn.secondary}>
                 <X className="w-4 h-4" />
               </button>
             ) : (
               <button
                 onClick={() => setIsOpen(true)}
                 disabled={staff.length === 0}
-                className={ghostClass}
-                style={fs.meta}
+                className={btn.secondary}
               >
-                <Plus className="w-3.5 h-3.5" />
+                <Plus className="text-meta w-3.5 h-3.5" />
                 إضافة
               </button>
             )
           }
         />
-        <p className="text-slate-400 dark:text-slate-500 mt-2" style={fs.meta}>
+        <p className="text-slate-400 dark:text-slate-500 mt-2 text-meta">
           أيام الإجازة لا تُحتسب غياباً. الإجازة السنوية وحدها تُخصم من الرصيد؛ المرضية
           وبدون راتب لا تُخصم.
         </p>
       </div>
 
       {error && (
-        <p className="px-6 pb-3 text-rose-600 dark:text-rose-400 font-semibold" style={fs.meta}>
+        <p className="px-6 pb-3 text-rose-600 dark:text-rose-400 font-semibold text-meta">
           {error}
         </p>
       )}
@@ -171,8 +171,7 @@ export default function EmployeeLeavePanel({
               max={365}
               value={allowance}
               onChange={(e) => setAllowance(e.target.value)}
-              className={`${inputClass} tabular-nums`}
-              style={fs.body}
+              className={`text-body ${field} tabular-nums`}
               dir="ltr"
             />
           </Field>
@@ -180,13 +179,12 @@ export default function EmployeeLeavePanel({
         <button
           onClick={saveAllowance}
           disabled={busy !== null}
-          className={ghostClass}
-          style={fs.body}
+          className={btn.secondary}
         >
-          {busy === "allowance" && <Loader2 className="w-4 h-4 animate-spin" />}
+          {busy === "allowance" && <Loader2 className="text-body w-4 h-4 animate-spin" />}
           حفظ الرصيد
         </button>
-        <span className="text-slate-400 dark:text-slate-500" style={fs.meta}>
+        <span className="text-slate-400 dark:text-slate-500 text-meta">
           أيام عمل لكل موظف في السنة
         </span>
       </div>
@@ -227,24 +225,22 @@ export default function EmployeeLeavePanel({
             <input
               value={form.note}
               onChange={(e) => setForm({ ...form, note: e.target.value })}
-              className={inputClass}
-              style={fs.body}
+              className={field}
             />
           </Field>
           <button
             onClick={submit}
             disabled={!form.targetUserId || !form.startDate || busy !== null}
-            className={ctaClass}
-            style={fs.body}
+            className={btn.primary}
           >
-            {busy === "save" && <Loader2 className="w-4 h-4 animate-spin" />}
+            {busy === "save" && <Loader2 className="text-body text-body w-4 h-4 animate-spin" />}
             إضافة الإجازة
           </button>
         </div>
       )}
 
       {leaves.length === 0 ? (
-        <p className="px-6 pb-8 text-slate-400 dark:text-slate-500" style={fs.body}>
+        <p className="px-6 pb-8 text-slate-400 dark:text-slate-500 text-body">
           لم تُسجَّل إجازات بعد.
         </p>
       ) : (
@@ -253,22 +249,21 @@ export default function EmployeeLeavePanel({
             <li
               key={leave.id}
               className="flex flex-wrap items-center gap-3 px-6 py-4
-                         shadow-[inset_0_1px_0_0_rgb(100_116_139_/_.10)]"
+ shadow-[inset_0_1px_0_0_rgb(100_116_139_/_.10)]"
             >
               <span
-                className="font-semibold text-slate-700 dark:text-slate-200 min-w-[110px]"
-                style={fs.body}
+                className="text-body font-semibold text-slate-700 dark:text-slate-200 min-w-[110px]"
               >
                 {leave.userName}
               </span>
-              <Chip tone={leave.type === "ANNUAL" ? "primary" : "neutral"}>
+              <Badge tone={leave.type === "ANNUAL" ? "brand" : "neutral"}>
                 {LEAVE_TYPE_LABELS[leave.type] ?? leave.type}
-              </Chip>
-              <span className="text-slate-500 dark:text-slate-400" style={fs.meta}>
+              </Badge>
+              <span className="text-slate-500 dark:text-slate-400 text-meta">
                 {formatRange(leave.startDate, leave.endDate)}
               </span>
               {leave.note && (
-                <span className="text-slate-400 dark:text-slate-500" style={fs.eyebrow}>
+                <span className="text-slate-400 dark:text-slate-500 text-caption">
                   {leave.note}
                 </span>
               )}

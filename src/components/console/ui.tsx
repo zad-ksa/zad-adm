@@ -45,6 +45,22 @@ export const btn = {
     "disabled:pointer-events-none disabled:opacity-50",
     focusRing
   ),
+  // زرُّ فعلٍ كبيرٌ بعرض الحاوية — فعلُ الشاشة الوحيدُ الذي جاء القارئُ من
+  // أجله: «تسجيل حضور» في شاشة الحضور. ولم يُركَّب بـ`cx` فوق `primary`:
+  // الارتفاعُ والمقاسُ يتنازعان، ويحسمهما ترتيبُ CSS لا ترتيبُ الأصناف.
+  primaryBlock: cx(
+    "inline-flex w-full items-center justify-center gap-2 rounded-lg bg-primary px-4 py-4 text-title font-semibold text-white",
+    "shadow-[inset_0_1px_0_rgb(255_255_255/0.14),0_1px_2px_rgb(15_118_110/0.3)] transition-colors hover:bg-[rgb(17_94_89)]",
+    "disabled:pointer-events-none disabled:opacity-50",
+    focusRing
+  ),
+  secondaryBlock: cx(
+    "inline-flex w-full items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-4 text-title font-semibold text-slate-900",
+    "shadow-[0_1px_2px_rgb(15_23_42/0.04)] transition-colors hover:bg-slate-50",
+    "dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100 dark:hover:bg-slate-800",
+    "disabled:pointer-events-none disabled:opacity-50",
+    focusRing
+  ),
   link: "text-[12.5px] font-medium text-primary hover:underline dark:text-teal-300",
   // زرّ أيقونةٍ مربّع (إغلاق ×، تعديل، حذف في صفّ). كان يُكتب cx(btn.ghost, "size-8 px-0")،
   // وpx-0 فوق px-2 لا يحسمه ترتيب الأصناف بل ترتيب CSS — فصار نمطاً بذاته.
@@ -241,10 +257,13 @@ export function IconTile({ children }: { children: ReactNode }) {
 }
 
 export function SectionHeader({
+  icon,
   title,
   description,
   action,
 }: {
+  /** أيقونةُ القسم — تُمرَّر حيث كانت، ولا تُفرض على عنوانٍ لم يحملها. */
+  icon?: ReactNode;
   title: string;
   description?: ReactNode;
   action?: ReactNode;
@@ -252,7 +271,14 @@ export function SectionHeader({
   return (
     <div className="flex items-start justify-between gap-4">
       <div className="min-w-0 space-y-0.5">
-        <h3 className="text-body font-semibold text-slate-900 dark:text-slate-100">{title}</h3>
+        <h3 className="flex items-center gap-2 text-body font-semibold text-slate-900 dark:text-slate-100">
+          {icon && (
+            <span aria-hidden className="shrink-0 text-primary dark:text-teal-300">
+              {icon}
+            </span>
+          )}
+          {title}
+        </h3>
         {description && <p className="text-meta leading-5 text-slate-500 dark:text-slate-400">{description}</p>}
       </div>
       {action && <div className="shrink-0 pt-0.5">{action}</div>}
@@ -355,16 +381,29 @@ const NOTE = {
   // وكانت الشاشاتُ تكتب لهذا صندوقاً أحمرَ بيدها لأنّ العدّةَ لا تحمله،
   // فاختلف مقاسُه ولونُه من شاشةٍ إلى شاشة.
   danger: "border-red-200 bg-red-50 text-red-700 dark:border-red-500/20 dark:bg-red-500/10 dark:text-red-300",
+  // و`good` لحالٍ **تمّت** — «سُجّل حضورُك»، «القسمُ مفتوح». وكانت الشاشاتُ
+  // تكتبه أخضرَ بيدها لأنّ العدّةَ تحمل الأحمرَ والكهرمانيَّ ولا تحمله.
+  good: "border-emerald-200 bg-emerald-50 text-emerald-800 dark:border-emerald-500/20 dark:bg-emerald-500/10 dark:text-emerald-300",
 } as const;
 
-export function Note({ tone, children }: { tone: keyof typeof NOTE; children: ReactNode }) {
+export function Note({
+  tone,
+  icon,
+  children,
+}: {
+  tone: keyof typeof NOTE;
+  /**
+   * أيقونةٌ تقول ما لا تقوله النبرة — قفلٌ لمغلق، وإجازةٌ ليوم عطلة، وشبكةٌ
+   * لاتّصالٍ منقطع. وبدونها أيقونةُ النبرة: معلومةٌ أو تنبيه.
+   */
+  icon?: ReactNode;
+  children: ReactNode;
+}) {
   return (
     <p className={cx("flex items-start gap-2 rounded-md border px-3 py-2.5 text-meta leading-5", NOTE[tone])}>
-      {tone === "brand" ? (
-        <Info className="mt-0.5 size-3.5 shrink-0 text-primary dark:text-teal-300" />
-      ) : (
-        <TriangleAlert className="mt-0.5 size-3.5 shrink-0" />
-      )}
+      <span aria-hidden className="mt-0.5 flex size-3.5 shrink-0 items-center justify-center [&>svg]:size-3.5">
+        {icon ?? (tone === "brand" ? <Info className="text-primary dark:text-teal-300" /> : tone === "good" ? <Check /> : <TriangleAlert />)}
+      </span>
       <span>{children}</span>
     </p>
   );

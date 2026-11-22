@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useTransition } from "react";
+import { useMemo, useState, useTransition, type ReactNode } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Building2, Coins, KeyRound } from "lucide-react";
@@ -44,10 +44,13 @@ export default function DonorsClient({
   charityId,
   charityName,
   donors,
+  tabs,
 }: {
   charityId: string;
   charityName: string;
   donors: PortalDonorRow[];
+  /** تبويبُ القسم — تحت العنوان لا فوق المسار. */
+  tabs?: ReactNode;
 }) {
   const router = useRouter();
   const [query, setQuery] = useState("");
@@ -129,6 +132,8 @@ export default function DonorsClient({
         title="تنمية الموارد المالية"
         description="الجهات المانحة وحسابات جمعيتك عندها، ومجالات المنح في كل جهة."
       />
+
+      {tabs}
 
       {/* الأعدادُ بطاقاتٌ كشاشات زاد لا سطرَ نصٍّ في الوصف: تُمسح بنظرة. */}
       <StatStrip

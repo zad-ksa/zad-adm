@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { loadPortalDonors, requireFundraisingPortal } from "@/lib/portalFundraising";
 import DonorsClient from "./DonorsClient";
+import FundraisingTabs from "./FundraisingTabs";
 
 export const dynamic = "force-dynamic";
 
@@ -18,5 +19,12 @@ export default async function FundraisingPage({ params }: { params: Promise<{ na
   const { charity } = await requireFundraisingPortal(name);
   const donors = await loadPortalDonors(charity.id);
 
-  return <DonorsClient charityId={charity.id} charityName={charity.name} donors={donors} />;
+  return (
+    <DonorsClient
+      charityId={charity.id}
+      charityName={charity.name}
+      donors={donors}
+      tabs={<FundraisingTabs charityId={charity.id} charityName={charity.name} />}
+    />
+  );
 }

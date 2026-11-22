@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { loadPortalGrants, requireFundraisingPortal } from "@/lib/portalFundraising";
 import GrantsClient from "./GrantsClient";
+import FundraisingTabs from "../FundraisingTabs";
 
 export const dynamic = "force-dynamic";
 
@@ -35,6 +36,7 @@ export default async function PortalGrantsPage({
       grants={grants}
       donors={donors}
       initialDonor={donor && donors.some((d) => d.id === donor) ? donor : null}
+      tabs={<FundraisingTabs charityId={charity.id} charityName={charity.name} />}
     />
   );
 }

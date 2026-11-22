@@ -172,15 +172,13 @@ export default function DonorFileClient({
 
       {/* ── مجالاتُ المنح ───────────────────────────────────────────────── */}
       <section className="space-y-3">
-        <div>
-          <h2 className="flex items-center gap-2 text-section font-semibold tracking-tight">
-            <Layers className="size-4 text-primary dark:text-teal-300" />
-            مجالات المنح
-          </h2>
-          <p className="mt-0.5 text-body text-slate-500 dark:text-slate-400">
-            تضيفها زاد في ملف الجهة. ارفع تحت كل مجال مشاريعك المقترحة فيه.
-          </p>
-        </div>
+        {/* ولا سطرَ شرحٍ تحت العنوان: البطاقاتُ تحته تقول ما هي، وزرُّ
+            «مشروع مقترح» في كلٍّ منها يقول ما يُفعل بها — وشرحُ الظاهرِ
+            سطرٌ يُقرأ مرّةً ثمّ يُتخطّى في كلِّ زيارةٍ بعدها. */}
+        <h2 className="flex items-center gap-2 text-section font-semibold tracking-tight">
+          <Layers className="size-4 text-primary dark:text-teal-300" />
+          مجالات المنح
+        </h2>
 
         {fields.length === 0 ? (
           <div className="space-y-3">
@@ -200,7 +198,11 @@ export default function DonorFileClient({
             )}
           </div>
         ) : (
-          <div className="space-y-3">
+          /* شبكةٌ لا صفوفٌ بعرض الشاشة: المجالُ اسمٌ وزرّ، وبطاقةٌ بعرض
+             ١٢٠٠px لهما تترك فراغاً بين الاسم وزرِّه، وأربعةُ مجالاتٍ
+             تلتهم الطيّة. و`items-start` كي لا تُمطَّ بطاقةٌ قصيرةٌ إلى
+             طول جارتها. */
+          <div className="grid items-start gap-3 md:grid-cols-2 xl:grid-cols-3">
             {fields.map((f) => (
               <FieldCard
                 key={f.id}
@@ -295,12 +297,19 @@ function FieldCard({
     );
   };
 
+  const open = adding || !!editing;
+
   return (
     <article
       id={`field-${row.id}`}
       // ومرسىً لكلِّ مجال: قائمةُ الجهات تربط اسمَ المجال به، فيَنزل القارئُ
       // عليه بدل أن يبحث عنه في الصفحة.
-      className="scroll-mt-24 rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900"
+      className={cx(
+        "scroll-mt-24 rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900",
+        // ووقتَ الكتابة تأخذ البطاقةُ عرضَ الشبكة: نموذجٌ فيه قائمةٌ وحقلان
+        // في عمودٍ من ثلثٍ يُكتب في خانةٍ ضيّقة.
+        open && "md:col-span-2 xl:col-span-3"
+      )}
     >
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
@@ -312,6 +321,11 @@ function FieldCard({
           </h3>
           {row.description && (
             <p className="mt-0.5 text-caption leading-5 text-slate-500 dark:text-slate-400">{row.description}</p>
+          )}
+          {/* وحالُ المجال تُقرأ بنظرةٍ في الشبكة: الشارةُ تقول «فيه مقترح»،
+              وهذا السطرُ يقول «لم يُمسّ» — والغيابُ وحدَه لا يُفرَّق عن سهو. */}
+          {row.proposals.length === 0 && !open && (
+            <p className="mt-0.5 text-meta text-slate-400">لا مقترحات بعد</p>
           )}
           {/* وسومُ المجال كما كتبتها زاد — تُقرأ ولا تُحرَّر هنا. */}
           {row.tags.length > 0 && (

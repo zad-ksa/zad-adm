@@ -30,18 +30,8 @@ import {
   setCharityStaffActive,
   updateCharityStaff,
 } from "@/app/actions/charityHr";
-import {
-  Banner,
-  Chip,
-  Field,
-  HrCard,
-  SectionHead,
-  StatTile,
-  ctaClass,
-  fs,
-  ghostClass,
-  inputClass,
-} from "./ui";
+import { Field, HrCard, SectionHead, StatTile } from "./ui";
+import { Badge, Note, btn, field } from "@/components/console/ui";
 
 type Staff = {
   id: string;
@@ -114,11 +104,11 @@ function ServiceEditor({
 }) {
   return (
     <div>
-      <p className="hr-eyebrow text-slate-400 dark:text-slate-500 mb-2" style={fs.eyebrow}>
+      <p className="text-slate-400 dark:text-slate-500 mb-2 text-caption">
         الخدمات المفوَّض لها
       </p>
       {services.length === 0 ? (
-        <p className="text-slate-400 dark:text-slate-500" style={fs.meta}>
+        <p className="text-slate-400 dark:text-slate-500 text-meta">
           لا توجد خدمات مقدَّمة لهذه الجمعية بعد.
         </p>
       ) : (
@@ -131,8 +121,7 @@ function ServiceEditor({
                 type="button"
                 onClick={() => onToggle(name)}
                 aria-pressed={checked}
-                style={fs.body}
-                className={`flex items-center gap-2 px-4 py-2 rounded-xl text-right
+                className={`text-body flex items-center gap-2 px-4 py-2 rounded-xl text-right
                             transition-[box-shadow,color,background-color] duration-300 ${
                               checked
                                 ? "text-primary dark:text-teal-400 bg-primary/[0.06] shadow-[inset_0_0_0_1px_rgb(15_118_110_/_.28)]"
@@ -177,7 +166,7 @@ function PermissionEditor({
   return (
     <div className="space-y-4">
       {groups.length === 0 && (
-        <p className="text-slate-400 dark:text-slate-500" style={fs.body}>
+        <p className="text-slate-400 dark:text-slate-500 text-body">
           اختر خدمةً أعلاه لتظهر صلاحيّاتُها.
         </p>
       )}
@@ -188,7 +177,7 @@ function PermissionEditor({
         if (available.length === 0) return null;
         return (
           <div key={group.title}>
-            <p className="hr-eyebrow text-slate-400 dark:text-slate-500 mb-2" style={fs.eyebrow}>
+            <p className="text-slate-400 dark:text-slate-500 mb-2 text-caption">
               {group.title}
             </p>
             <div className="grid sm:grid-cols-2 gap-2">
@@ -200,8 +189,7 @@ function PermissionEditor({
                     type="button"
                     onClick={() => onToggle(permission.id)}
                     aria-pressed={checked}
-                    style={fs.body}
-                    className={`flex items-center gap-2 px-4 py-2 rounded-xl text-right
+                    className={`text-body flex items-center gap-2 px-4 py-2 rounded-xl text-right
                                 transition-[box-shadow,color,background-color] duration-300 ${
                                   checked
                                     ? "text-primary dark:text-teal-400 bg-primary/[0.06] shadow-[inset_0_0_0_1px_rgb(15_118_110_/_.28)] dark:shadow-[inset_0_0_0_1px_rgb(45_212_191_/_.28)]"
@@ -510,20 +498,20 @@ export default function StaffManagerClient({
   return (
     <div className="space-y-6">
       {error && (
-        <Banner tone="danger" icon={AlertTriangle}>
+        <Note tone="danger" icon={<AlertTriangle className="size-3.5" />}>
           {error}
-        </Banner>
+        </Note>
       )}
       {notice && !error && (
-        <Banner tone="ok" icon={Check}>
+        <Note tone="good" icon={<Check className="size-3.5" />}>
           {notice}
-        </Banner>
+        </Note>
       )}
 
       {/* ── Bento row: three quiet stats + one loud action ─────────────────
           Spans 3/3/2/4 rather than four equal quarters, so the eye lands on
           the action card instead of scanning a uniform strip. */}
-      <section className="grid grid-cols-12 gap-4 hr-reveal">
+      <section className="grid grid-cols-12 gap-4">
         <div className="col-span-6 lg:col-span-3">
           <StatTile label="إجمالي الموظفين" value={counts.total} tone="neutral" />
         </div>
@@ -537,10 +525,10 @@ export default function StaffManagerClient({
         <div className="col-span-6 lg:col-span-4">
           <HrCard interactive className="p-4 h-full flex flex-col justify-between gap-4">
             <div className="flex items-start gap-2">
-              <span className="hr-icon-lead text-primary dark:text-teal-400">
+              <span className="text-primary dark:text-teal-400">
                 <Sparkles className="w-4 h-4" />
               </span>
-              <p className="text-slate-500 dark:text-slate-400 leading-relaxed" style={fs.meta}>
+              <p className="text-slate-500 dark:text-slate-400 leading-relaxed text-meta">
                 يمكنك منح الصلاحيات التي تملكها أنت فقط.
               </p>
             </div>
@@ -550,8 +538,7 @@ export default function StaffManagerClient({
                 setError(null);
                 setNotice(null);
               }}
-              className={`${ctaClass} w-full`}
-              style={fs.body}
+              className={`text-body ${btn.primary} w-full`}
             >
               <Plus className="w-4 h-4" />
               إضافة موظف
@@ -589,8 +576,7 @@ export default function StaffManagerClient({
                 <input
                   value={form.phone}
                   onChange={(e) => handlePhoneChange(e.target.value)}
-                  className={`${inputClass} font-mono tabular-nums`}
-                  style={fs.body}
+                  className={`text-body ${field} font-mono tabular-nums`}
                   placeholder="05XXXXXXXX"
                   dir="ltr"
                   inputMode="numeric"
@@ -602,8 +588,7 @@ export default function StaffManagerClient({
                 id="phone-status"
                 role="status"
                 aria-live="polite"
-                className="flex items-center gap-2 mt-2 min-h-4"
-                style={fs.meta}
+                className="text-meta flex items-center gap-2 mt-2 min-h-4"
               >
                 {phoneState.kind === "checking" && (
                   <span className="flex items-center gap-2 text-slate-400">
@@ -644,7 +629,7 @@ export default function StaffManagerClient({
                 which other charity this person serves. */}
             {isExisting && (
               <div className="col-span-12">
-                <Banner tone="warn" icon={AlertTriangle}>
+                <Note tone="warn" icon={<AlertTriangle className="size-3.5" />}>
                   <p className="font-semibold">هذا الرقم مسجّل مسبقاً في النظام</p>
                   <p className="mt-2">
                     <span className="font-medium">{phoneState.name}</span>
@@ -663,16 +648,16 @@ export default function StaffManagerClient({
                       تنبيه: الحساب موقوف من إدارة زاد ولن يتمكن من الدخول حتى يُفعّل.
                     </p>
                   )}
-                </Banner>
+                </Note>
               </div>
             )}
 
             {isAlreadyMember && (
               <div className="col-span-12">
-                <Banner tone="danger" icon={AlertTriangle}>
+                <Note tone="danger" icon={<AlertTriangle className="size-3.5" />}>
                   <span className="font-medium">{phoneState.name}</span> مضاف بالفعل إلى الجمعية.
                   يمكنك تعديل صلاحياته من القائمة أدناه.
-                </Banner>
+                </Note>
               </div>
             )}
 
@@ -691,10 +676,9 @@ export default function StaffManagerClient({
                 <input
                   value={form.name}
                   onChange={(e) => setForm({ ...form, name: e.target.value })}
-                  className={`${inputClass} ${
+                  className={`text-body ${field} ${
                     isNameLocked ? "pl-10 text-slate-500 dark:text-slate-400" : ""
                   }`}
-                  style={fs.body}
                   placeholder={isNameLocked ? "" : "اسم الموظف"}
                   readOnly={isNameLocked}
                   aria-readonly={isNameLocked}
@@ -717,20 +701,18 @@ export default function StaffManagerClient({
                     type="email"
                     value={form.email}
                     onChange={(e) => setForm({ ...form, email: e.target.value })}
-                    className={inputClass}
-                    style={fs.body}
+                    className={field}
                     placeholder="name@example.com"
                     dir="ltr"
                   />
                 </Field>
 
-                <Field label="كلمة المرور" className="col-span-12 sm:col-span-6">
+                <Field label="كلمة المرور" className="text-body text-body col-span-12 sm:col-span-6">
                   <input
                     type="text"
                     value={form.password}
                     onChange={(e) => setForm({ ...form, password: e.target.value })}
-                    className={inputClass}
-                    style={fs.body}
+                    className={field}
                     placeholder="٨ أحرف على الأقل — مع البريد فقط"
                     dir="ltr"
                   />
@@ -758,13 +740,12 @@ export default function StaffManagerClient({
             <button
               onClick={submitCreate}
               disabled={!canSubmit}
-              className={ctaClass}
-              style={fs.body}
+              className={btn.primary}
             >
-              {busy && <Loader2 className="w-4 h-4 animate-spin" />}
+              {busy && <Loader2 className="text-body w-4 h-4 animate-spin" />}
               {submitLabel}
             </button>
-            <button onClick={resetAddForm} className={ghostClass} style={fs.body}>
+            <button onClick={resetAddForm} className={btn.secondary}>
               إلغاء
             </button>
           </div>
@@ -772,13 +753,13 @@ export default function StaffManagerClient({
       )}
 
       {/* ── Staff list ───────────────────────────────────────────────────── */}
-      <HrCard className="hr-reveal">
+      <HrCard>
         <div className="p-6 pb-4">
           <SectionHead icon={ShieldCheck} title="قائمة الموظفين" hint={`${counts.total} حساب`} />
         </div>
 
         {initialStaff.length === 0 ? (
-          <p className="px-6 pb-8 text-center text-slate-400" style={fs.body}>
+          <p className="px-6 pb-8 text-center text-slate-400 text-body">
             لا يوجد موظفون بعد
           </p>
         ) : (
@@ -801,24 +782,22 @@ export default function StaffManagerClient({
                   <div className="flex-1 min-w-[200px] space-y-2">
                     <div className="flex items-center gap-2 flex-wrap">
                       <span
-                        className="font-semibold text-slate-800 dark:text-slate-100"
-                        style={fs.h3}
+                        className="text-title font-semibold text-slate-800 dark:text-slate-100"
                       >
                         {member.name}
                       </span>
                       {member.isAdmin && (
-                        <Chip tone="primary">
+                        <Badge tone="brand">
                           <ShieldCheck className="w-3 h-3" />
                           حساب الجمعية
-                        </Chip>
+                        </Badge>
                       )}
-                      {isSelf && <Chip>أنت</Chip>}
-                      {!member.isActive && <Chip>معطّل</Chip>}
-                      {!member.isAccountActive && <Chip tone="danger">موقوف من زاد</Chip>}
+                      {isSelf && <Badge tone="neutral">أنت</Badge>}
+                      {!member.isActive && <Badge tone="neutral">معطّل</Badge>}
+                      {!member.isAccountActive && <Badge tone="danger">موقوف من زاد</Badge>}
                     </div>
                     <p
-                      className="flex flex-wrap items-center gap-x-4 gap-y-2 text-slate-400 dark:text-slate-500"
-                      style={fs.meta}
+                      className="text-meta flex flex-wrap items-center gap-x-4 gap-y-2 text-slate-400 dark:text-slate-500"
                     >
                       <span dir="ltr" className="font-mono tabular-nums">
                         {member.phone}
@@ -866,8 +845,7 @@ export default function StaffManagerClient({
                             ? "حساب الجمعية يُدار من زاد"
                             : undefined
                       }
-                      className={ghostClass}
-                      style={fs.meta}
+                      className={btn.secondary}
                     >
                       الصلاحيات
                     </button>
@@ -875,13 +853,12 @@ export default function StaffManagerClient({
                       onClick={() => toggleActive(member)}
                       disabled={locked || busy || isPending}
                       title={member.isAdmin ? "حساب الجمعية يُدار من زاد" : undefined}
-                      style={fs.meta}
-                      className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl font-medium
+                      className={`text-meta text-meta inline-flex items-center gap-2 px-4 py-2 rounded-xl font-medium
                                   disabled:opacity-40 disabled:pointer-events-none
                                   transition-[box-shadow,color] duration-300 ${
                                     member.isActive
-                                      ? "text-rose-600 dark:text-rose-400 shadow-[inset_0_0_0_1px_rgb(225_29_72_/_.20)] hover:shadow-[var(--hr-shadow-danger)]"
-                                      : "text-emerald-600 dark:text-emerald-400 shadow-[inset_0_0_0_1px_rgb(16_185_129_/_.20)] hover:shadow-[var(--hr-shadow-ok)]"
+                                      ? "text-rose-600 dark:text-rose-400 shadow-[inset_0_0_0_1px_rgb(225_29_72_/_.20)] hover:border border-red-200 dark:border-red-500/20"
+                                      : "text-emerald-600 dark:text-emerald-400 shadow-[inset_0_0_0_1px_rgb(16_185_129_/_.20)] hover:border border-emerald-200 dark:border-emerald-500/20"
                                   }`}
                     >
                       {member.isActive ? (
@@ -903,7 +880,7 @@ export default function StaffManagerClient({
       {editing && (
         <div
           className="fixed inset-0 z-[100] flex items-center justify-center p-4
-                     bg-slate-950/50 backdrop-blur-sm animate-in fade-in duration-200"
+ bg-slate-950/50 backdrop-blur-sm animate-in fade-in duration-200"
           onClick={() => setEditing(null)}
         >
           <div
@@ -911,7 +888,7 @@ export default function StaffManagerClient({
             aria-modal="true"
             onClick={(e) => e.stopPropagation()}
             className="w-full max-w-[560px] max-h-[85vh] overflow-y-auto no-scrollbar
-                       animate-in zoom-in-95 duration-300"
+ animate-in zoom-in-95 duration-300"
           >
             <HrCard className="p-6 space-y-6">
               <SectionHead
@@ -956,17 +933,17 @@ export default function StaffManagerClient({
               />
 
               {editError && (
-                <Banner tone="danger" icon={AlertTriangle}>
+                <Note tone="danger" icon={<AlertTriangle className="size-3.5" />}>
                   {editError}
-                </Banner>
+                </Note>
               )}
 
               <div className="flex flex-wrap gap-2">
-                <button onClick={submitEdit} disabled={busy} className={ctaClass} style={fs.body}>
+                <button onClick={submitEdit} disabled={busy} className={btn.primary}>
                   {busy && <Loader2 className="w-4 h-4 animate-spin" />}
                   حفظ
                 </button>
-                <button onClick={() => setEditing(null)} className={ghostClass} style={fs.body}>
+                <button onClick={() => setEditing(null)} className={btn.secondary}>
                   إلغاء
                 </button>
               </div>

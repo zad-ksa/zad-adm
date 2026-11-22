@@ -17,17 +17,8 @@ import {
 } from "lucide-react";
 import { correctAttendance } from "@/app/actions/attendance";
 import { ATTENDANCE_STATUS_LABELS } from "@/lib/attendanceTime";
-import {
-  Chip,
-  Field,
-  HrCard,
-  SectionHead,
-  StatTile,
-  fs,
-  ctaClass,
-  ghostClass,
-  inputClass,
-} from "../ui";
+import { Field, HrCard, SectionHead, StatTile } from "../ui";
+import { Badge, btn, field } from "@/components/console/ui";
 import DateField from "@/components/console/DateField";
 import TimeField from "@/components/console/TimeField";
 
@@ -108,8 +99,8 @@ function recentMonths(currentMonth: string, selected: string): string[] {
   return out;
 }
 
-const statusTone: Record<string, "primary" | "warn" | "danger" | "neutral"> = {
-  PRESENT: "primary",
+const statusTone: Record<string, "brand" | "warn" | "danger" | "neutral"> = {
+  PRESENT: "brand",
   LATE: "warn",
   EARLY_LEAVE: "warn",
   ABSENT: "danger",
@@ -292,19 +283,19 @@ export default function AttendanceReportClient({
           and this is the screen a manager already opens to review attendance. */}
       {totals.autoClosed > 0 && (
         <div className="flex flex-wrap items-center gap-3 rounded-2xl px-5 py-4
-                        bg-amber-500/[0.07] shadow-[inset_0_0_0_1px_rgb(217_119_6_/_.22)]">
+ bg-amber-500/[0.07] shadow-[inset_0_0_0_1px_rgb(217_119_6_/_.22)]">
           <MoonStar className="w-4 h-4 shrink-0 text-amber-600 dark:text-amber-400" />
-          <p className="text-amber-700 dark:text-amber-400 font-semibold" style={fs.body}>
+          <p className="text-amber-700 dark:text-amber-400 font-semibold text-body">
             {totals.autoClosed} يوم لم يُسجَّل انصرافه، وأُغلق آلياً على وقت نهاية الدوام
           </p>
-          <span className="text-amber-600/80 dark:text-amber-400/70" style={fs.meta}>
+          <span className="text-amber-600/80 dark:text-amber-400/70 text-meta">
             الأوقات المكتوبة فيها افتراضية — راجعها وصحّح ما يلزم
           </span>
         </div>
       )}
 
       {/* ── Bento: four counters, deliberately uneven spans ───────────────── */}
-      <section className="grid grid-cols-12 gap-4 hr-reveal">
+      <section className="grid grid-cols-12 gap-4">
         <div className="col-span-6 lg:col-span-3">
           <StatTile label="سجلات الشهر" value={totals.records} />
         </div>
@@ -355,8 +346,7 @@ export default function AttendanceReportClient({
               <input
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                className={`${inputClass} pr-10`}
-                style={fs.body}
+                className={`text-body ${field} pr-10`}
                 placeholder="اسم الموظف"
               />
             </div>
@@ -367,19 +357,18 @@ export default function AttendanceReportClient({
               <button
                 onClick={() => setOnlySuspicious(!onlySuspicious)}
                 aria-pressed={onlySuspicious}
-                style={fs.body}
-                className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl font-medium
+                className={`text-body inline-flex items-center gap-2 px-4 py-2 rounded-xl font-medium
                             transition-[box-shadow,color,background-color] duration-300 ${
                               onlySuspicious
-                                ? "text-amber-700 dark:text-amber-300 bg-amber-500/[0.08] shadow-[var(--hr-shadow-warn)]"
-                                : "text-slate-600 dark:text-slate-300 shadow-[inset_0_0_0_1px_rgb(100_116_139_/_.20)] hover:shadow-[var(--hr-shadow-warn)]"
+                                ? "text-amber-700 dark:text-amber-300 bg-amber-500/[0.08] border border-amber-200 dark:border-amber-500/20"
+                                : "text-slate-600 dark:text-slate-300 shadow-[inset_0_0_0_1px_rgb(100_116_139_/_.20)] hover:border border-amber-200 dark:border-amber-500/20"
                             }`}
               >
                 <AlertTriangle className="w-4 h-4" />
                 {onlySuspicious ? "عرض الكل" : `للمراجعة (${totals.suspicious})`}
               </button>
             )}
-            <button onClick={exportCsv} className={ghostClass} style={fs.body}>
+            <button onClick={exportCsv} className={btn.secondary}>
               <Download className="w-4 h-4" />
               تصدير CSV
             </button>
@@ -388,7 +377,7 @@ export default function AttendanceReportClient({
       </HrCard>
 
       {/* ── Bento: per-employee roll-up (4) beside the detail log (8) ─────── */}
-      <section className="grid grid-cols-12 gap-4 hr-reveal">
+      <section className="grid grid-cols-12 gap-4">
         <div className="col-span-12 lg:col-span-4">
           <HrCard className="h-full">
             <div className="p-6 pb-4">
@@ -396,7 +385,7 @@ export default function AttendanceReportClient({
             </div>
 
             {summary.length === 0 ? (
-              <p className="px-6 pb-8 text-slate-400" style={fs.body}>
+              <p className="px-6 pb-8 text-slate-400 text-body">
                 لا يوجد موظفون
               </p>
             ) : (
@@ -405,22 +394,20 @@ export default function AttendanceReportClient({
                   <li
                     key={row.id}
                     className="px-6 py-4 space-y-2
-                               shadow-[inset_0_1px_0_0_rgb(100_116_139_/_.10)]
+ shadow-[inset_0_1px_0_0_rgb(100_116_139_/_.10)]
                                transition-colors duration-300
                                hover:bg-primary/[0.02] dark:hover:bg-teal-400/[0.02]"
                   >
                     <div className="flex items-center justify-between gap-4">
                       <span
-                        className="font-semibold text-slate-800 dark:text-slate-100 truncate"
-                        style={fs.h3}
+                        className="text-title font-semibold text-slate-800 dark:text-slate-100 truncate"
                       >
                         {row.name}
                       </span>
-                      {row.suspicious > 0 && <Chip tone="danger">{row.suspicious} للمراجعة</Chip>}
+                      {row.suspicious > 0 && <Badge tone="danger">{row.suspicious} للمراجعة</Badge>}
                     </div>
                     <div
-                      className="flex flex-wrap items-center gap-x-4 gap-y-2 tabular-nums"
-                      style={fs.meta}
+                      className="text-meta flex flex-wrap items-center gap-x-4 gap-y-2 tabular-nums"
                     >
                       <span className="text-emerald-600 dark:text-emerald-400">
                         {row.present} حاضر
@@ -467,7 +454,7 @@ export default function AttendanceReportClient({
                 hint={`${filtered.length} من ${records.length}`}
                 action={
                   canCorrect && staff.length > 0 ? (
-                    <button onClick={openCreate} className={ghostClass} style={fs.meta}>
+                    <button onClick={openCreate} className={btn.secondary}>
                       <Plus className="w-3.5 h-3.5" />
                       تسجيل يدوي
                     </button>
@@ -477,25 +464,25 @@ export default function AttendanceReportClient({
             </div>
 
             {filtered.length === 0 ? (
-              <p className="px-6 pb-8 text-slate-400" style={fs.body}>
+              <p className="px-6 pb-8 text-slate-400 text-body">
                 لا توجد سجلات مطابقة
               </p>
             ) : (
               // The table scrolls inside its own card rather than pushing the
               // page sideways — the header and summary stay put while reading.
               <div className="overflow-x-auto">
-                <table className="w-full border-collapse" style={fs.meta}>
+                <table className="w-full border-collapse text-meta">
                   <thead>
                     <tr className="shadow-[inset_0_-1px_0_0_rgb(100_116_139_/_.14)]">
-                      <th className={`${thClass} hr-eyebrow`}>الموظف</th>
-                      <th className={`${thClass} hr-eyebrow`}>التاريخ</th>
-                      <th className={`${thClass} hr-eyebrow`}>حضور</th>
-                      <th className={`${thClass} hr-eyebrow`}>انصراف</th>
-                      <th className={`${thClass} hr-eyebrow`}>الحالة</th>
-                      <th className={`${thClass} hr-eyebrow`}>الموقع</th>
-                      <th className={`${thClass} hr-eyebrow`}>المسافة</th>
-                      <th className={`${thClass} hr-eyebrow`}>IP</th>
-                      {canCorrect && <th className={`${thClass} hr-eyebrow`}>تصحيح</th>}
+                      <th className={`${thClass}`}>الموظف</th>
+                      <th className={`${thClass}`}>التاريخ</th>
+                      <th className={`${thClass}`}>حضور</th>
+                      <th className={`${thClass}`}>انصراف</th>
+                      <th className={`${thClass}`}>الحالة</th>
+                      <th className={`${thClass}`}>الموقع</th>
+                      <th className={`${thClass}`}>المسافة</th>
+                      <th className={`${thClass}`}>IP</th>
+                      {canCorrect && <th className={`${thClass}`}>تصحيح</th>}
                     </tr>
                   </thead>
                   <tbody>
@@ -516,24 +503,22 @@ export default function AttendanceReportClient({
                               {r.userName}
                             </span>
                             {r.manualAt && (
-                              <Chip tone="neutral">
+                              <Badge tone="neutral">
                                 <PencilLine className="w-3 h-3" />
                                 يدوي
-                              </Chip>
+                              </Badge>
                             )}
                           </div>
                           {r.manualAt && r.manualReason && (
                             <p
-                              className="text-slate-400 dark:text-slate-500 mt-2 max-w-[200px]"
-                              style={fs.eyebrow}
+                              className="text-caption text-slate-400 dark:text-slate-500 mt-2 max-w-[200px]"
                             >
                               {r.manualReason}
                             </p>
                           )}
                           {r.isSuspicious && r.suspiciousReason && (
                             <p
-                              className="text-amber-600 dark:text-amber-400 mt-2 max-w-[200px]"
-                              style={fs.eyebrow}
+                              className="text-caption text-amber-600 dark:text-amber-400 mt-2 max-w-[200px]"
                             >
                               {r.suspiciousReason}
                             </p>
@@ -549,8 +534,7 @@ export default function AttendanceReportClient({
                           {riyadhTime(r.checkOutAt)}
                           {r.autoClosedAt && (
                             <span
-                              className="block text-amber-600 dark:text-amber-400 mt-1"
-                              style={fs.eyebrow}
+                              className="text-caption block text-amber-600 dark:text-amber-400 mt-1"
                               title="لم يسجّل انصرافه؛ أُغلق اليوم آلياً على وقت نهاية الدوام"
                             >
                               أُغلق تلقائياً
@@ -558,9 +542,9 @@ export default function AttendanceReportClient({
                           )}
                         </td>
                         <td className={tdClass}>
-                          <Chip tone={statusTone[r.status] ?? "neutral"}>
+                          <Badge tone={statusTone[r.status] ?? "neutral"}>
                             {ATTENDANCE_STATUS_LABELS[r.status] ?? r.status}
-                          </Chip>
+                          </Badge>
                         </td>
                         <td className={`${tdClass} text-slate-500 dark:text-slate-400 whitespace-nowrap`}>
                           {r.siteName ?? "—"}
@@ -587,11 +571,10 @@ export default function AttendanceReportClient({
                           <td className={tdClass}>
                             <button
                               onClick={() => openEdit(r)}
-                              className={ghostClass}
-                              style={fs.meta}
+                              className={btn.secondary}
                               title="تصحيح هذا السجل"
                             >
-                              <PencilLine className="w-3.5 h-3.5" />
+                              <PencilLine className="text-meta w-3.5 h-3.5" />
                               تصحيح
                             </button>
                           </td>
@@ -614,13 +597,13 @@ export default function AttendanceReportClient({
               title={draft.locked ? `تصحيح سجل ${draft.userName}` : "تسجيل حضور يدوياً"}
               hint={draft.locked ? undefined : "للحالات التي تعذّر فيها تحديد الموقع"}
               action={
-                <button onClick={() => setDraft(null)} className={ghostClass} style={fs.meta}>
+                <button onClick={() => setDraft(null)} className={btn.secondary}>
                   <X className="w-4 h-4" />
                 </button>
               }
             />
 
-            <p className="text-slate-400 dark:text-slate-500" style={fs.meta}>
+            <p className="text-slate-400 dark:text-slate-500 text-meta">
               السجل المُدخَل يدوياً لا يحمل أي إثبات للموقع، ويظهر موسوماً بـ«يدوي» لكل
               من يطّلع على التقرير.
             </p>
@@ -669,13 +652,12 @@ export default function AttendanceReportClient({
                 value={draft.reason}
                 onChange={(e) => setDraft({ ...draft, reason: e.target.value })}
                 placeholder="مثال: تعذّر تحديد الموقع داخل المبنى"
-                className={inputClass}
-                style={fs.body}
+                className={field}
               />
             </Field>
 
             {saveError && (
-              <p className="text-rose-600 dark:text-rose-400 font-semibold" style={fs.meta}>
+              <p className="text-body text-rose-600 dark:text-rose-400 font-semibold text-meta">
                 {saveError}
               </p>
             )}
@@ -684,13 +666,12 @@ export default function AttendanceReportClient({
               <button
                 onClick={submitCorrection}
                 disabled={saving || draft.reason.trim().length < 3 || !draft.workDate}
-                className={ctaClass}
-                style={fs.body}
+                className={btn.primary}
               >
-                {saving && <Loader2 className="w-4 h-4 animate-spin" />}
+                {saving && <Loader2 className="text-body w-4 h-4 animate-spin" />}
                 حفظ التصحيح
               </button>
-              <button onClick={() => setDraft(null)} className={ghostClass} style={fs.body}>
+              <button onClick={() => setDraft(null)} className={btn.secondary}>
                 إلغاء
               </button>
             </div>

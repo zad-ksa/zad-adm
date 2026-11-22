@@ -45,7 +45,7 @@ export default async function HrStaffPage({ params }: { params: Promise<{ name: 
         />
         <div
           className="rounded-2xl border border-slate-200/70 dark:border-slate-700/60
-                     bg-white/60 dark:bg-slate-900/40 px-6 py-10 text-center"
+ bg-white/60 dark:bg-slate-900/40 px-6 py-10 text-center"
         >
           <p className="text-slate-600 dark:text-slate-300 text-[15px] leading-relaxed">
             لا تملك صلاحية إدارة الموظفين.

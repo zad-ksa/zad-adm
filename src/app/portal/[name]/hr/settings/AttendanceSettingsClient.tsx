@@ -26,17 +26,8 @@ import {
 import { ScheduleShape, WEEKDAY_LABELS } from "@/lib/attendanceTime";
 import HolidaysPanel, { type Holiday } from "./HolidaysPanel";
 import EmployeeLeavePanel, { type LeaveRow } from "./EmployeeLeavePanel";
-import {
-  Banner,
-  Chip,
-  Field,
-  HrCard,
-  SectionHead,
-  ctaClass,
-  fs,
-  ghostClass,
-  inputClass,
-} from "../ui";
+import { Field, HrCard, SectionHead } from "../ui";
+import { Badge, Note, btn, field } from "@/components/console/ui";
 import TimeField from "@/components/console/TimeField";
 
 type Site = {
@@ -239,28 +230,28 @@ export default function AttendanceSettingsClient({
   return (
     <div className="space-y-6">
       {error && (
-        <Banner tone="danger" icon={AlertTriangle}>
+        <Note tone="danger" icon={<AlertTriangle className="size-3.5" />}>
           {error}
-        </Banner>
+        </Note>
       )}
       {notice && !error && (
-        <Banner tone="ok" icon={Check}>
+        <Note tone="good" icon={<Check className="size-3.5" />}>
           {notice}
-        </Banner>
+        </Note>
       )}
 
       {/* The master switch, first on the page: nothing else here matters while
           attendance is off, and it is the one setting staff feel immediately. */}
-      <HrCard className="p-6 hr-reveal">
+      <HrCard className="p-6">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div className="min-w-0">
-            <p className="hr-eyebrow text-primary/60 dark:text-teal-400/60" style={fs.eyebrow}>
+            <p className="text-primary/60 dark:text-teal-400/60 text-caption">
               حالة التحضير
             </p>
-            <h3 className="font-bold text-slate-900 dark:text-slate-50 mt-2" style={fs.h3}>
+            <h3 className="font-bold text-slate-900 dark:text-slate-50 mt-2 text-title">
               {initialAttendanceOpen ? "التحضير مفعّل" : "التحضير مغلق"}
             </h3>
-            <p className="text-slate-400 dark:text-slate-500 mt-2 max-w-prose" style={fs.meta}>
+            <p className="text-slate-400 dark:text-slate-500 mt-2 max-w-prose text-meta">
               {initialAttendanceOpen
                 ? "يستطيع الموظفون تسجيل حضورهم وانصرافهم. إغلاقه يوقف التسجيل، ولا تُحتسب أيام الإغلاق غياباً."
                 : "لا يستطيع أحد تسجيل حضوره حتى تفعّله. الأيام السابقة للتفعيل لا تُحتسب غياباً على أحد."}
@@ -272,15 +263,14 @@ export default function AttendanceSettingsClient({
                 initialAttendanceOpen ? "تم إغلاق التحضير" : "تم تفعيل التحضير")
             }
             disabled={busy !== null}
-            style={fs.body}
             className={
               initialAttendanceOpen
-                ? `${ghostClass} shrink-0`
-                : `${ctaClass} shrink-0`
+                ? `${btn.secondary} shrink-0`
+                : `${btn.primary} shrink-0`
             }
           >
             {busy === "attendance-gate" ? (
-              <Loader2 className="w-4 h-4 animate-spin" />
+              <Loader2 className="text-body w-4 h-4 animate-spin" />
             ) : initialAttendanceOpen ? (
               <Lock className="w-4 h-4" />
             ) : (
@@ -292,7 +282,7 @@ export default function AttendanceSettingsClient({
       </HrCard>
 
       {/* ── Bento: sites (7) beside schedule (5) ──────────────────────────── */}
-      <section className="grid grid-cols-12 gap-4 hr-reveal">
+      <section className="grid grid-cols-12 gap-4">
         {/* Work sites */}
         <div className="col-span-12 lg:col-span-7">
           <HrCard className="h-full flex flex-col">
@@ -308,10 +298,9 @@ export default function AttendanceSettingsClient({
                         setSiteForm({ ...emptySite });
                         setIsSiteFormOpen(true);
                       }}
-                      className={ghostClass}
-                      style={fs.meta}
+                      className={btn.secondary}
                     >
-                      <Plus className="w-4 h-4" />
+                      <Plus className="text-meta w-4 h-4" />
                       موقع جديد
                     </button>
                   ) : undefined
@@ -320,7 +309,7 @@ export default function AttendanceSettingsClient({
             </div>
 
             {initialSites.length === 0 && !isSiteFormOpen && (
-              <p className="px-6 pb-8 text-slate-400" style={fs.body}>
+              <p className="px-6 pb-8 text-slate-400 text-body">
                 لن يتمكن الموظفون من التسجيل حتى يُحدَّد موقع واحد على الأقل.
               </p>
             )}
@@ -339,16 +328,14 @@ export default function AttendanceSettingsClient({
                     <div className="flex-1 min-w-[160px] space-y-2">
                       <div className="flex items-center gap-2 flex-wrap">
                         <span
-                          className="font-semibold text-slate-800 dark:text-slate-100"
-                          style={fs.h3}
+                          className="text-title font-semibold text-slate-800 dark:text-slate-100"
                         >
                           {site.name}
                         </span>
-                        {!site.isActive && <Chip>معطّل</Chip>}
+                        {!site.isActive && <Badge tone="neutral">معطّل</Badge>}
                       </div>
                       <p
-                        className="text-slate-400 dark:text-slate-500 font-mono tabular-nums"
-                        style={fs.meta}
+                        className="text-meta text-slate-400 dark:text-slate-500 font-mono tabular-nums"
                         dir="ltr"
                       >
                         {site.latitude.toFixed(5)}, {site.longitude.toFixed(5)}
@@ -368,8 +355,7 @@ export default function AttendanceSettingsClient({
                           });
                           setIsSiteFormOpen(true);
                         }}
-                        className={ghostClass}
-                        style={fs.meta}
+                        className={btn.secondary}
                       >
                         تعديل
                       </button>
@@ -377,11 +363,10 @@ export default function AttendanceSettingsClient({
                         <button
                           onClick={() => removeSite(site)}
                           disabled={busy === site.id}
-                          style={fs.meta}
-                          className="inline-flex items-center gap-2 px-4 py-2 rounded-xl font-medium
-                                     text-rose-600 dark:text-rose-400
+                          className="text-meta text-meta inline-flex items-center gap-2 px-4 py-2 rounded-xl font-medium
+ text-rose-600 dark:text-rose-400
                                      shadow-[inset_0_0_0_1px_rgb(225_29_72_/_.20)]
-                                     hover:shadow-[var(--hr-shadow-danger)]
+                                     hover:border border-red-200 dark:border-red-500/20
                                      disabled:opacity-40 disabled:pointer-events-none
                                      transition-[box-shadow] duration-300"
                         >
@@ -415,17 +400,15 @@ export default function AttendanceSettingsClient({
                     <input
                       value={siteForm.name}
                       onChange={(e) => setSiteForm({ ...siteForm, name: e.target.value })}
-                      className={inputClass}
-                      style={fs.body}
+                      className={field}
                       placeholder="المقر الرئيسي"
                     />
                   </Field>
-                  <Field label="خط العرض" className="col-span-6 sm:col-span-4">
+                  <Field label="خط العرض" className="text-body col-span-6 sm:col-span-4">
                     <input
                       value={siteForm.latitude}
                       onChange={(e) => setSiteForm({ ...siteForm, latitude: e.target.value })}
-                      className={`${inputClass} font-mono tabular-nums`}
-                      style={fs.body}
+                      className={`text-body ${field} font-mono tabular-nums`}
                       dir="ltr"
                       inputMode="decimal"
                       placeholder="24.712345"
@@ -435,8 +418,7 @@ export default function AttendanceSettingsClient({
                     <input
                       value={siteForm.longitude}
                       onChange={(e) => setSiteForm({ ...siteForm, longitude: e.target.value })}
-                      className={`${inputClass} font-mono tabular-nums`}
-                      style={fs.body}
+                      className={`text-body ${field} font-mono tabular-nums`}
                       dir="ltr"
                       inputMode="decimal"
                       placeholder="46.675296"
@@ -450,8 +432,7 @@ export default function AttendanceSettingsClient({
                     <input
                       value={siteForm.radiusMeters}
                       onChange={(e) => setSiteForm({ ...siteForm, radiusMeters: e.target.value })}
-                      className={`${inputClass} font-mono tabular-nums`}
-                      style={fs.body}
+                      className={`text-body ${field} font-mono tabular-nums`}
                       dir="ltr"
                       inputMode="numeric"
                     />
@@ -462,11 +443,10 @@ export default function AttendanceSettingsClient({
                   <button
                     onClick={useCurrentLocation}
                     disabled={locating}
-                    className={ghostClass}
-                    style={fs.body}
+                    className={btn.secondary}
                   >
                     {locating ? (
-                      <Loader2 className="w-4 h-4 animate-spin" />
+                      <Loader2 className="text-body w-4 h-4 animate-spin" />
                     ) : (
                       <Crosshair className="w-4 h-4" />
                     )}
@@ -475,10 +455,9 @@ export default function AttendanceSettingsClient({
                   <button
                     onClick={submitSite}
                     disabled={busy === "site"}
-                    className={ctaClass}
-                    style={fs.body}
+                    className={btn.primary}
                   >
-                    {busy === "site" && <Loader2 className="w-4 h-4 animate-spin" />}
+                    {busy === "site" && <Loader2 className="text-body w-4 h-4 animate-spin" />}
                     حفظ الموقع
                   </button>
                 </div>
@@ -503,8 +482,7 @@ export default function AttendanceSettingsClient({
                 <input
                   value={schedule.lateAfterMinutes}
                   onChange={(e) => setSchedule({ ...schedule, lateAfterMinutes: e.target.value })}
-                  className={`${inputClass} tabular-nums`}
-                  style={fs.body}
+                  className={`text-body ${field} tabular-nums`}
                   dir="ltr"
                   inputMode="numeric"
                 />
@@ -515,8 +493,7 @@ export default function AttendanceSettingsClient({
                   onChange={(e) =>
                     setSchedule({ ...schedule, earlyLeaveBeforeMinutes: e.target.value })
                   }
-                  className={`${inputClass} tabular-nums`}
-                  style={fs.body}
+                  className={`text-body ${field} tabular-nums`}
                   dir="ltr"
                   inputMode="numeric"
                 />
@@ -524,7 +501,7 @@ export default function AttendanceSettingsClient({
             </div>
 
             <div>
-              <p className="hr-eyebrow text-slate-400 dark:text-slate-500 mb-2" style={fs.eyebrow}>
+              <p className="text-slate-400 dark:text-slate-500 mb-2 text-caption">
                 أيام العمل
               </p>
               <div className="flex flex-wrap gap-2">
@@ -543,8 +520,7 @@ export default function AttendanceSettingsClient({
                             : [...schedule.workDays, day].sort(),
                         })
                       }
-                      style={fs.meta}
-                      className={`px-4 py-2 rounded-xl font-medium
+                      className={`text-meta px-4 py-2 rounded-xl font-medium
                                   transition-[box-shadow,color,background-color] duration-300 ${
                                     selected
                                       ? "text-primary dark:text-teal-400 bg-primary/[0.06] shadow-[inset_0_0_0_1px_rgb(15_118_110_/_.28)] dark:shadow-[inset_0_0_0_1px_rgb(45_212_191_/_.28)]"
@@ -561,8 +537,7 @@ export default function AttendanceSettingsClient({
             <button
               onClick={submitSchedule}
               disabled={busy === "schedule"}
-              className={`${ctaClass} w-full`}
-              style={fs.body}
+              className={`text-body ${btn.primary} w-full`}
             >
               {busy === "schedule" && <Loader2 className="w-4 h-4 animate-spin" />}
               حفظ أوقات الدوام
@@ -589,22 +564,20 @@ export default function AttendanceSettingsClient({
       </section>
 
       {/* ── Bento: policy rationale (5) beside the allow list (7) ─────────── */}
-      <section className="grid grid-cols-12 gap-4 hr-reveal">
+      <section className="grid grid-cols-12 gap-4">
         <div className="col-span-12 lg:col-span-5">
           <HrCard className="p-6 h-full space-y-6">
             <SectionHead icon={Wifi} title="التحقق من الشبكة" hint="طبقة ثانية فوق الموقع" />
 
             <HrCard sunk className="p-4 space-y-2">
               <p
-                className="text-slate-500 dark:text-slate-400 leading-relaxed"
-                style={fs.meta}
+                className="text-meta text-slate-500 dark:text-slate-400 leading-relaxed"
               >
                 تحديد الموقع في المتصفح قابل للتزوير عبر أدوات المطوّر. عنوان الشبكة أصعب بكثير في
                 التزوير.
               </p>
               <p
-                className="text-slate-500 dark:text-slate-400 leading-relaxed"
-                style={fs.meta}
+                className="text-meta text-slate-500 dark:text-slate-400 leading-relaxed"
               >
                 يتحقق الشرط فقط عند الاتصال بواي فاي المقر؛ على بيانات الجوال لن يطابق العنوان.
               </p>
@@ -626,7 +599,7 @@ export default function AttendanceSettingsClient({
                                     : "shadow-[inset_0_0_0_1px_rgb(100_116_139_/_.14)] hover:shadow-[inset_0_0_0_1px_rgb(15_118_110_/_.24)]"
                                 }`}
                   >
-                    <span className="hr-icon-lead hr-icon-lead--h3">
+                    <span>
                       <span
                         className={`w-4 h-4 rounded-full transition-colors duration-300 ${
                           selected
@@ -637,18 +610,16 @@ export default function AttendanceSettingsClient({
                     </span>
                     <span className="min-w-0">
                       <span
-                        className={`block font-semibold ${
+                        className={`text-title block font-semibold ${
                           selected
                             ? "text-primary dark:text-teal-400"
                             : "text-slate-700 dark:text-slate-200"
                         }`}
-                        style={fs.h3}
                       >
                         {option.label}
                       </span>
                       <span
-                        className="block text-slate-400 dark:text-slate-500 mt-2"
-                        style={fs.meta}
+                        className="text-meta block text-slate-400 dark:text-slate-500 mt-2"
                       >
                         {option.hint}
                       </span>
@@ -665,14 +636,14 @@ export default function AttendanceSettingsClient({
             <SectionHead
               title="عناوين الشبكة المسموحة"
               hint="عنوان مفرد أو نطاق CIDR"
-              action={<Chip tone={ipRanges.length > 0 ? "primary" : "neutral"}>{ipRanges.length}</Chip>}
+              action={<Badge tone={ipRanges.length > 0 ? "brand" : "neutral"}>{ipRanges.length}</Badge>}
             />
 
             {ipMode === "BLOCK" && (
-              <Banner tone="warn" icon={AlertTriangle}>
+              <Note tone="warn" icon={<AlertTriangle className="size-3.5" />}>
                 في وضع المنع لن يتمكن أي موظف من التسجيل خارج شبكة الجمعية — بما في ذلك المهام
                 الخارجية والفروع التي لا تمر عبر نفس الاتصال. أضِف كل عناوين الجمعية أولاً.
-              </Banner>
+              </Note>
             )}
 
             <div className="flex gap-2">
@@ -686,8 +657,7 @@ export default function AttendanceSettingsClient({
                   if (value && !ipRanges.includes(value)) setIpRanges([...ipRanges, value]);
                   setIpDraft("");
                 }}
-                className={`${inputClass} font-mono tabular-nums`}
-                style={fs.body}
+                className={`text-body ${field} font-mono tabular-nums`}
                 dir="ltr"
                 placeholder="212.118.5.0/24"
               />
@@ -697,8 +667,7 @@ export default function AttendanceSettingsClient({
                   if (value && !ipRanges.includes(value)) setIpRanges([...ipRanges, value]);
                   setIpDraft("");
                 }}
-                className={`${ghostClass} shrink-0`}
-                style={fs.body}
+                className={`text-body ${btn.secondary} shrink-0`}
               >
                 إضافة
               </button>
@@ -707,8 +676,7 @@ export default function AttendanceSettingsClient({
             {currentIp && !ipRanges.includes(currentIp) && (
               <button
                 onClick={() => setIpRanges([...ipRanges, currentIp])}
-                className="self-start text-primary dark:text-teal-400 hover:underline underline-offset-4 rounded-lg transition-colors duration-300"
-                style={fs.meta}
+                className="text-meta self-start text-primary dark:text-teal-400 hover:underline underline-offset-4 rounded-lg transition-colors duration-300"
               >
                 إضافة عنواني الحالي (<span dir="ltr" className="font-mono">{currentIp}</span>)
               </button>
@@ -716,7 +684,7 @@ export default function AttendanceSettingsClient({
 
             <div className="flex-1">
               {ipRanges.length === 0 ? (
-                <p className="text-slate-400 dark:text-slate-500" style={fs.meta}>
+                <p className="text-slate-400 dark:text-slate-500 text-meta">
                   القائمة فارغة — طبقة الشبكة غير مفعّلة عملياً.
                 </p>
               ) : (
@@ -725,12 +693,11 @@ export default function AttendanceSettingsClient({
                     <li
                       key={range}
                       className="flex items-center gap-2 px-4 py-2 rounded-xl
-                                 text-slate-600 dark:text-slate-300
+ text-slate-600 dark:text-slate-300
                                  shadow-[inset_0_0_0_1px_rgb(15_118_110_/_.16)]
                                  dark:shadow-[inset_0_0_0_1px_rgb(45_212_191_/_.16)]"
-                      style={fs.meta}
                     >
-                      <span dir="ltr" className="font-mono tabular-nums">
+                      <span dir="ltr" className="text-meta font-mono tabular-nums">
                         {range}
                       </span>
                       <button
@@ -749,8 +716,7 @@ export default function AttendanceSettingsClient({
             <button
               onClick={submitIpPolicy}
               disabled={busy === "ip"}
-              className={`${ctaClass} self-start`}
-              style={fs.body}
+              className={`text-body ${btn.primary} self-start`}
             >
               {busy === "ip" && <Loader2 className="w-4 h-4 animate-spin" />}
               حفظ إعدادات الشبكة

@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
 import { Check, Info, Minus, TriangleAlert } from "lucide-react";
+import { highlightParts } from "@/lib/arabicSearch";
 
 // عناصر لوحات الإدارة المشتركة (الموظفون، الصلاحيات). الأحجام بالبكسل صراحةً:
 // globals.css يجعل text-sm وtext-xs كليهما 11px في الموقع كله.
@@ -418,6 +419,36 @@ export function Count({ n, unit }: { n: number; unit: string }) {
 
 export function Dot() {
   return <span aria-hidden className="size-0.5 rounded-full bg-slate-300 dark:bg-slate-600" />;
+}
+
+/**
+ * نصٌّ يُعلَّم فيه موضعُ البحث — صفحةٌ تُرشَّح بكلمةٍ تقول أين وجدتها.
+ *
+ * **والتقطيعُ في المكتبة لا هنا**: `highlightParts` في `lib/arabicSearch`
+ * تُسوّي الهمزةَ والتاءَ والتشكيلَ قبل المقارنة، وهي منطقٌ يُختبر. وهذا رسمُه.
+ *
+ * **ولا `dangerouslySetInnerHTML`**: النصُّ قد يحمل قوساً أو علامةً، فيُبنى
+ * قطعةً قطعةً ولا يُفسَّر منه شيء.
+ */
+export function Highlight({ text, query }: { text: string; query: string }) {
+  const parts = highlightParts(text, query);
+  if (parts.length === 1 && !parts[0].hit) return <>{text}</>;
+  return (
+    <>
+      {parts.map((part, index) =>
+        part.hit ? (
+          <mark
+            key={index}
+            className="rounded-[3px] bg-amber-100 px-0.5 text-inherit dark:bg-amber-400/25 dark:text-amber-100"
+          >
+            {part.text}
+          </mark>
+        ) : (
+          <span key={index}>{part.text}</span>
+        )
+      )}
+    </>
+  );
 }
 
 // ── ما كان ناقصاً في العُدّة ───────────────────────────────────────────────

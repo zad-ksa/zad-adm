@@ -146,7 +146,9 @@ export default function CharitySidebar({
     // «الخدمات» تبويبٌ مشتقٌّ: يُعرض لمن له صلاحيّةٌ في خدمةٍ ما، وصفحتُه تسرد
     // خدماتِه وحدَها — لا صلاحيّةَ باسمه تُمنح (`view_services` متقاعدة).
     { id: "services", label: "الخدمات", href: `/portal/${encodeURIComponent(charityName)}/services`, exact: true, icon: Briefcase, show: seesCharityServicesTab(isOfficial, permissions) },
-    { id: "governance", label: "الحوكمة", href: `/portal/${encodeURIComponent(charityName)}/governance`, exact: true, icon: Scale, show: can("view_governance") },
+    // والحوكمةُ ليست `exact`: الدليلُ صفحةٌ تحتها (`/governance/standards`)،
+    // وهي وجهتُه الدائمة — فتبويبٌ يُعلَّم في الباب وحدَه لا يُعلَّم أبداً.
+    { id: "governance", label: "الحوكمة", href: `/portal/${encodeURIComponent(charityName)}/governance`, icon: Scale, show: can("view_governance") },
     // Viewing and raising a design request are one permission — see
     // charityPermissions.ts.
     { id: "design-requests", label: "طلبات التصاميم", href: `/portal/${encodeURIComponent(charityName)}/design-requests`, exact: true, icon: Palette, show: can("view_design_requests") },

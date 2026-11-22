@@ -1,157 +1,130 @@
-import { Shield, BookOpen, AlertCircle, Scale, Building, Landmark, ChevronLeft, CheckCircle2, TrendingUp, Gem } from "lucide-react";
-import Link from "next/link";
-import { CharitySize } from "@/data/governanceManual";
-import AutoRedirectCharitySize from "@/components/AutoRedirectCharitySize";
+import type { Metadata } from "next";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
+import { Building2, Gem, Landmark, Scale, TrendingUp } from "lucide-react";
+import { PageHeader } from "@/components/console/layout";
+import { NavCard, Note, card } from "@/components/console/ui";
+import { prisma } from "@/lib/db";
 import { requirePortalPermission } from "@/lib/portalAccess";
+import {
+  CHARITY_SIZES,
+  GUIDE_SIZE_COOKIE,
+  guideTotals,
+  isGuideSize,
+  type GuideSizeId,
+} from "@/lib/governanceGuide";
+import { governanceManuals } from "@/data/governanceManual";
 
-export default async function GovernancePage({ 
+export const metadata: Metadata = { title: "دليل الحوكمة" };
+
+/** أيقونةُ الحجم — وهي في الدليل من قبلُ، فلم تُفرض على بطاقةٍ لم تحملها. */
+const SIZE_ICON: Record<GuideSizeId, typeof Building2> = {
+  MICRO: Building2,
+  SMALL: Building2,
+  MEDIUM: Landmark,
+  LARGE: TrendingUp,
+  MEGA: Gem,
+};
+
+/**
+ * دليلُ الحوكمة — بابُه: أيُّ حجمٍ تُقاس به الجمعية.
+ *
+ * **والحجمُ يُقرأ من ملفِّ الجمعية أوّلاً**: زادٌ تسجّله في `Charity.size`،
+ * وهو الخبرُ الصحيح. فإن لم يُسجَّل قُرئ اختيارٌ سابقٌ من كعكةٍ في المتصفّح،
+ * فإن لم يكن عُرضت الأحجام.
+ *
+ * **وكانت تُقرأ من `localStorage` ومن كعكةٍ معاً**: الأولى بعد رسم الصفحة،
+ * فتُرسم شاشةُ الأحجام ثمّ تُقفز عنها — ومصدران لخبرٍ واحدٍ يختلفان. فبقيت
+ * الكعكةُ وحدَها: تُقرأ على الخادم، فلا ترتدّ الصفحةُ أمام العين.
+ */
+export default async function GovernancePage({
   params,
-  searchParams
-}: { 
+  searchParams,
+}: {
   params: Promise<{ name: string }>;
-  searchParams: Promise<{ change_size?: string }>;
+  /** `change=1` — «تغيير الحجم»: تُعرض الأحجامُ ولو كان محفوظاً. */
+  searchParams: Promise<{ change?: string }>;
 }) {
   const { name } = await params;
-  const charityName = decodeURIComponent(name);
-  const resolvedSearchParams = await searchParams;
+  const { change } = await searchParams;
+  const access = await requirePortalPermission(name, "view_governance");
+  const base = `/portal/${encodeURIComponent(access.charity.name)}/governance`;
 
-  await requirePortalPermission(name, "view_governance");
-
-  if (!resolvedSearchParams.change_size) {
-    const cookieStore = await cookies();
-    const savedSize = cookieStore.get(`preferredCharitySize_${encodeURIComponent(charityName)}`)?.value;
-    
-    if (savedSize) {
-      redirect(`/portal/${encodeURIComponent(charityName)}/governance/standards?size=${savedSize}`);
-    }
+  if (!change) {
+    const saved = await savedSize(access.charity.id, access.charity.name);
+    if (saved) redirect(`${base}/standards?size=${saved}`);
   }
 
-  const sizes = [
-    {
-      id: "MICRO",
-      title: "الجمعيات متناهية الصغر",
-      desc: "إجمالي الإيرادات السنوية لا يتجاوز 500 ألف ريال سعودي.",
-      icon: <Building className="w-5 h-5 text-slate-500 dark:text-slate-400 group-hover:text-primary transition-colors" />,
-      features: ["معيار الامتثال والالتزام الأساسي", "مؤشرات الشفافية المبسطة"]
-    },
-    {
-      id: "SMALL",
-      title: "الجمعيات الصغيرة",
-      desc: "إجمالي الإيرادات من 500 ألف إلى 2 مليون ريال سعودي.",
-      icon: <Building className="w-5 h-5 text-slate-500 dark:text-slate-400 group-hover:text-primary transition-colors" />,
-      features: ["الامتثال والالتزام الأساسي", "الشفافية المبسطة"]
-    },
-    {
-      id: "MEDIUM",
-      title: "الجمعيات المتوسطة",
-      desc: "إجمالي الإيرادات من 2 مليون إلى 8 مليون ريال سعودي.",
-      icon: <Landmark className="w-5 h-5 text-slate-500 dark:text-slate-400 group-hover:text-primary transition-colors" />,
-      features: ["معيار السلامة المالية", "سياسات حوكمة متقدمة"]
-    },
-    {
-      id: "LARGE",
-      title: "الجمعيات الكبيرة",
-      desc: "إجمالي الإيرادات من 8 مليون إلى 30 مليون ريال سعودي.",
-      icon: <TrendingUp className="w-5 h-5 text-slate-500 dark:text-slate-400 group-hover:text-primary transition-colors" />,
-      features: ["مراجعة داخلية مستقلة إلزامية", "لجان منبثقة (مراجعة، مكافآت)"]
-    },
-    {
-      id: "MEGA",
-      title: "الجمعيات متناهية الكبر",
-      desc: "إجمالي الإيرادات يتجاوز 30 مليون ريال سعودي.",
-      icon: <Gem className="w-5 h-5 text-slate-500 dark:text-slate-400 group-hover:text-primary transition-colors" />,
-      features: ["حوكمة مؤسسية شاملة", "تدقيق مالي عالي المستوى"]
-    }
-  ];
-
   return (
-    <div className="min-h-full bg-[#FAFAFA] dark:bg-[#0A0A0A] p-4 md:p-8 selection:bg-primary/20 selection:text-primary">
-      <AutoRedirectCharitySize charityName={charityName} />
-      
-      {/* Header Section */}
-      <div className="mb-10 max-w-6xl mx-auto space-y-4">
-        <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/5 dark:bg-primary/10 border border-primary/10 dark:border-primary/20 text-primary">
-          <Scale className="w-4 h-4" />
-          <span className="text-xs font-semibold tracking-widest uppercase">المركز الوطني لتنمية القطاع غير الربحي</span>
-        </div>
-        <h1 
-          className="font-bold text-slate-900 dark:text-white tracking-tight"
-          style={{ fontSize: "clamp(2rem, 4vw, 3rem)", lineHeight: 1.1 }}
-        >
-          دليل <span className="text-primary">الحوكمة</span> الشامل
-        </h1>
-        <p 
-          className="text-slate-500 dark:text-slate-400 max-w-2xl font-medium"
-          style={{ fontSize: "clamp(1rem, 2vw, 1.125rem)", lineHeight: 1.6 }}
-        >
-          مرجعك الأساسي لفهم معايير الحوكمة، وتصنيف الجمعيات الأهلية، ومتطلبات الامتثال لتحقيق الشفافية والاستدامة المؤسسية.
+    <div className="space-y-6" dir="rtl">
+      <PageHeader
+        icon={<Scale className="size-6" />}
+        title="دليل الحوكمة"
+        description="معايير الحوكمة ومؤشراتها والشواهد المطلوبة في كل مؤشر، كما يصنفها المركز الوطني لتنمية القطاع غير الربحي."
+      />
+
+      <Note tone="warn">
+        <span className="font-semibold">درجة الحوكمة شرط للدعم.</span> عدم تحقيق درجة الاجتياز قد
+        يعرض الجمعية لإيقاف الدعم الحكومي وتجميد الحسابات البنكية، فحدث بياناتك في منصة المركز أولا
+        بأول.
+      </Note>
+
+      <section className={`${card.static} p-5`}>
+        <h2 className="text-title font-semibold text-slate-900 dark:text-slate-100">ما الحوكمة؟</h2>
+        <p className="mt-1.5 max-w-3xl text-body leading-6 text-slate-500 dark:text-slate-400">
+          نظام يحدد من يتخذ القرار وكيف يتخذه، ويوزع الأدوار والمسؤوليات بوضوح بين الجمعية العمومية
+          ومجلس الإدارة والإدارة التنفيذية — لتبلغ الجمعية أهدافها بشفافية ومسؤولية.
         </p>
-      </div>
+      </section>
 
-      {/* Bento Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-12 gap-6 max-w-6xl mx-auto auto-rows-[minmax(180px,auto)]">
-        
-        {/* Intro Card - Span 8 */}
-        <div className="md:col-span-8 group relative rounded-3xl overflow-hidden bg-white dark:bg-[#111] ring-1 ring-slate-200 dark:ring-slate-800/80 shadow-sm hover:shadow-md transition-all duration-500 flex flex-col justify-between p-8">
-          <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-primary/5 dark:bg-primary/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3 pointer-events-none transition-opacity duration-500 opacity-50 group-hover:opacity-100" />
-          
-          <div className="relative z-10 space-y-6">
-            <div className="w-12 h-12 rounded-2xl bg-primary/10 dark:bg-primary/20 flex items-center justify-center border border-primary/20 dark:border-primary/30">
-              <Shield className="w-6 h-6 text-primary" />
-            </div>
-            
-            <div className="space-y-3">
-              <h2 className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">ما هي الحوكمة؟</h2>
-              <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed max-w-lg">
-                نظام يحدد من يتخذ القرارات وكيفية اتخاذها، ويضمن وجود هيكل تنظيمي يوزع الأدوار والمسؤوليات بوضوح بين الجمعية العمومية، ومجلس الإدارة، والإدارة التنفيذية، لتحقيق أهداف الجمعية بشفافية ومسؤولية.
-              </p>
-            </div>
-          </div>
+      <section className="space-y-3">
+        <div>
+          <h2 className="text-section font-semibold tracking-tight">اختر حجم الجمعية</h2>
+          <p className="mt-0.5 text-body text-slate-500 dark:text-slate-400">
+            الحجم يحدد المعايير المطلوبة منك. والحد إيراد السنة.
+          </p>
         </div>
 
-        {/* Info / Alert Block - Span 4 */}
-        <div className="md:col-span-4 relative rounded-3xl overflow-hidden bg-rose-500/5 dark:bg-rose-500/10 ring-1 ring-rose-500/20 shadow-sm p-6 flex items-start gap-4 h-full">
-          <div className="shrink-0 mt-1">
-            <AlertCircle className="w-5 h-5 text-rose-500" />
-          </div>
-          <div>
-            <h4 className="text-sm font-bold text-rose-700 dark:text-rose-400 mb-1.5">تنبيه هام للجمعيات</h4>
-            <p className="text-xs text-rose-600/80 dark:text-rose-300/80 leading-relaxed">
-              عدم تحقيق درجة اجتياز الحوكمة قد يعرض الجمعية لإيقاف الدعم الحكومي وتجميد الحسابات البنكية. احرص على تحديث بياناتك بانتظام في منصة المركز.
-            </p>
-          </div>
+        <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+          {CHARITY_SIZES.map((size) => {
+            const Icon = SIZE_ICON[size.id];
+            const totals = guideTotals(governanceManuals[size.id] ?? []);
+            return (
+              <NavCard
+                key={size.id}
+                href={`${base}/standards?size=${size.id}`}
+                icon={<Icon className="size-5" />}
+                title={size.title}
+                description={size.revenue}
+                meta={`${totals.standards} معايير · ${totals.indicators} مؤشرا`}
+              />
+            );
+          })}
         </div>
-
-        {/* Charity Sizes Cards */}
-        {sizes.map((size) => (
-          <Link 
-            key={size.id}
-            href={`/portal/${encodeURIComponent(charityName)}/governance/standards?size=${size.id}`}
-            className="md:col-span-4 relative rounded-3xl overflow-hidden bg-white dark:bg-[#111] ring-1 ring-slate-200 dark:ring-slate-800/80 shadow-sm hover:shadow-md hover:ring-primary/40 dark:hover:ring-primary/50 transition-all duration-300 p-6 flex flex-col gap-4 group cursor-pointer"
-          >
-            <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
-            
-            <div className="flex items-start justify-between relative z-10">
-              <div className="w-10 h-10 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 flex items-center justify-center group-hover:scale-110 group-hover:bg-primary/5 group-hover:border-primary/20 transition-all duration-300">
-                {size.icon}
-              </div>
-              <ChevronLeft className="w-5 h-5 text-slate-400 group-hover:text-primary group-hover:-translate-x-1 transition-all duration-300" />
-            </div>
-
-            <div className="relative z-10">
-              <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-2">{size.title}</h3>
-              <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed min-h-[32px]">
-                {size.desc}
-              </p>
-            </div>
-          </Link>
-        ))}
-
-
-
-      </div>
+      </section>
     </div>
   );
+}
+
+/**
+ * الحجمُ المحفوظُ لهذه الجمعية: ملفُّها أوّلاً ثمّ كعكةُ المتصفّح.
+ *
+ * ومحروسٌ: `size` عمودٌ قد لا يكون في قاعدةٍ لم تُهاجَر بعد، ودليلٌ كاملٌ لا
+ * يسقط لعمودٍ ناقص — تُعرض الأحجامُ ويُختار منها.
+ */
+async function savedSize(charityId: string, charityName: string): Promise<GuideSizeId | null> {
+  try {
+    const charity = await prisma.charity.findUnique({
+      where: { id: charityId },
+      select: { size: true },
+    });
+    const size = charity?.size;
+    if (isGuideSize(size)) return size;
+  } catch {
+    // ويُمضى إلى الكعكة.
+  }
+
+  const jar = await cookies();
+  const picked = jar.get(`${GUIDE_SIZE_COOKIE}_${encodeURIComponent(charityName)}`)?.value;
+  return isGuideSize(picked) ? picked : null;
 }

@@ -297,35 +297,27 @@ function FieldCard({
     );
   };
 
-  const open = adding || !!editing;
-
   return (
     <article
       id={`field-${row.id}`}
       // ومرسىً لكلِّ مجال: قائمةُ الجهات تربط اسمَ المجال به، فيَنزل القارئُ
       // عليه بدل أن يبحث عنه في الصفحة.
-      className={cx(
-        "scroll-mt-24 rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900",
-        // ووقتَ الكتابة تأخذ البطاقةُ عرضَ الشبكة: نموذجٌ فيه قائمةٌ وحقلان
-        // في عمودٍ من ثلثٍ يُكتب في خانةٍ ضيّقة.
-        open && "md:col-span-2 xl:col-span-3"
-      )}
+      className="scroll-mt-24 rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900"
     >
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
           <h3 className="flex flex-wrap items-center gap-2 text-body font-semibold text-slate-900 dark:text-slate-100">
             {row.name}
-            {row.proposals.length > 0 && (
+            {/* وخانةُ الشارة واحدةٌ للحالين: «فيه كذا» أو «لم يُمسّ» — ولا
+                يُقرأ الثاني سطراً ثالثاً من الوصف. */}
+            {row.proposals.length > 0 ? (
               <Badge tone="brand">{row.proposals.length} مشروع مقترح</Badge>
+            ) : (
+              <Badge tone="neutral">لا مقترحات بعد</Badge>
             )}
           </h3>
           {row.description && (
             <p className="mt-0.5 text-caption leading-5 text-slate-500 dark:text-slate-400">{row.description}</p>
-          )}
-          {/* وحالُ المجال تُقرأ بنظرةٍ في الشبكة: الشارةُ تقول «فيه مقترح»،
-              وهذا السطرُ يقول «لم يُمسّ» — والغيابُ وحدَه لا يُفرَّق عن سهو. */}
-          {row.proposals.length === 0 && !open && (
-            <p className="mt-0.5 text-meta text-slate-400">لا مقترحات بعد</p>
           )}
           {/* وسومُ المجال كما كتبتها زاد — تُقرأ ولا تُحرَّر هنا. */}
           {row.tags.length > 0 && (
@@ -404,7 +396,9 @@ function FieldCard({
           <label className="block">
             <span className="mb-1 flex items-center justify-between text-caption font-semibold text-slate-500 dark:text-slate-400">
               <span>ملاحظة (اختياري)</span>
-              <span className="font-normal text-slate-400">{note.length} / 600</span>
+              <span dir="ltr" className="font-normal text-slate-400">
+                {note.length} / 600
+              </span>
             </span>
             <input
               value={note}

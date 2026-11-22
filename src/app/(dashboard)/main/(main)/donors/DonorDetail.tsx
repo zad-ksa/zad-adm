@@ -2,7 +2,7 @@
 
 import { useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowDown, ArrowUp, Building2, CalendarClock, ExternalLink, FileText, KeyRound, Layers, Pencil, Plus, Trash2, Wand2 } from "lucide-react";
+import { ArrowDown, ArrowUp, Building2, CalendarClock, ChevronDown, ChevronUp, ExternalLink, FileText, KeyRound, Layers, Pencil, Plus, Trash2, Wand2 } from "lucide-react";
 import {
   EmptyState,
   PageHeader,
@@ -29,6 +29,7 @@ import { confirmAction } from "@/components/console/confirmBus";
 import { GRANT_STATUSES, grantStatusLabel } from "@/lib/donorOrg";
 import {
   addDonorField,
+  copyDonorFields,
   deleteDonorAccountRow,
   deleteDonorField,
   importLegacyDonorFields,
@@ -92,6 +93,7 @@ export default function DonorDetail({
   accounts,
   grants,
   fields,
+  fieldSources,
   underDevelopment = false,
   showAccounts = true,
 }: {
@@ -102,6 +104,8 @@ export default function DonorDetail({
   grants: DonorGrantRow[];
   /** مجالاتُ المنح صفوفاً — تُقرأ في بوّابة الجمعية وتُكتب هنا. */
   fields: DonorFieldRow[];
+  /** جهاتٌ لها مجالات — يُنسخ منها إلى هذه. */
+  fieldSources?: { id: string; name: string; count: number }[];
   underDevelopment?: boolean;
   showAccounts?: boolean;
 }) {
@@ -306,8 +310,11 @@ export default function DonorDetail({
             dot: org.intakeStatus === "OPEN" ? "active" : "muted",
           },
           {
+            // والخانةُ مقاسُها رقم: التاريخُ فيها، و«بلا موعد» في سطر التلميح
+            // — ونصٌّ في خانةٍ بمقاس ٢٨px يلتفّ ويُقرأ عنواناً مكسوراً.
             label: org.intakeStatus === "OPEN" ? "يُغلق" : "يُفتح",
-            value: (org.intakeStatus === "OPEN" ? org.closesAt : org.opensAt) ?? "بلا موعدٍ معلن",
+            value: (org.intakeStatus === "OPEN" ? org.closesAt : org.opensAt) ?? "—",
+            hint: (org.intakeStatus === "OPEN" ? org.closesAt : org.opensAt) ? undefined : "بلا موعدٍ معلن",
           },
           {
             label: "الطلبات المرفوعة",
@@ -345,6 +352,7 @@ export default function DonorDetail({
         <GrantFieldsCard
           org={org}
           fields={fields}
+          sources={fieldSources}
           onDone={() => startTransition(() => router.refresh())}
           onRaise={(p) => setRaising(p)}
         />
@@ -782,11 +790,14 @@ function AccountSheet({
 function GrantFieldsCard({
   org,
   fields,
+  sources,
   onDone,
   onRaise,
 }: {
   org: DonorRow;
   fields: DonorFieldRow[];
+  /** وتُترك فارغةً حيث لا نسخ — كتبويبَي إحسان والصندوق. */
+  sources?: { id: string; name: string; count: number }[];
   onDone: () => void;
   /** رفعُ مقترحٍ منحةً — تفتح الصفحةُ لوحةَ المنحة مُعبَّأةً به. */
   onRaise: (proposal: DonorProposalRow) => void;
@@ -796,6 +807,9 @@ function GrantFieldsCard({
   const [description, setDescription] = useState("");
   const [tags, setTags] = useState<string[]>([]);
   const [editing, setEditing] = useState<DonorFieldRow | null>(null);
+  // والمقترحاتُ مطويّةٌ ما لم تُفتح: مجالٌ بستّة مقترحاتٍ كان يدفع أزرارَه
+  // بعيداً عن اسمه، ويجعل ارتفاعَ الصفوف متفاوتاً فيضيع المسحُ بالعين.
+  const [openProposals, setOpenProposals] = useState<Record<string, boolean>>({});
   const [busy, start] = useTransition();
 
   const run = (fn: () => Promise<{ ok: boolean; error?: string }>, done?: () => void) =>
@@ -819,12 +833,74 @@ function GrantFieldsCard({
 
   const submit = () => {
     if (editing) {
-      run(() => updateDonorField(editing.id, name, description, tags), reset);
+      run(() => updateDonorField(editing.id, name, description, tags), () => {
+        reset();
+        notify("ok", "حُفظ المجال.");
+      });
       return;
     }
-    run(() => addDonorField(org.id, name, description, tags), reset);
+    run(() => addDonorField(org.id, name, description, tags), () => {
+      reset();
+      // والنجاحُ يُقال كما يُقال الخطأ: إغلاقُ النموذج وحدَه لا يُفرَّق عن
+      // انصرافٍ بلا حفظ.
+      notify("ok", "أضيف المجال.");
+    });
   };
 
+  // نموذجٌ واحدٌ للإضافة والتعديل، يُركَّب في موضعين: فوق القائمة عند
+  // الإضافة، وفي مكان الصفِّ عند تعديله — فمن ضغط «تعديل» على التاسع كان
+  // النموذجُ يُفتح في أعلى القسم خارجَ شاشته، والصفُّ لا يقول إنّه قيد التحرير.
+  const fieldForm = (
+    <div className="space-y-2 rounded-xl border border-primary/15 bg-primary/[0.03] p-3 dark:border-teal-400/15 dark:bg-teal-400/[0.04]">
+          {/* وتسمياتٌ ظاهرةٌ لا نصٌّ داخل الحقل: النائبُ يختفي عند الكتابة،
+              فلا يبقى ما يقول أيُّ حقلٍ هذا ولا أيُّها إلزاميّ. */}
+          <div className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_minmax(0,2fr)]">
+            <label className="block">
+              <span className="mb-1 block text-caption font-semibold text-slate-500 dark:text-slate-400">
+                اسم المجال *
+              </span>
+              <input
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="مثال: التعليم"
+                className={field}
+                autoFocus
+              />
+            </label>
+            <label className="block">
+              <span className="mb-1 block text-caption font-semibold text-slate-500 dark:text-slate-400">
+                وصف المجال (اختياري)
+              </span>
+              <input
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                placeholder="ما يقبل في هذا المجال وما لا يقبل"
+                className={field}
+              />
+            </label>
+          </div>
+          {/* والوسومُ بعد الوصف: الوصفُ جملةٌ تُقرأ، والوسمُ كلمةٌ تُقارَن. */}
+          <label className="block">
+            <span className="mb-1 block text-caption font-semibold text-slate-500 dark:text-slate-400">
+              وسوم المجال (اختياري)
+            </span>
+            <TagsField
+              values={tags}
+              onChange={setTags}
+              label="وسوم المجال"
+              placeholder="اكتب وسما ثم اضغط Enter"
+            />
+          </label>
+          <div className="flex items-center gap-2">
+            <button type="button" disabled={!name.trim() || busy} onClick={submit} className={btn.primary}>
+              {editing ? "حفظ" : "إضافة"}
+            </button>
+            <button type="button" onClick={reset} disabled={busy} className={btn.secondary}>
+              إلغاء
+            </button>
+          </div>
+        </div>
+  );
   return (
     <section className="space-y-3">
       <div className="flex flex-wrap items-end justify-between gap-4">
@@ -838,46 +914,32 @@ function GrantFieldsCard({
           </p>
         </div>
         {!adding && !editing && (
-          <button type="button" onClick={() => setAdding(true)} className={btn.secondary}>
-            <Plus className="size-4" /> إضافة مجال
-          </button>
+          <div className="flex flex-wrap items-center gap-2">
+            {/* ونسخُ المجالات من جهةٍ أخرى: ستٌّ وستون جهةً مجالاتُها
+                متشابهة، وكتابتُها يدوياً لكلٍّ عملٌ يُكرَّر بلا داعٍ. */}
+            {sources && sources.length > 0 && (
+              <Select
+                placeholder="نسخ المجالات من جهة…"
+                onSelect={(id) =>
+                  run(() => copyDonorFields(id, org.id), () =>
+                    notify("ok", "نسخت المجالات.")
+                  )
+                }
+                options={sources.map((d) => ({
+                  value: d.id,
+                  label: d.name,
+                  hint: `${d.count} مجال`,
+                }))}
+              />
+            )}
+            <button type="button" onClick={() => setAdding(true)} className={btn.primary}>
+              <Plus className="size-4" /> إضافة مجال
+            </button>
+          </div>
         )}
       </div>
 
-      {(adding || editing) && (
-        <div className="space-y-2 rounded-xl border border-primary/15 bg-primary/[0.03] p-3 dark:border-teal-400/15 dark:bg-teal-400/[0.04]">
-          <div className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_minmax(0,2fr)]">
-            <input
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="اسم المجال — مثال: التعليم"
-              className={field}
-              autoFocus
-            />
-            <input
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder="وصف المجال (اختياري)"
-              className={field}
-            />
-          </div>
-          {/* والوسومُ بعد الوصف: الوصفُ جملةٌ تُقرأ، والوسمُ كلمةٌ تُقارَن. */}
-          <TagsField
-            values={tags}
-            onChange={setTags}
-            label="وسوم المجال"
-            placeholder="وسوم (اختياري) — اكتب وسما ثم اضغط Enter"
-          />
-          <div className="flex items-center gap-2">
-            <button type="button" disabled={!name.trim() || busy} onClick={submit} className={btn.primary}>
-              {editing ? "حفظ" : "إضافة"}
-            </button>
-            <button type="button" onClick={reset} disabled={busy} className={btn.secondary}>
-              إلغاء
-            </button>
-          </div>
-        </div>
-      )}
+      {adding && fieldForm}
 
       {fields.length === 0 ? (
         <div className={tableFrameClass}>
@@ -891,6 +953,10 @@ function GrantFieldsCard({
         <ul className="divide-y divide-slate-200 overflow-hidden rounded-xl border border-slate-200 dark:divide-slate-800 dark:border-slate-800">
           {fields.map((f, index) => (
             <li key={f.id} className="flex items-start gap-3 bg-white px-3 py-2.5 dark:bg-slate-900">
+              {editing?.id === f.id ? (
+                <div className="min-w-0 flex-1">{fieldForm}</div>
+              ) : (
+              <>
               <div className="min-w-0 flex-1">
                 <p className="text-body font-medium text-slate-900 dark:text-slate-100">{f.name}</p>
                 {f.description && (
@@ -913,10 +979,23 @@ function GrantFieldsCard({
                     فتُفصل عن وصف المجال بإطارٍ وشارةِ صاحبها، ولا تُقرأ ذيلاً له. */}
                 {f.proposals.length > 0 && (
                   <div className="mt-2 rounded-lg border border-slate-200 bg-slate-50/70 p-2 dark:border-slate-800 dark:bg-slate-800/40">
-                    <p className="mb-1.5 text-meta font-semibold text-slate-500 dark:text-slate-400">
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setOpenProposals((prev) => ({ ...prev, [f.id]: !prev[f.id] }))
+                      }
+                      aria-expanded={openProposals[f.id] ?? false}
+                      className="flex w-full items-center gap-1.5 text-meta font-semibold text-slate-500 outline-none transition-colors hover:text-slate-700 focus-visible:ring-2 focus-visible:ring-primary/40 dark:text-slate-400 dark:hover:text-slate-200"
+                    >
+                      {openProposals[f.id] ? (
+                        <ChevronUp className="size-3.5" />
+                      ) : (
+                        <ChevronDown className="size-3.5" />
+                      )}
                       مشاريع مقترحة من الجمعيات ({f.proposals.length})
-                    </p>
-                    <ul className="space-y-1.5">
+                    </button>
+                    {openProposals[f.id] && (
+                    <ul className="mt-1.5 space-y-1.5">
                       {f.proposals.map((p) => (
                         <li key={p.id} className="flex flex-wrap items-center gap-x-2 gap-y-1">
                           <Badge tone="neutral">{p.charityName}</Badge>
@@ -951,6 +1030,7 @@ function GrantFieldsCard({
                         </li>
                       ))}
                     </ul>
+                    )}
                   </div>
                 )}
               </div>
@@ -1013,6 +1093,8 @@ function GrantFieldsCard({
                   <Trash2 className="size-3.5" />
                 </button>
               </div>
+              </>
+              )}
             </li>
           ))}
         </ul>

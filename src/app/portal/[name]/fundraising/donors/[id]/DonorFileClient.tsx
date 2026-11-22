@@ -2,16 +2,26 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { Building2, ExternalLink, FileText, KeyRound, Layers, Plus, Trash2 } from "lucide-react";
+import { Building2, ExternalLink, FileText, KeyRound, Layers, Pencil, Plus, Trash2 } from "lucide-react";
 import { EmptyState, PageHeader, StatStrip } from "@/components/console/layout";
 import { Badge, MONO, Note, btn, cx, field } from "@/components/console/ui";
 import { CopyButton, SecretValue } from "@/components/console/Copy";
 import Select from "@/components/console/Select";
 import { notify } from "@/components/console/toastBus";
 import { confirmAction } from "@/components/console/confirmBus";
-import { addPortalProposal, deletePortalProposal } from "@/app/actions/charityFundraising";
+import {
+  addPortalProposal,
+  deletePortalProposal,
+  updatePortalProposal,
+} from "@/app/actions/charityFundraising";
+import { proposalStatusLabel, proposalStatusTone } from "@/lib/donorFields";
+import type { DeadlineNote } from "@/lib/donorOrg";
 import AccountSheet from "../../AccountSheet";
-import type { PortalFieldRow, PortalInitiativeOption } from "@/lib/portalFundraising";
+import type {
+  PortalFieldRow,
+  PortalInitiativeOption,
+  PortalProposalRow,
+} from "@/lib/portalFundraising";
 
 type Donor = {
   id: string;
@@ -23,6 +33,7 @@ type Donor = {
   intakeReason: string;
   opensAt: string | null;
   closesAt: string | null;
+  deadline: DeadlineNote | null;
   grants: number;
   username: string | null;
   password: string | null;
@@ -46,12 +57,15 @@ export default function DonorFileClient({
   donor,
   fields,
   initiatives,
+  usedInitiativeIds,
 }: {
   charityId: string;
   charityName: string;
   donor: Donor;
   fields: PortalFieldRow[];
   initiatives: PortalInitiativeOption[];
+  /** مبادراتٌ اقتُرحت عند هذه الجهة — تُعلَّم في القائمة فلا تُقترح مرّتين. */
+  usedInitiativeIds: string[];
 }) {
   const router = useRouter();
   const [busy, start] = useTransition();
@@ -107,8 +121,12 @@ export default function DonorFileClient({
             dot: donor.intakeStatus === "OPEN" ? "active" : "muted",
           },
           {
+            // والخانةُ مقاسُها رقم: التاريخُ فيها، والعبارةُ («يغلق بعد ٣
+            // أيام» أو «بلا موعد») في سطر التلميح — ونصٌّ في خانة رقمٍ
+            // بمقاس ٢٨px يلتفّ ويُقرأ عنواناً مكسوراً.
             label: donor.intakeStatus === "OPEN" ? "يغلق" : "يفتح",
-            value: (donor.intakeStatus === "OPEN" ? donor.closesAt : donor.opensAt) ?? "بلا موعد معلن",
+            value: (donor.intakeStatus === "OPEN" ? donor.closesAt : donor.opensAt) ?? "—",
+            hint: donor.deadline?.text ?? "بلا موعد معلن",
           },
           {
             label: "المشاريع المرفوعة",
@@ -189,6 +207,9 @@ export default function DonorFileClient({
                 charityId={charityId}
                 field={f}
                 initiatives={initiatives}
+                usedInitiativeIds={usedInitiativeIds}
+                deadline={donor.deadline}
+                closed={donor.intakeStatus !== "OPEN"}
                 busy={busy}
                 run={run}
               />
@@ -219,12 +240,19 @@ function FieldCard({
   charityId,
   field: row,
   initiatives,
+  usedInitiativeIds,
+  deadline,
+  closed,
   busy,
   run,
 }: {
   charityId: string;
   field: PortalFieldRow;
   initiatives: PortalInitiativeOption[];
+  usedInitiativeIds: string[];
+  /** موعدُ الجهة منسوباً إلى اليوم — يُقرأ في لحظة الكتابة لا في أعلى الصفحة. */
+  deadline: DeadlineNote | null;
+  closed: boolean;
   busy: boolean;
   run: (fn: () => Promise<{ ok: boolean; error?: string }>, done?: () => void) => void;
 }) {
@@ -232,6 +260,8 @@ function FieldCard({
   const [picked, setPicked] = useState("");
   const [name, setName] = useState("");
   const [note, setNote] = useState("");
+  /** مقترحٌ قيد التعديل — نفسُ النموذج، فلا شكلان لعملٍ واحد. */
+  const [editing, setEditing] = useState<PortalProposalRow | null>(null);
 
   const outside = picked === OUTSIDE;
   const reset = () => {
@@ -239,9 +269,17 @@ function FieldCard({
     setPicked("");
     setName("");
     setNote("");
+    setEditing(null);
   };
 
-  const submit = () =>
+  const submit = () => {
+    if (editing) {
+      run(() => updatePortalProposal(editing.id, { name, note }), () => {
+        reset();
+        notify("ok", "حفظ المشروع المقترح.");
+      });
+      return;
+    }
     run(
       () =>
         addPortalProposal(charityId, row.id, {
@@ -255,17 +293,21 @@ function FieldCard({
         notify("ok", "أضيف المشروع المقترح.");
       }
     );
+  };
 
   return (
-    <article className="rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900">
+    <article
+      id={`field-${row.id}`}
+      // ومرسىً لكلِّ مجال: قائمةُ الجهات تربط اسمَ المجال به، فيَنزل القارئُ
+      // عليه بدل أن يبحث عنه في الصفحة.
+      className="scroll-mt-24 rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900"
+    >
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
           <h3 className="flex flex-wrap items-center gap-2 text-body font-semibold text-slate-900 dark:text-slate-100">
             {row.name}
             {row.proposals.length > 0 && (
-              <span className="text-meta font-normal text-slate-400">
-                {row.proposals.length} مشروع مقترح
-              </span>
+              <Badge tone="brand">{row.proposals.length} مشروع مقترح</Badge>
             )}
           </h3>
           {row.description && (
@@ -292,45 +334,88 @@ function FieldCard({
         )}
       </div>
 
-      {adding && (
+      {(adding || editing) && (
         <div className="mt-3 space-y-2 rounded-lg border border-primary/15 bg-primary/[0.03] p-3 dark:border-teal-400/15 dark:bg-teal-400/[0.04]">
-          <Select
-            value={picked}
-            onSelect={setPicked}
-            placeholder="اختر مشروعا من الخطة التشغيلية…"
-            options={[
-              ...initiatives.map((i) => ({ value: i.id, label: i.name, hint: i.planLabel })),
-              { value: OUTSIDE, label: "مشروع من خارج الخطة" },
-            ]}
-            className="[&>button]:w-full [&>button]:justify-between"
-          />
-          {outside && (
-            <input
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="اسم المشروع"
-              className={field}
-              autoFocus
-            />
+          {/* والموعدُ يُقرأ في لحظة الكتابة: حالةُ الجهة في أعلى الصفحة،
+              والكاتبُ هنا — فمن يكتب لجهةٍ تُغلق بعد يومين يَعلم وهو يكتب. */}
+          {!editing && (closed || deadline?.tone === "danger" || deadline?.tone === "warn") && (
+            <Note tone={closed || deadline?.tone === "danger" ? "warn" : "brand"}>
+              {closed
+                ? `الرفع مغلق عند هذه الجهة الآن${deadline ? ` — ${deadline.text}` : ""}. والاقتراح يبقى محفوظا لفريق زاد.`
+                : `${deadline?.text} — جهز المشروع قبل الموعد.`}
+            </Note>
           )}
-          <input
-            value={note}
-            onChange={(e) => setNote(e.target.value)}
-            placeholder="ملاحظة (اختياري)"
-            className={field}
-          />
-          <div className="flex items-center gap-2">
+
+          {!editing && (
+            <label className="block">
+              <span className="mb-1 block text-caption font-semibold text-slate-500 dark:text-slate-400">
+                المشروع
+              </span>
+              <Select
+                value={picked}
+                onSelect={setPicked}
+                placeholder="اختر مشروعا من الخطة التشغيلية…"
+                options={[
+                  ...initiatives.map((i) => ({
+                    value: i.id,
+                    label: i.name,
+                    // والمقترحُ من قبلُ يُعلَّم ولا يُمنع: قد يُقترح المشروعُ
+                    // نفسُه في مجالين عن قصد، والتنبيهُ يكفي.
+                    hint: usedInitiativeIds.includes(i.id)
+                      ? `${i.planLabel} · اقترح عند هذه الجهة`
+                      : i.planLabel,
+                  })),
+                  { value: OUTSIDE, label: "مشروع من خارج الخطة" },
+                ]}
+                className="[&>button]:w-full [&>button]:justify-between"
+              />
+            </label>
+          )}
+
+          {(outside || editing) && (
+            <label className="block">
+              <span className="mb-1 block text-caption font-semibold text-slate-500 dark:text-slate-400">
+                اسم المشروع
+              </span>
+              <input
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="اسم المشروع"
+                className={field}
+                autoFocus
+              />
+            </label>
+          )}
+
+          <label className="block">
+            <span className="mb-1 flex items-center justify-between text-caption font-semibold text-slate-500 dark:text-slate-400">
+              <span>ملاحظة (اختياري)</span>
+              <span className="font-normal text-slate-400">{note.length} / 600</span>
+            </span>
+            <input
+              value={note}
+              onChange={(e) => setNote(e.target.value.slice(0, 600))}
+              placeholder="ما يميز هذا المشروع في هذا المجال"
+              className={field}
+            />
+          </label>
+
+          <div className="flex flex-wrap items-center gap-2">
             <button
               type="button"
-              disabled={busy || !picked || (outside && !name.trim())}
+              disabled={busy || (!editing && !picked) || ((outside || !!editing) && !name.trim())}
               onClick={submit}
               className={btn.primary}
             >
-              إضافة
+              {editing ? "حفظ" : "إضافة"}
             </button>
             <button type="button" onClick={reset} disabled={busy} className={btn.secondary}>
               إلغاء
             </button>
+            {/* وسببُ القفل مكتوب: زرٌّ معطَّلٌ بلا بيانٍ طريقٌ مسدود. */}
+            {!editing && !picked && (
+              <span className="text-meta text-slate-400">اختر مشروعا أولا</span>
+            )}
           </div>
         </div>
       )}
@@ -341,13 +426,12 @@ function FieldCard({
             <li key={p.id} className="flex items-start gap-3 px-3 py-2">
               <FileText className="mt-0.5 size-3.5 shrink-0 text-slate-400" />
               <div className="min-w-0 flex-1">
-                <p className="text-body text-slate-800 dark:text-slate-100">
-                  {p.name}{" "}
-                  {!p.fromPlan && (
-                    <Badge tone="neutral">
-                      <span className="text-[10px]">من خارج الخطة</span>
-                    </Badge>
-                  )}
+                <p className="flex flex-wrap items-center gap-2 text-body text-slate-800 dark:text-slate-100">
+                  {p.name}
+                  {/* ومصيرُه عند زادٍ يُقرأ هنا: الاقتراحُ بلا مصيرٍ طريقٌ
+                      مسدود — تكتبه الجمعيةُ ولا تعرف أرُفع أم أُجِّل. */}
+                  <Badge tone={proposalStatusTone(p.status)}>{proposalStatusLabel(p.status)}</Badge>
+                  {!p.fromPlan && <Badge tone="neutral">من خارج الخطة</Badge>}
                 </p>
                 {p.note && (
                   <p className="mt-0.5 text-caption leading-5 text-slate-500 dark:text-slate-400">{p.note}</p>
@@ -357,6 +441,22 @@ function FieldCard({
                   {p.authorName ? ` · ${p.authorName}` : ""}
                 </p>
               </div>
+              {/* والتعديلُ قبل الحذف: خطأٌ في حرفٍ كان يُكلّف الصفَّ كلَّه
+                  — تاريخَه وكاتبَه وما ضبطته زادٌ من حاله. */}
+              <button
+                type="button"
+                disabled={busy}
+                aria-label="تعديل المشروع"
+                onClick={() => {
+                  setEditing(p);
+                  setAdding(false);
+                  setName(p.name);
+                  setNote(p.note ?? "");
+                }}
+                className={btn.icon}
+              >
+                <Pencil className="size-3.5" />
+              </button>
               <button
                 type="button"
                 disabled={busy}

@@ -212,3 +212,53 @@ export function formatDonorDate(d: Date | string): string {
     day: "2-digit",
   }).format(date);
 }
+
+/** صياغةُ عددِ الأيام عربيّةً: يوم، يومان، ثلاثةُ أيام، اثنا عشر يوماً. */
+export function daysLabel(days: number): string {
+  if (days === 1) return "يوم";
+  if (days === 2) return "يومين";
+  if (days <= 10) return `${days} أيام`;
+  return `${days} يوما`;
+}
+
+export type DeadlineTone = "neutral" | "warn" | "danger";
+
+export type DeadlineNote = { text: string; tone: DeadlineTone; days: number };
+
+/**
+ * الموعدُ القادمُ منسوباً إلى اليوم: «يغلق بعد ٣ أيام» لا «٢٠٢٦/١١/٣٠».
+ *
+ * **ولمَ نسبيّاً**: جهةٌ تُغلق بعد ثلاثة أيامٍ وأخرى بعد خمسة أشهرٍ تبدوان
+ * سواءً في جدولٍ يكتب التاريخين — والقارئُ يرتّب عملَه بالقُرب لا بالتاريخ.
+ * والتاريخُ يبقى مكتوباً معها: النسبةُ تُنبّه، والتاريخُ يُخطَّط عليه.
+ *
+ * **واللونُ للقُرب لا للحالة**: أسبوعٌ فأقلُّ تحذير، واليومُ والغدُ خطر —
+ * وما بعدهما خبرٌ محايد. وموعدُ الفتح لا يُحذَّر منه: انتظارٌ لا فوات.
+ */
+export function deadlineNote(
+  status: IntakeStatus,
+  date: Date | string | null | undefined,
+  now: Date
+): DeadlineNote | null {
+  if (!date) return null;
+  const at = typeof date === "string" ? new Date(date) : date;
+  if (Number.isNaN(at.getTime())) return null;
+
+  // بفارق اليوم لا بفارق الساعات: «يغلق اليوم» و«يغلق بعد ساعتين» خبرٌ واحد.
+  const day = 24 * 60 * 60 * 1000;
+  const startOf = (d: Date) => Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate());
+  const days = Math.round((startOf(at) - startOf(now)) / day);
+
+  if (status === "OPEN") {
+    if (days < 0) return { text: "مضى موعد الإغلاق", tone: "danger", days };
+    if (days === 0) return { text: "يغلق اليوم", tone: "danger", days };
+    if (days === 1) return { text: "يغلق غدا", tone: "danger", days };
+    if (days <= 7) return { text: `يغلق بعد ${daysLabel(days)}`, tone: "warn", days };
+    return { text: `يغلق بعد ${daysLabel(days)}`, tone: "neutral", days };
+  }
+
+  if (days < 0) return { text: "مضى موعد الفتح", tone: "warn", days };
+  if (days === 0) return { text: "يفتح اليوم", tone: "neutral", days };
+  if (days === 1) return { text: "يفتح غدا", tone: "neutral", days };
+  return { text: `يفتح بعد ${daysLabel(days)}`, tone: "neutral", days };
+}

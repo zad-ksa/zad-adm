@@ -213,3 +213,42 @@ export async function deletePortalProposal(id: string): Promise<Result> {
     return { ok: false, error: "تعذر حذف المشروع" };
   }
 }
+
+/**
+ * تعديلُ مشروعٍ مقترح: اسمُه وملاحظتُه.
+ *
+ * **ولمَ لا يُحذف ويُعاد**: الحذفُ يُفقد تاريخَه وكاتبَه وما ضبطته زادٌ من
+ * حاله — فخطأٌ في حرفٍ كان يُكلّف كلَّ ذلك.
+ *
+ * **ولا يُنقل إلى مجالٍ آخر ولا يُغيَّر مصدرُه**: نقلُه قرارٌ آخر، والمصدرُ
+ * (من الخطة أو من خارجها) خبرٌ وقتَ الاقتراح. ومن أراد غيرَ ذلك اقترح جديداً.
+ */
+export async function updatePortalProposal(
+  id: string,
+  input: { name: string; note?: string | null }
+): Promise<Result> {
+  try {
+    const row = await prisma.grantProposal.findUnique({
+      where: { id },
+      select: { charityId: true },
+    });
+    if (!row) return { ok: false, error: "المشروع غير موجود" };
+
+    const guard = await requireFundraiser(row.charityId);
+    if (!guard) return { ok: false, error: "غير مصرح" };
+
+    const name = input.name.replace(/\s+/g, " ").trim().slice(0, MAX_NAME);
+    if (!name) return { ok: false, error: "اسم المشروع مطلوب" };
+
+    await prisma.grantProposal.update({
+      where: { id },
+      data: { name, note: (input.note ?? "").trim().slice(0, MAX_NOTE) || null },
+    });
+
+    revalidateFundraising(guard.charity.name);
+    return { ok: true };
+  } catch (error) {
+    console.error("updatePortalProposal", error);
+    return { ok: false, error: "تعذر حفظ المشروع" };
+  }
+}

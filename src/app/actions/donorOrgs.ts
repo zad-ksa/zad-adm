@@ -510,3 +510,59 @@ export async function setProposalStatus(id: string, status: string): Promise<Res
     return fieldError(error, "تعذر تغيير حال المقترح");
   }
 }
+
+/**
+ * نسخُ مجالات جهةٍ إلى أخرى.
+ *
+ * **ولمَ**: ستٌّ وستون جهةً ومجالاتُها متشابهة («التعليم»، «الصحة»،
+ * «التمكين») — وكتابتُها يدوياً لكلِّ جهةٍ عملٌ يُكرَّر بلا داعٍ، وأوّلُ ما
+ * يُملُّ منه يُترك فارغاً فتبقى الجهةُ بلا مجالات.
+ *
+ * **ولا يُمسح الموجود**: ما في الجهة يبقى، ويُضاف ما ليس فيها — فالنسخُ
+ * إضافةٌ لا استبدال. والمطابقةُ بالاسم المسوَّى، فلا «التعليم» مرّتين.
+ */
+export async function copyDonorFields(fromDonorOrgId: string, toDonorOrgId: string): Promise<Result & { added?: number }> {
+  const session = await requireDonorEditor();
+  if (!session) return { ok: false, error: "غير مصرح" };
+  if (fromDonorOrgId === toDonorOrgId) return { ok: false, error: "اختر جهة أخرى" };
+
+  try {
+    const [source, target] = await Promise.all([
+      prisma.donorField.findMany({
+        where: { donorOrgId: fromDonorOrgId },
+        orderBy: [{ order: "asc" }, { createdAt: "asc" }],
+        select: { name: true, description: true, tags: true },
+      }),
+      prisma.donorField.findMany({ where: { donorOrgId: toDonorOrgId }, select: { name: true } }),
+    ]);
+
+    const fresh = source.filter((f) => !target.some((t) => sameFieldName(t.name, f.name)));
+    if (fresh.length === 0) return { ok: false, error: "لا جديد ينسخ من هذه الجهة" };
+
+    let order = await nextFieldOrder(toDonorOrgId);
+    await prisma.donorField.createMany({
+      data: fresh.map((f) => ({
+        donorOrgId: toDonorOrgId,
+        name: f.name,
+        description: f.description,
+        tags: f.tags,
+        order: order++,
+      })),
+    });
+
+    await logAudit({
+      actorType: "EMPLOYEE",
+      actorId: session.id,
+      actorName: session.name,
+      action: "CREATE",
+      targetType: "DonorField",
+      targetId: toDonorOrgId,
+      metadata: { copiedFrom: fromDonorOrgId, count: fresh.length },
+    });
+
+    revalidateDonors(toDonorOrgId);
+    return { ok: true, added: fresh.length };
+  } catch (error) {
+    return fieldError(error, "تعذر نسخ المجالات");
+  }
+}

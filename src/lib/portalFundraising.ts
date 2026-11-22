@@ -4,7 +4,13 @@ import { decryptSecret } from "@/lib/encryption";
 import { isCharityFundraisingOpen } from "@/lib/featureFlags";
 import { requirePortalPermission } from "@/lib/portalAccess";
 import { SECTION_SERVICES, charityHasService } from "@/lib/charityServices";
-import { effectiveIntake, formatDonorDate, type IntakeStatus } from "@/lib/donorOrg";
+import {
+  deadlineNote,
+  effectiveIntake,
+  formatDonorDate,
+  type DeadlineNote,
+  type IntakeStatus,
+} from "@/lib/donorOrg";
 
 /**
  * تنميةُ الموارد المالية في بوّابة الجمعية: قراءاتُها في موضعٍ واحد.
@@ -57,6 +63,8 @@ export type PortalDonorRow = {
   intakeReason: string;
   /** موعدُ الإغلاق للمفتوح، وموعدُ الفتح للمغلق — وهو ما يُسأل عنه. */
   nextDate: string | null;
+  /** الموعدُ نفسُه منسوباً إلى اليوم: «يغلق بعد ٣ أيام». */
+  deadline: DeadlineNote | null;
   username: string | null;
   /** مفكوكةُ التشفير — تُعرض مُغطّاةً وتُكشف باختيار. */
   password: string | null;
@@ -65,14 +73,16 @@ export type PortalDonorRow = {
   /** مشاريعُها المقترحةُ في مجالات هذه الجهة. */
   proposals: number;
   /**
-   * مجالاتُ منح الجهة بأسمائها — تُقرأ سطراً تحت اسمها كأنّها وصفُها.
+   * مجالاتُ منح الجهة — تُقرأ سطراً تحت اسمها كأنّها وصفُها.
    *
    * وأسماءٌ لا عدد: «٣» لا تقول أين يُقترح، و«التعليم · الصحة · الإسكان»
-   * تقوله بنظرة.
+   * تقوله بنظرة. ومعها مُعرِّفاتُها فيُنزَل على المجال في ملفِّ الجهة.
    */
-  fieldNames: string[];
+  fields: { id: string; name: string }[];
   /** نصُّ مجالات الدعم القديم — يُقرأ حين لا مجالاتٍ مهيكلةً بعد. */
   legacyFields: string | null;
+  /** وسومُ مجالاتها مجموعةً — يُبحث ويُرشَّح بها. */
+  fieldTags: string[];
 };
 
 /**
@@ -100,9 +110,9 @@ export async function loadPortalDonors(charityId: string): Promise<PortalDonorRo
   });
 
   // المقترحاتُ والمجالاتُ تُعدُّ في استعلامٍ واحدٍ لا استعلامٍ لكلِّ جهة.
-  const [proposals, fieldNames] = await Promise.all([
+  const [proposals, fields] = await Promise.all([
     countProposalsByDonor(charityId),
-    fieldNamesByDonor(),
+    fieldsByDonor(),
   ]);
 
   return orgs.map((org) => {
@@ -116,32 +126,38 @@ export async function loadPortalDonors(charityId: string): Promise<PortalDonorRo
       intakeStatus: intake.status,
       intakeReason: intake.reason,
       nextDate: next ? formatDonorDate(next) : null,
+      deadline: deadlineNote(intake.status, next, now),
       username: account?.username ?? null,
       password: account ? decryptSecret(account.password) : null,
       grants: org._count.grants,
       proposals: proposals.get(org.id) ?? 0,
-      fieldNames: fieldNames.get(org.id) ?? [],
+      fields: fields.get(org.id)?.list ?? [],
+      fieldTags: fields.get(org.id)?.tags ?? [],
       legacyFields: org.fields,
     };
   });
 }
 
-/** أسماءُ المجالات لكلِّ جهة — محروسٌ حتى يُطبَّق جدولُ المجالات. */
-async function fieldNamesByDonor(): Promise<Map<string, string[]>> {
+/** أسماءُ المجالات ووسومُها لكلِّ جهة — محروسٌ حتى يُطبَّق جدولُ المجالات. */
+async function fieldsByDonor(): Promise<
+  Map<string, { list: { id: string; name: string }[]; tags: string[] }>
+> {
   try {
     const rows = await prisma.donorField.findMany({
       orderBy: [{ order: "asc" }, { createdAt: "asc" }],
-      select: { donorOrgId: true, name: true },
+      select: { id: true, donorOrgId: true, name: true, tags: true },
     });
-    const map = new Map<string, string[]>();
+    const map = new Map<string, { list: { id: string; name: string }[]; tags: string[] }>();
     for (const row of rows) {
-      const list = map.get(row.donorOrgId);
-      if (list) list.push(row.name);
-      else map.set(row.donorOrgId, [row.name]);
+      const entry = map.get(row.donorOrgId) ?? { list: [], tags: [] };
+      entry.list.push({ id: row.id, name: row.name });
+      // والوسمُ لا يُكرَّر بين مجالين في الجهة الواحدة: مُرشِّحٌ لا إحصاء.
+      for (const tag of row.tags) if (!entry.tags.includes(tag)) entry.tags.push(tag);
+      map.set(row.donorOrgId, entry);
     }
     return map;
   } catch (error) {
-    console.error("fieldNamesByDonor", error);
+    console.error("fieldsByDonor", error);
     return new Map();
   }
 }
@@ -228,12 +244,34 @@ export async function loadPortalDonorFile(charityId: string, donorOrgId: string)
       intakeReason: intake.reason,
       opensAt: org.opensAt ? formatDonorDate(org.opensAt) : null,
       closesAt: org.closesAt ? formatDonorDate(org.closesAt) : null,
+      deadline: deadlineNote(
+        intake.status,
+        intake.status === "OPEN" ? org.closesAt : org.opensAt,
+        now
+      ),
       grants: org._count.grants,
       username: account?.username ?? null,
       password: account ? decryptSecret(account.password) : null,
     },
     fields: await loadPortalFields(charityId, donorOrgId),
+    // ومبادراتٌ اقتُرحت عند هذه الجهة من قبل: تُعلَّم في القائمة فلا تُقترح
+    // مرّتين — والتكرارُ لا يُرى إلّا بعد الإضافة.
+    usedInitiativeIds: await usedInitiatives(charityId, donorOrgId),
   };
+}
+
+/** مبادراتُ هذه الجمعية المقترحةُ عند هذه الجهة — في مجالاتها كلِّها. */
+async function usedInitiatives(charityId: string, donorOrgId: string): Promise<string[]> {
+  try {
+    const rows = await prisma.grantProposal.findMany({
+      where: { charityId, initiativeId: { not: null }, donorField: { donorOrgId } },
+      select: { initiativeId: true },
+    });
+    return rows.map((r) => r.initiativeId as string);
+  } catch (error) {
+    console.error("usedInitiatives", error);
+    return [];
+  }
 }
 
 /**
@@ -352,4 +390,60 @@ export async function loadPortalGrants(charityId: string): Promise<PortalGrantRo
     createdAt: formatDonorDate(g.createdAt),
     createdAtMs: g.createdAt.getTime(),
   }));
+}
+
+export type PortalProposalListRow = {
+  id: string;
+  donorId: string;
+  donorName: string;
+  fieldName: string;
+  name: string;
+  note: string | null;
+  status: string;
+  fromPlan: boolean;
+  createdAt: string;
+  createdAtMs: number;
+};
+
+/**
+ * كلُّ ما اقترحته هذه الجمعية — عبر الجهات والمجالات.
+ *
+ * **ولمَ صفحةٌ جامعة**: المقترحاتُ مبعثرةٌ في ملفات الجهات، فلا موضعَ يُجيب
+ * «ما الذي اقترحناه وأين وصل؟» — وهو سؤالُ من يتابع العمل لا من يكتبه.
+ * وصفحةُ المنح تعرض المرفوعَ وحدَه، والمقترحُ ما قبلَه.
+ */
+export async function loadPortalProposals(charityId: string): Promise<PortalProposalListRow[]> {
+  try {
+    const rows = await prisma.grantProposal.findMany({
+      where: { charityId },
+      orderBy: { createdAt: "desc" },
+      select: {
+        id: true,
+        name: true,
+        note: true,
+        status: true,
+        initiativeId: true,
+        createdAt: true,
+        donorField: {
+          select: { name: true, donorOrg: { select: { id: true, name: true } } },
+        },
+      },
+    });
+
+    return rows.map((p) => ({
+      id: p.id,
+      donorId: p.donorField.donorOrg.id,
+      donorName: p.donorField.donorOrg.name,
+      fieldName: p.donorField.name,
+      name: p.name,
+      note: p.note,
+      status: p.status,
+      fromPlan: p.initiativeId !== null,
+      createdAt: formatDonorDate(p.createdAt),
+      createdAtMs: p.createdAt.getTime(),
+    }));
+  } catch (error) {
+    console.error("loadPortalProposals", error);
+    return [];
+  }
 }

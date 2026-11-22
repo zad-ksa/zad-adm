@@ -17,18 +17,23 @@ import { cx } from "@/components/console/ui";
 export default function FundraisingNav({
   charityName,
   donors,
+  proposals,
   grants,
 }: {
   charityName: string;
   donors: number;
+  proposals: number;
   grants: number;
 }) {
   const pathname = decodeURIComponent(usePathname());
   const base = `/portal/${charityName}/fundraising`;
   const onGrants = pathname.startsWith(`${base}/grants`);
+  const onProposals = pathname.startsWith(`${base}/proposals`);
 
+  // وثلاثةُ أبوابٍ بترتيب العمل: أين نقترح، ثم ما اقترحنا، ثم ما رُفع.
   const items = [
-    { href: base, label: "الجهات المانحة", count: donors, active: !onGrants },
+    { href: base, label: "الجهات المانحة", count: donors, active: !onGrants && !onProposals },
+    { href: `${base}/proposals`, label: "مقترحاتنا", count: proposals, active: onProposals },
     { href: `${base}/grants`, label: "المنح المرفوعة", count: grants, active: onGrants },
   ];
 

@@ -402,6 +402,44 @@ export function TableShell({ children, empty, footer }: { children: ReactNode; e
   );
 }
 
+/**
+ * جدولٌ على الحاسوب، وبطاقاتٌ على الجوّال.
+ *
+ * **ولمَ شكلان لجدولٍ واحد**: جدولٌ بستّة أعمدةٍ على شاشة هاتفٍ يُلفّ أفقياً،
+ * فيُقرأ عمودٌ ويُفقد الصفّ. والبوّابةُ تُفتح من الهاتف كثيراً. والبطاقةُ هي
+ * الصفُّ نفسُه مكتوباً رأسياً، فلا بياناتٍ تُحذف — إنّما يُعاد صفُّها.
+ *
+ * والبيانُ واحدٌ في الاثنين: من كتب بطاقةً تُخالف صفَّها كتب شاشتين.
+ */
+export function TableShellCards({
+  children,
+  cards,
+  empty,
+  footer,
+}: {
+  children: ReactNode;
+  /** بطاقةٌ لكلِّ صفّ، بترتيب الصفوف نفسِه. */
+  cards: ReactNode[];
+  empty?: ReactNode;
+  footer?: ReactNode;
+}) {
+  return (
+    <div className={tableFrameClass}>
+      <ul className="divide-y divide-slate-100 md:hidden dark:divide-slate-800">
+        {cards.map((card, index) => (
+          <li key={index}>{card}</li>
+        ))}
+      </ul>
+      <div className="hidden overflow-x-auto md:block">
+        <table className="w-full text-right">{children}</table>
+      </div>
+      {empty}
+      {footer && (
+        <div className="border-t border-slate-100 px-4 py-2.5 text-meta text-slate-500 dark:border-slate-800">{footer}</div>
+      )}
+    </div>
+  );
+}
 export function Th({ children, className }: { children?: ReactNode; className?: string }) {
   return (
     <th className={cx(thClass, className)}>

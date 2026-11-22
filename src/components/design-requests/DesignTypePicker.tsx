@@ -1,6 +1,6 @@
 "use client";
 
-import { Check } from "lucide-react";
+import { Note, OptionRow } from "@/components/console/ui";
 
 export type DesignTypeOption = { id: string; name: string; workingDays: number };
 
@@ -48,80 +48,42 @@ export default function DesignTypePicker({
   // rendering an empty box the user will read as a broken form.
   if (options.length === 0) {
     return (
-      <p
-        className="rounded-xl bg-amber-500/[0.08] text-amber-700 dark:text-amber-400 px-4 py-3 font-semibold"
-        style={{ fontSize: "var(--dr-fs-meta)" }}
-      >
-        لم تُضَف أنواع التصاميم بعد، ولا يمكن رفع طلب قبل تحديد نوعه. يرجى التواصل مع فريق
-        زاد.
-      </p>
+      <Note tone="warn">
+        لم تضف أنواع التصاميم بعد، ولا يمكن رفع طلب قبل تحديد نوعه. يرجى التواصل مع فريق زاد.
+      </Note>
     );
   }
 
   return (
-    <div>
-      <label
-        className="block font-semibold text-slate-500 dark:text-slate-400 mb-2"
-        style={{ fontSize: "var(--dr-fs-meta)" }}
-      >
-        نوع التصميم <span className="text-rose-500">*</span>
-        <span className="font-normal text-slate-400 dark:text-slate-500 mr-1">
-          — يمكن اختيار أكثر من نوع
-        </span>
-      </label>
+    <div className="space-y-1.5">
+      <p className="text-body font-medium text-slate-700 dark:text-slate-300">
+        نوع التصميم <span className="text-red-500">*</span>
+        <span className="ms-1 font-normal text-slate-400">— يمكن اختيار أكثر من نوع</span>
+      </p>
 
-      <div className="grid sm:grid-cols-2 gap-2">
-        {options.map((option) => {
-          const checked = selected.includes(option.id);
-          return (
-            <button
-              key={option.id}
-              type="button"
-              onClick={() => onToggle(option.id)}
-              aria-pressed={checked}
-              style={{ fontSize: "var(--dr-fs-body)" }}
-              className={`flex items-center gap-2 px-3 py-2.5 rounded-lg text-right border transition-colors ${
-                checked
-                  ? "border-primary/40 bg-primary/[0.06] text-primary dark:text-teal-300"
-                  : "border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:border-primary/30"
-              }`}
-            >
-              <span
-                className={`w-4 h-4 shrink-0 rounded flex items-center justify-center ${
-                  checked
-                    ? "bg-primary dark:bg-teal-400"
-                    : "border border-slate-300 dark:border-slate-600"
-                }`}
-              >
-                {checked && <Check className="w-2.5 h-2.5 text-white" strokeWidth={4} />}
-              </span>
-              <span className="truncate flex-1">{option.name}</span>
-              <span
-                className="shrink-0 text-slate-400 dark:text-slate-500 tabular-nums"
-                style={{ fontSize: "var(--dr-fs-eyebrow)" }}
-              >
-                {option.workingDays} يوم
-              </span>
-            </button>
-          );
-        })}
+      {/* وكلُّ نوعٍ يقول مدّته بجانبه: اختيارُ نوعٍ ثانٍ يزيد الموعد، فلا
+          يُعرف ذلك بعد الإرسال. */}
+      <div className="grid gap-1 sm:grid-cols-2">
+        {options.map((option) => (
+          <OptionRow
+            key={option.id}
+            label={option.name}
+            checked={selected.includes(option.id)}
+            count={option.workingDays}
+            onToggle={() => onToggle(option.id)}
+          />
+        ))}
       </div>
 
       {chosen.length === 0 ? (
-        <p
-          className="mt-2 rounded-xl bg-slate-100 dark:bg-slate-800/60 text-slate-500 dark:text-slate-400 px-4 py-3"
-          style={{ fontSize: "var(--dr-fs-meta)" }}
-        >
-          اختر نوع التصميم لتظهر مدة التنفيذ.
+        <p className="text-meta text-slate-500 dark:text-slate-400">
+          اختر نوع التصميم لتظهر مدة التنفيذ. والرقم بجانب كل نوع أيام عمله.
         </p>
       ) : (
-        <p
-          className="mt-2 rounded-xl bg-primary/5 dark:bg-primary/10 text-primary dark:text-teal-300 px-4 py-3 font-semibold"
-          style={{ fontSize: "var(--dr-fs-meta)" }}
-        >
-          مدة التنفيذ: {totalDays} {totalDays === 1 ? "يوم عمل" : "أيام عمل"} (الأحد – الخميس)
-          من بداية دور الطلب
-        </p>
+        <Note tone="brand">
+          مدة التنفيذ: {totalDays} {totalDays === 1 ? "يوم عمل" : "أيام عمل"} (الأحد – الخميس) من
+          بداية دور الطلب.
+        </Note>
       )}
     </div>
   );

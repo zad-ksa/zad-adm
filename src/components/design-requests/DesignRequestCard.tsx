@@ -144,8 +144,7 @@ export default function DesignRequestCard({
         <div className={`hidden lg:grid ${DESIGN_REQUEST_LIST_GRID_COLS} items-center gap-3 px-4 py-2.5`}>
           <span
             title={request.charityName}
-            className="min-w-0 truncate flex items-center gap-1 text-primary dark:text-teal-300 font-semibold"
-            style={{ fontSize: "var(--dr-fs-eyebrow)" }}
+            className="min-w-0 truncate flex items-center gap-1 text-primary dark:text-teal-300 font-semibold text-caption"
           >
             {request.charityName && <Building2 className="w-3 h-3 shrink-0" />}
             {request.charityName || "—"}
@@ -153,21 +152,19 @@ export default function DesignRequestCard({
 
           <span
             title={request.title}
-            className="min-w-0 truncate font-semibold text-slate-900 dark:text-slate-100"
-            style={{ fontSize: "var(--dr-fs-title)" }}
+            className="min-w-0 truncate font-semibold text-slate-900 dark:text-slate-100 text-title"
           >
             {request.title}
           </span>
 
           <span
             title={typesLabel}
-            className="min-w-0 truncate text-slate-500 dark:text-slate-400"
-            style={{ fontSize: "var(--dr-fs-meta)" }}
+            className="min-w-0 truncate text-slate-500 dark:text-slate-400 text-meta"
           >
             {typesLabel}
           </span>
 
-          <span className="text-slate-400 dark:text-slate-500 tabular-nums" style={{ fontSize: "var(--dr-fs-meta)" }}>
+          <span className="text-slate-400 dark:text-slate-500 tabular-nums text-meta">
             {request.submittedAt}
           </span>
 
@@ -177,8 +174,7 @@ export default function DesignRequestCard({
 
           {request.attachments.length > 0 ? (
             <span
-              className="flex items-center gap-1 text-slate-400 dark:text-slate-500"
-              style={{ fontSize: "var(--dr-fs-eyebrow)" }}
+              className="flex items-center gap-1 text-slate-400 dark:text-slate-500 text-caption"
               title={`${request.attachments.length} مرفق`}
             >
               <Paperclip className="w-3 h-3" />
@@ -194,16 +190,14 @@ export default function DesignRequestCard({
           {chevron}
           {request.charityName && (
             <span
-              className="hidden sm:flex items-center gap-1 text-primary dark:text-teal-300 font-semibold shrink-0"
-              style={{ fontSize: "var(--dr-fs-eyebrow)" }}
+              className="hidden sm:flex items-center gap-1 text-primary dark:text-teal-300 font-semibold shrink-0 text-caption"
             >
               <Building2 className="w-3 h-3" />
               {request.charityName}
             </span>
           )}
           <span
-            className="flex-1 min-w-0 truncate font-semibold text-slate-900 dark:text-slate-100"
-            style={{ fontSize: "var(--dr-fs-title)" }}
+            className="flex-1 min-w-0 truncate font-semibold text-slate-900 dark:text-slate-100 text-title"
           >
             {request.title}
           </span>
@@ -212,8 +206,7 @@ export default function DesignRequestCard({
           <DesignRequestCountdownBadge progress={progress} />
           {request.attachments.length > 0 && (
             <span
-              className="hidden sm:flex items-center gap-1 text-slate-400 dark:text-slate-500 shrink-0"
-              style={{ fontSize: "var(--dr-fs-eyebrow)" }}
+              className="hidden sm:flex items-center gap-1 text-slate-400 dark:text-slate-500 shrink-0 text-caption"
               title={`${request.attachments.length} مرفق`}
             >
               <Paperclip className="w-3 h-3" />
@@ -235,8 +228,7 @@ export default function DesignRequestCard({
         <button
           type="button"
           onClick={() => setRowOpen(false)}
-          className="flex items-center gap-1.5 mb-2 text-slate-400 hover:text-primary dark:text-slate-500 dark:hover:text-teal-400 font-semibold transition-colors cursor-pointer"
-          style={{ fontSize: "var(--dr-fs-eyebrow)" }}
+          className="flex items-center gap-1.5 mb-2 text-slate-400 hover:text-primary dark:text-slate-500 dark:hover:text-teal-400 font-semibold transition-colors cursor-pointer text-caption"
         >
           <ChevronDown className="w-3.5 h-3.5" />
           طيّ
@@ -246,8 +238,7 @@ export default function DesignRequestCard({
         <div className="min-w-0 flex-1 space-y-1">
           {request.charityName && (
             <div
-              className="flex items-center gap-1.5 text-primary dark:text-teal-300 font-semibold"
-              style={{ fontSize: "var(--dr-fs-eyebrow)" }}
+              className="flex items-center gap-1.5 text-primary dark:text-teal-300 font-semibold text-caption"
             >
               <Building2 className="w-3 h-3" />
               <span>{request.charityName}</span>
@@ -259,8 +250,8 @@ export default function DesignRequestCard({
               its row to match, so the cards beside it stay aligned. */}
           <div className="flex items-start gap-2">
             <h3
-              className="font-semibold text-slate-900 dark:text-slate-100 break-words leading-snug min-w-0 flex-1"
-              style={{ fontSize: "var(--dr-fs-title)", textWrap: "balance" }}
+              className="font-semibold text-slate-900 dark:text-slate-100 break-words leading-snug min-w-0 flex-1 text-title"
+              style={{ textWrap: "balance" }}
             >
               {request.title}
             </h3>
@@ -279,10 +270,9 @@ export default function DesignRequestCard({
           {request.description && (
             <div>
               <p
-                className={`text-slate-500 dark:text-slate-400 whitespace-pre-line ${
+                className={`text-body text-slate-500 dark:text-slate-400 whitespace-pre-line ${
                   expanded ? "" : "line-clamp-2"
                 }`}
-                style={{ fontSize: "var(--dr-fs-body)" }}
               >
                 {/* A brief often IS a link — a reference, a folder, a previous
                     design — and pasting it as dead text means retyping it into
@@ -295,8 +285,7 @@ export default function DesignRequestCard({
                 <button
                   type="button"
                   onClick={() => setExpanded((v) => !v)}
-                  className="mt-1 font-semibold text-primary dark:text-teal-300 hover:underline"
-                  style={{ fontSize: "var(--dr-fs-eyebrow)" }}
+                  className="mt-1 font-semibold text-primary dark:text-teal-300 hover:underline text-caption"
                 >
                   {expanded ? "عرض أقل" : "عرض المزيد"}
                 </button>
@@ -315,8 +304,7 @@ export default function DesignRequestCard({
           {request.types.map((t) => (
             <span
               key={t.id}
-              className="px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300"
-              style={{ fontSize: "var(--dr-fs-eyebrow)" }}
+              className="px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 text-caption"
             >
               {t.name}
             </span>
@@ -327,8 +315,7 @@ export default function DesignRequestCard({
       {request.extensions && request.extensions.length > 0 && (
         <div className="mt-3 rounded-xl bg-amber-500/[0.07] px-3 py-2.5 space-y-2">
           <p
-            className="flex items-center gap-1.5 font-semibold text-amber-700 dark:text-amber-400"
-            style={{ fontSize: "var(--dr-fs-eyebrow)" }}
+            className="flex items-center gap-1.5 font-semibold text-amber-700 dark:text-amber-400 text-caption"
           >
             <CalendarPlus className="w-3 h-3 shrink-0" />
             تم تمديد موعد التسليم
@@ -336,14 +323,12 @@ export default function DesignRequestCard({
           {request.extensions.map((ext) => (
             <div key={ext.id} className="flex items-start gap-2">
               <span
-                className="shrink-0 px-1.5 py-0.5 rounded bg-amber-500/15 text-amber-700 dark:text-amber-400 font-semibold tabular-nums"
-                style={{ fontSize: "var(--dr-fs-eyebrow)" }}
+                className="shrink-0 px-1.5 py-0.5 rounded bg-amber-500/15 text-amber-700 dark:text-amber-400 font-semibold tabular-nums text-caption"
               >
                 +{ext.days}
               </span>
               <span
-                className="text-slate-600 dark:text-slate-300 whitespace-pre-line"
-                style={{ fontSize: "var(--dr-fs-eyebrow)" }}
+                className="text-slate-600 dark:text-slate-300 whitespace-pre-line text-caption"
               >
                 {ext.reason}
                 <span className="text-slate-400 dark:text-slate-500"> — {ext.createdAt}</span>
@@ -355,8 +340,7 @@ export default function DesignRequestCard({
 
       <div className={`flex flex-col ${isList ? "pt-3 gap-3" : "mt-auto pt-6 gap-4"}`}>
         <div
-          className={`text-slate-500 dark:text-slate-400 ${isList ? "flex flex-wrap gap-x-4 gap-y-1.5" : "flex flex-col gap-2"}`}
-          style={{ fontSize: "var(--dr-fs-meta)" }}
+          className={`text-meta text-slate-500 dark:text-slate-400 ${isList ? "flex flex-wrap gap-x-4 gap-y-1.5" : "flex flex-col gap-2"}`}
         >
           <span className="flex items-center gap-2">
             <Calendar className="w-4 h-4 text-slate-400 dark:text-slate-500 shrink-0" />
@@ -465,8 +449,7 @@ export default function DesignRequestCard({
             log, one click away, for anyone who does want to know. */}
         {request.startedAt && request.status === "PENDING" && (
           <div
-            className="mt-3 px-3 py-2.5 rounded-xl bg-indigo-500/[0.07] text-indigo-700 dark:text-indigo-300 leading-relaxed"
-            style={{ fontSize: "var(--dr-fs-meta)" }}
+            className="mt-3 px-3 py-2.5 rounded-xl bg-indigo-500/[0.07] text-indigo-700 dark:text-indigo-300 leading-relaxed text-meta"
           >
             <span className="inline-flex items-center gap-1.5 font-semibold">
               <Hammer className="w-3.5 h-3.5 shrink-0" />
@@ -487,8 +470,7 @@ export default function DesignRequestCard({
                 href={att.fileUrl}
                 target="_blank"
                 rel="noreferrer"
-                className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-[#111] hover:border-primary/30 hover:bg-primary/[0.04] dark:hover:bg-primary/10 transition-colors"
-                style={{ fontSize: "var(--dr-fs-meta)" }}
+                className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-[#111] hover:border-primary/30 hover:bg-primary/[0.04] dark:hover:bg-primary/10 transition-colors text-meta"
               >
                 <Paperclip className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500 shrink-0" />
                 <span className="font-semibold text-slate-700 dark:text-slate-300 truncate max-w-[140px]">
@@ -505,8 +487,7 @@ export default function DesignRequestCard({
         {request.deliverables && request.deliverables.length > 0 && (
           <div className="pt-4 border-t border-slate-100 dark:border-slate-800/60 space-y-2">
             <p
-              className="flex items-center gap-1.5 font-semibold text-primary dark:text-teal-300"
-              style={{ fontSize: "var(--dr-fs-eyebrow)" }}
+              className="flex items-center gap-1.5 font-semibold text-primary dark:text-teal-300 text-caption"
             >
               <FileCheck2 className="w-3.5 h-3.5 shrink-0" />
               الملفات النهائية
@@ -518,8 +499,7 @@ export default function DesignRequestCard({
                   href={att.fileUrl}
                   target="_blank"
                   rel="noreferrer"
-                  className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-primary/30 bg-primary/[0.05] dark:bg-primary/10 hover:bg-primary/[0.1] transition-colors"
-                  style={{ fontSize: "var(--dr-fs-meta)" }}
+                  className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-primary/30 bg-primary/[0.05] dark:bg-primary/10 hover:bg-primary/[0.1] transition-colors text-meta"
                 >
                   <Download className="w-3.5 h-3.5 text-primary dark:text-teal-300 shrink-0" />
                   <span className="font-semibold text-primary dark:text-teal-300 truncate max-w-[140px]">

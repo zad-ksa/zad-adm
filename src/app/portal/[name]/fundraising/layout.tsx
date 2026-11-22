@@ -23,18 +23,16 @@ export default async function FundraisingLayout({
   const { name } = await params;
   const { charity } = await requireFundraisingPortal(name);
 
-  const [donors, grants, proposals] = await Promise.all([
+  const [donors, grants] = await Promise.all([
     prisma.donorOrg.count({ where: { kind: PORTAL_DONOR_KIND } }),
     prisma.grantApplication.count({
       where: { charityId: charity.id, donorOrg: { kind: PORTAL_DONOR_KIND } },
     }),
-    // ومحروسٌ: جدولُ المقترحات قد لا يكون أُنشئ بعد، ولا يسقط القسمُ لعدّاد.
-    prisma.grantProposal.count({ where: { charityId: charity.id } }).catch(() => 0),
   ]);
 
   return (
     <div className="space-y-4">
-      <FundraisingNav charityName={charity.name} donors={donors} proposals={proposals} grants={grants} />
+      <FundraisingNav charityName={charity.name} donors={donors} grants={grants} />
       {children}
     </div>
   );

@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, type ReactNode } from "react";
 import { Coins } from "lucide-react";
 import {
   EmptyState,
@@ -44,6 +44,7 @@ export default function GrantsClient({
   grants,
   donors,
   initialDonor,
+  tabs,
 }: {
   charityName: string;
   grants: PortalGrantRow[];
@@ -51,6 +52,8 @@ export default function GrantsClient({
   donors: { id: string; label: string }[];
   /** جهةٌ تُفتح الصفحةُ مُرشَّحةً بها، قادمةً من ملفِّها. */
   initialDonor: string | null;
+  /** تبويبُ القسم — تحت العنوان لا فوق المسار. */
+  tabs?: ReactNode;
 }) {
   const [query, setQuery] = useState("");
   const [status, setStatus] = useState("all");
@@ -102,8 +105,9 @@ export default function GrantsClient({
         icon={<Coins className="size-6" />}
         title="المنح المرفوعة"
         description="ما رفعته الجمعية إلى الجهات المانحة، وحالة كل طلب."
-
       />
+
+      {tabs}
 
       <StatStrip
         items={[

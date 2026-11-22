@@ -1,7 +1,5 @@
 import type { ReactNode } from "react";
-import { prisma } from "@/lib/db";
-import { PORTAL_DONOR_KIND, requireFundraisingPortal } from "@/lib/portalFundraising";
-import FundraisingNav from "./FundraisingNav";
+import { requireFundraisingPortal } from "@/lib/portalFundraising";
 
 /**
  * غلافُ قسم تنمية الموارد: حارسُه وتنقّلُه.
@@ -10,8 +8,9 @@ import FundraisingNav from "./FundraisingNav";
  * الجمعية. ولم يُحذف من الصفحات: غلافٌ يحرس وصفحةٌ تُستدعى من غيره يومَ
  * تُنقل — والحراسةُ تُكرَّر ولا تُفترض.
  *
- * **والعددان يُجلبان مرّةً للشاشتين**: كلاهما سطرٌ واحدٌ في القاعدة، ووجودُهما
- * على التبويب يقول حجمَ ما خلفه قبل فتحه.
+ * **والتبويبُ ليس هنا**: الغلافُ يسبق العنوانَ والمسار، فكان التبويبُ فوقهما
+ * وترتيبُه مقلوب. فصار كلُّ قائمةٍ تستدعيه تحت عنوانها (`FundraisingTabs`)،
+ * وملفُّ الجهة لا يستدعيه — مسارُه يُعيد.
  */
 export default async function FundraisingLayout({
   children,
@@ -21,19 +20,7 @@ export default async function FundraisingLayout({
   params: Promise<{ name: string }>;
 }) {
   const { name } = await params;
-  const { charity } = await requireFundraisingPortal(name);
+  await requireFundraisingPortal(name);
 
-  const [donors, grants] = await Promise.all([
-    prisma.donorOrg.count({ where: { kind: PORTAL_DONOR_KIND } }),
-    prisma.grantApplication.count({
-      where: { charityId: charity.id, donorOrg: { kind: PORTAL_DONOR_KIND } },
-    }),
-  ]);
-
-  return (
-    <div className="space-y-4">
-      <FundraisingNav charityName={charity.name} donors={donors} grants={grants} />
-      {children}
-    </div>
-  );
+  return <div className="space-y-4">{children}</div>;
 }

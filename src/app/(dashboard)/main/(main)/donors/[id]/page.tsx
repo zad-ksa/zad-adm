@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { requireDonorViewer } from "@/lib/donorScope";
-import { loadDonorDetail } from "../donorData";
+import { loadDonorDetail, loadFieldSources } from "../donorData";
 import DonorDetail from "../DonorDetail";
 
 export const dynamic = "force-dynamic";
@@ -19,6 +19,10 @@ export default async function DonorOrgPage({ params }: { params: Promise<{ id: s
   const detail = await loadDonorDetail(viewer, id);
   if (!detail) notFound();
 
+  // وجهاتُ النسخ تُجلب هنا: المجالاتُ متشابهةٌ بين الجهات، ونسخُها أسرعُ
+  // من كتابتها ستّاً وستّين مرّة.
+  const fieldSources = await loadFieldSources(id);
+
   return (
     <DonorDetail
       org={detail.row}
@@ -27,6 +31,7 @@ export default async function DonorOrgPage({ params }: { params: Promise<{ id: s
       accounts={detail.accounts}
       grants={detail.grants}
       fields={detail.fields}
+      fieldSources={fieldSources}
     />
   );
 }

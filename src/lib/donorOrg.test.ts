@@ -10,6 +10,8 @@ import {
   intakeFromInputs,
   intakeStatusOf,
   normalizeDonorName,
+  daysLabel,
+  deadlineNote,
 } from "./donorOrg.ts";
 
 // ── تسوية الاسم ────────────────────────────────────────────────────────────
@@ -158,4 +160,29 @@ test("حقلٌ نصفُ مكتوبٍ لا يُقلب الحالة", () => {
   // المتصفّحُ يُرسل قيمةً ناقصةً أثناء الكتابة، فلا تُقرأ تاريخاً.
   assert.equal(intakeFromInputs("CLOSED", "", "2026-11", at).mode, "MANUAL");
   assert.equal(intakeFromInputs("CLOSED", "", "غير تاريخ", at).mode, "MANUAL");
+});
+
+test("daysLabel: مفرد ومثنى وجمع", () => {
+  assert.equal(daysLabel(1), "يوم");
+  assert.equal(daysLabel(2), "يومين");
+  assert.equal(daysLabel(3), "3 أيام");
+  assert.equal(daysLabel(10), "10 أيام");
+  assert.equal(daysLabel(11), "11 يوما");
+});
+
+test("deadlineNote: القربُ يُحذِّر، والفتحُ خبرٌ محايد", () => {
+  const now = new Date("2026-11-22T09:00:00Z");
+  assert.equal(deadlineNote("OPEN", null, now), null);
+  assert.deepEqual(deadlineNote("OPEN", "2026-11-22T23:00:00Z", now), {
+    text: "يغلق اليوم",
+    tone: "danger",
+    days: 0,
+  });
+  assert.equal(deadlineNote("OPEN", "2026-11-23T01:00:00Z", now)?.text, "يغلق غدا");
+  assert.equal(deadlineNote("OPEN", "2026-11-27T00:00:00Z", now)?.tone, "warn");
+  assert.equal(deadlineNote("OPEN", "2027-02-01T00:00:00Z", now)?.tone, "neutral");
+  assert.equal(deadlineNote("OPEN", "2026-11-20T00:00:00Z", now)?.text, "مضى موعد الإغلاق");
+  // والفتحُ انتظارٌ لا فوات.
+  assert.equal(deadlineNote("CLOSED", "2026-12-02T00:00:00Z", now)?.tone, "neutral");
+  assert.equal(deadlineNote("CLOSED", "2026-12-02T00:00:00Z", now)?.text, "يفتح بعد 10 أيام");
 });

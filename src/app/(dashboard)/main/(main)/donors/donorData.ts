@@ -297,6 +297,25 @@ export async function loadSingletonDonor(viewer: DonorViewer, kind: DonorKind) {
   return first ? loadDonorDetail(viewer, first.id) : null;
 }
 
+/**
+ * جهاتٌ لها مجالاتٌ مكتوبة — يُنسخ منها إلى جهةٍ فارغة.
+ *
+ * ومحروسٌ كبقيّة قراءات المجالات، ويُسقط الجهةَ نفسَها: لا تُنسخ إلى ذاتها.
+ */
+export async function loadFieldSources(exceptId: string) {
+  try {
+    const rows = await prisma.donorOrg.findMany({
+      where: { id: { not: exceptId }, grantFields: { some: {} } },
+      select: { id: true, name: true, _count: { select: { grantFields: true } } },
+      orderBy: { name: "asc" },
+    });
+    return rows.map((r) => ({ id: r.id, name: r.name, count: r._count.grantFields }));
+  } catch (error) {
+    console.error("loadFieldSources", error);
+    return [] as { id: string; name: string; count: number }[];
+  }
+}
+
 export async function loadDonorDetail(viewer: DonorViewer, id: string) {
   const now = new Date();
   const org = await prisma.donorOrg.findUnique({

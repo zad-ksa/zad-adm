@@ -10,7 +10,7 @@ import {
   SearchField,
   SortTh,
   StatStrip,
-  TableShell,
+  TableShellCards,
   Th,
   tableFrameClass,
   tbodyClass,
@@ -19,6 +19,7 @@ import {
   type SortDir,
 } from "@/components/console/layout";
 import { Badge, MONO, btn, cx } from "@/components/console/ui";
+import MultiSelect from "@/components/console/MultiSelect";
 import { CopyButton, SecretValue } from "@/components/console/Copy";
 import { notify } from "@/components/console/toastBus";
 import AccountSheet from "./AccountSheet";
@@ -51,6 +52,9 @@ export default function DonorsClient({
   const router = useRouter();
   const [query, setQuery] = useState("");
   const [onlyOpen, setOnlyOpen] = useState(false);
+  // و«لها حساب» مُرشِّحٌ كالبطاقة التي تعدّه: نصفُ الشريط كان تفاعليّاً.
+  const [onlyAccount, setOnlyAccount] = useState(false);
+  const [pickedTags, setPickedTags] = useState<string[]>([]);
   // والترتيبُ الافتراضيُّ بالحالة والمفتوحُ أوّلاً: السؤالُ الأوّلُ في هذه
   // الصفحة «أين أرفع الآن؟»، لا «أين الجهةُ في المعجم؟».
   const [column, setColumn] = useState<Column>("status");
@@ -64,7 +68,17 @@ export default function DonorsClient({
     const rank = (status: string) => (status === "OPEN" ? 0 : 1);
     const sign = dir === "asc" ? 1 : -1;
     const list = donors.filter(
-      (d) => (!onlyOpen || d.intakeStatus === "OPEN") && (q === "" || d.name.includes(q))
+      (d) =>
+        (!onlyOpen || d.intakeStatus === "OPEN") &&
+        (!onlyAccount || d.username !== null) &&
+        (pickedTags.length === 0 || pickedTags.some((t) => d.fieldTags.includes(t))) &&
+        // والبحثُ يشمل المجالاتِ والوسوم: السطرُ تحت الاسم يعرضها، ومن
+        // بحث عن «تعليم» يريد الجهةَ التي تموّله لا الجهةَ التي تُسمّى به.
+        (q === "" ||
+          d.name.includes(q) ||
+          d.fields.some((f) => f.name.includes(q)) ||
+          d.fieldTags.some((t) => t.includes(q)) ||
+          (d.legacyFields ?? "").includes(q))
     );
     list.sort((a, b) => {
       switch (column) {
@@ -86,10 +100,15 @@ export default function DonorsClient({
       }
     });
     return list;
-  }, [donors, query, onlyOpen, column, dir]);
+  }, [donors, query, onlyOpen, onlyAccount, pickedTags, column, dir]);
 
   const openCount = donors.filter((d) => d.intakeStatus === "OPEN").length;
   const withAccount = donors.filter((d) => d.username).length;
+  // ووسومُ الجهات كلِّها مرّةً: مُرشِّحٌ لا يعرض وسماً لا جهةَ له.
+  const allTags = useMemo(
+    () => [...new Set(donors.flatMap((d) => d.fieldTags))].sort((a, b) => a.localeCompare(b, "ar")),
+    [donors]
+  );
 
   const run = (fn: () => Promise<{ ok: boolean; error?: string }>) =>
     start(async () => {
@@ -114,7 +133,17 @@ export default function DonorsClient({
       {/* الأعدادُ بطاقاتٌ كشاشات زاد لا سطرَ نصٍّ في الوصف: تُمسح بنظرة. */}
       <StatStrip
         items={[
-          { label: "الجهات المانحة", value: donors.length },
+          {
+            label: "الجهات المانحة",
+            value: donors.length,
+            // ونقرةٌ على الكلِّ تمسح المُرشِّحات: مخرجٌ ظاهرٌ من أيِّ تصفية.
+            onClick: () => {
+              setOnlyOpen(false);
+              setOnlyAccount(false);
+              setPickedTags([]);
+            },
+            selected: !onlyOpen && !onlyAccount && pickedTags.length === 0,
+          },
           {
             label: "مفتوحة للرفع الآن",
             value: openCount,
@@ -124,7 +153,13 @@ export default function DonorsClient({
             onClick: () => setOnlyOpen((v) => !v),
             selected: onlyOpen,
           },
-          { label: "لها حساب مسجل", value: withAccount, hint: `من ${donors.length} جهة` },
+          {
+            label: "لها حساب مسجل",
+            value: withAccount,
+            hint: `من ${donors.length} جهة`,
+            onClick: () => setOnlyAccount((v) => !v),
+            selected: onlyAccount,
+          },
         ]}
       />
 
@@ -136,14 +171,20 @@ export default function DonorsClient({
           placeholder="ابحث باسم الجهة…"
           className="min-w-56 flex-1"
         />
-        <button
-          type="button"
-          onClick={() => setOnlyOpen((v) => !v)}
-          aria-pressed={onlyOpen}
-          className={onlyOpen ? btn.primary : btn.secondary}
-        >
-          المفتوحة للرفع فقط
-        </button>
+        {/* ولا زرَّ «المفتوحة فقط»: البطاقةُ أعلاه تفعل الشيءَ نفسَه، ومُرشِّحان
+            لشيءٍ واحدٍ في شاشةٍ واحدةٍ يُربكان. ومكانَه مُرشِّحُ الوسوم —
+            وهو ثمرةُ الوسوم: كلماتٌ تُقارَن. */}
+        {allTags.length > 0 && (
+          <MultiSelect
+            label="الوسوم"
+            placeholder="كل الوسوم"
+            allLabel="كل الوسوم"
+            countNoun="وسوم"
+            values={pickedTags}
+            onChange={setPickedTags}
+            options={allTags.map((t) => ({ value: t, label: t }))}
+          />
+        )}
       </div>
 
       {shown.length === 0 ? (
@@ -155,12 +196,68 @@ export default function DonorsClient({
           />
         </div>
       ) : (
-        <TableShell
+        <TableShellCards
           footer={
             shown.length === donors.length
               ? `${donors.length} جهة`
               : `${shown.length} من ${donors.length} جهة`
           }
+          cards={shown.map((donor) => (
+            <div key={donor.id} className="space-y-1.5 p-3">
+              <div className="flex flex-wrap items-center gap-2">
+                <Link
+                  href={`/portal/${encodeURIComponent(charityName)}/fundraising/donors/${donor.id}`}
+                  className="font-medium text-primary hover:underline dark:text-teal-300"
+                >
+                  {donor.name}
+                </Link>
+                <Badge tone={donor.intakeStatus === "OPEN" ? "good" : "neutral"}>
+                  {donor.intakeStatus === "OPEN" ? "مفتوح" : "مغلق"}
+                </Badge>
+                {donor.deadline && (
+                  <span
+                    className={cx(
+                      "text-meta",
+                      donor.deadline.tone === "danger"
+                        ? "font-semibold text-rose-600 dark:text-rose-400"
+                        : donor.deadline.tone === "warn"
+                          ? "text-amber-600 dark:text-amber-400"
+                          : "text-slate-400"
+                    )}
+                  >
+                    {donor.deadline.text}
+                  </span>
+                )}
+              </div>
+              {(donor.fields.length > 0 || donor.legacyFields) && (
+                <p className="line-clamp-2 text-meta text-slate-500 dark:text-slate-400">
+                  {donor.fields.length > 0
+                    ? donor.fields.map((f) => f.name).join(" · ")
+                    : donor.legacyFields}
+                </p>
+              )}
+              <p className="flex flex-wrap items-center gap-x-3 gap-y-1 text-meta text-slate-400">
+                <span>
+                  {donor.username ? (
+                    <>
+                      الحساب: <span className={cx(MONO, "text-slate-600 dark:text-slate-300")} dir="ltr">{donor.username}</span>
+                    </>
+                  ) : (
+                    "لا حساب مسجل"
+                  )}
+                </span>
+                <span>المرفوع: {donor.grants}</span>
+                {donor.proposals > 0 && <span>المقترح: {donor.proposals}</span>}
+              </p>
+              <div className="flex items-center gap-2 pt-1">
+                <button type="button" onClick={() => setEditing(donor)} className={btn.secondary}>
+                  <KeyRound className="size-4" />
+                  {donor.username ? "تعديل الحساب" : "إضافة حساب"}
+                </button>
+                {donor.password && <SecretValue value={donor.password} />}
+              </div>
+            </div>
+          ))}
         >
           <thead>
             <tr className={theadRowClass}>
@@ -198,10 +295,21 @@ export default function DonorsClient({
                   {/* ومجالاتُ الجهة سطرٌ تحت اسمها كأنّها وصفُها: الاسمُ وحدَه
                       لا يقول فيمَ تُنفق، وعددٌ مجرَّدٌ لا يقوله أيضاً. وحيث لم
                       تُنقل المجالاتُ إلى صفوفٍ بعدُ يُقرأ نصُّها القديم. */}
-                  {donor.fieldNames.length > 0 ? (
+                  {donor.fields.length > 0 ? (
                     <p className="mt-0.5 text-meta font-normal leading-5 text-slate-500 dark:text-slate-400">
-                      {donor.fieldNames.slice(0, 4).join(" · ")}
-                      {donor.fieldNames.length > 4 && ` · و${donor.fieldNames.length - 4} غيرها`}
+                      {donor.fields.slice(0, 4).map((f, i) => (
+                        <span key={f.id}>
+                          {i > 0 && " · "}
+                          {/* والرابطُ ينزل على المجال نفسِه في ملفِّ الجهة. */}
+                          <Link
+                            href={`/portal/${encodeURIComponent(charityName)}/fundraising/donors/${donor.id}#field-${f.id}`}
+                            className="transition-colors hover:text-primary hover:underline dark:hover:text-teal-300"
+                          >
+                            {f.name}
+                          </Link>
+                        </span>
+                      ))}
+                      {donor.fields.length > 4 && ` · و${donor.fields.length - 4} غيرها`}
                     </p>
                   ) : donor.legacyFields ? (
                     <p className="mt-0.5 line-clamp-2 text-meta font-normal leading-5 text-slate-400 dark:text-slate-500">
@@ -216,11 +324,26 @@ export default function DonorsClient({
                 </td>
                 <td className={tdClass}>
                   {donor.nextDate ? (
-                    <span className="text-body text-slate-600 dark:text-slate-300">
-                      <span className="text-meta text-slate-400">
-                        {donor.intakeStatus === "OPEN" ? "يغلق " : "يفتح "}
+                    <span className="block">
+                      <span className={cx(MONO, "text-body text-slate-600 dark:text-slate-300")}>
+                        {donor.nextDate}
                       </span>
-                      <span className={MONO}>{donor.nextDate}</span>
+                      {/* والنسبةُ تحت التاريخ: بها يُرتَّب العملُ، وبالتاريخ
+                          يُخطَّط له. واللونُ للقُرب لا للحالة. */}
+                      {donor.deadline && (
+                        <span
+                          className={cx(
+                            "mt-0.5 block text-meta",
+                            donor.deadline.tone === "danger"
+                              ? "font-semibold text-rose-600 dark:text-rose-400"
+                              : donor.deadline.tone === "warn"
+                                ? "text-amber-600 dark:text-amber-400"
+                                : "text-slate-400"
+                          )}
+                        >
+                          {donor.deadline.text}
+                        </span>
+                      )}
                     </span>
                   ) : (
                     <span className="text-slate-400 dark:text-slate-500" title={donor.intakeReason}>
@@ -247,7 +370,18 @@ export default function DonorsClient({
                   )}
                 </td>
 
-                <td className={cx(tdClass, MONO, "text-slate-600 dark:text-slate-300")}>{donor.grants}</td>
+                <td className={cx(tdClass, MONO, "text-slate-600 dark:text-slate-300")}>
+                  {donor.grants > 0 ? (
+                    <Link
+                      href={`/portal/${encodeURIComponent(charityName)}/fundraising/grants?donor=${donor.id}`}
+                      className="text-primary hover:underline dark:text-teal-300"
+                    >
+                      {donor.grants}
+                    </Link>
+                  ) : (
+                    donor.grants
+                  )}
+                </td>
                 <td className={cx(tdClass, "whitespace-nowrap")}>
                   <button type="button" onClick={() => setEditing(donor)} className={btn.secondary}>
                     <KeyRound className="size-4" />
@@ -257,7 +391,7 @@ export default function DonorsClient({
               </tr>
             ))}
           </tbody>
-        </TableShell>
+        </TableShellCards>
       )}
 
       {editing && (

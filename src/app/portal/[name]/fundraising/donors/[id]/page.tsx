@@ -47,6 +47,7 @@ export default async function PortalDonorPage({
       donor={file.donor}
       fields={file.fields}
       initiatives={initiatives}
+      usedInitiativeIds={file.usedInitiativeIds}
     />
   );
 }

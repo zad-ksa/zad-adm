@@ -1,26 +1,25 @@
 export const dynamic = "force-dynamic";
 
 import type { Metadata } from "next";
-import { prisma } from "@/lib/db";
+import { redirect } from "next/navigation";
 import { Briefcase } from "lucide-react";
-import ServicesTimelineViewer from "@/components/ServicesTimelineViewer";
+import { PageHeader } from "@/components/console/layout";
 import ServicesGuideButton from "@/components/ServicesGuideButton";
+import { prisma } from "@/lib/db";
 import { getTimelineConfigs } from "@/app/actions/settings";
 import { resolveCharityPortal } from "@/lib/portalAccess";
 import { seesCharityServicesTab, visibleCharityServices } from "@/lib/charityPermissions";
-import { redirect } from "next/navigation";
+import ServicesClient from "./ServicesClient";
 
 export async function generateMetadata({ params }: { params: Promise<{ name: string }> }): Promise<Metadata> {
   const { name } = await params;
-  const decodedName = decodeURIComponent(name);
-  return {
-    title: `${decodedName} | الخدمات`,
-  };
+  return { title: `${decodeURIComponent(name)} | الخدمات` };
 }
+
+const CORE = ["STRATEGY", "GOVERNANCE", "FINANCE"] as const;
 
 export default async function ServicesPage({ params }: { params: Promise<{ name: string }> }) {
   const { name } = await params;
-  const decodedName = decodeURIComponent(name);
 
   // Membership AND permission, both re-checked here: the layout only proves the
   // visitor belongs to this charity, not that they may see this tab.
@@ -33,23 +32,15 @@ export default async function ServicesPage({ params }: { params: Promise<{ name:
     redirect(`/portal/${encodeURIComponent(access.charity.name)}/no-access`);
   }
 
-  const charity = await prisma.charity.findUnique({
-    where: { name: decodedName },
-  });
-
-  if (!charity) {
-    return <div>الجمعية غير موجودة</div>;
-  }
-
   const serviceRows = await prisma.service.findMany({
-    where: { charityId: charity.id },
+    where: { charityId: access.charity.id },
     include: {
       stages: {
-        orderBy: { order: 'asc' },
-        include: { steps: { orderBy: { order: 'asc' } } }
-      }
+        orderBy: { order: "asc" },
+        include: { steps: { orderBy: { order: "asc" } } },
+      },
     },
-    orderBy: { createdAt: "desc" }
+    orderBy: { createdAt: "desc" },
   });
 
   // الترشيحُ بالقاعدة نفسِها التي يقرؤها الشريطُ (`visibleCharityServices`).
@@ -60,67 +51,46 @@ export default async function ServicesPage({ params }: { params: Promise<{ name:
       charityServices: serviceRows.map((s) => s.name),
     })
   );
-  const allServices = serviceRows.filter((s) => visible.has(s.name));
+  const allowed = serviceRows.filter((s) => visible.has(s.name));
 
-  const strategicService = allServices.find(s => s.department === "STRATEGY");
-  const governanceService = allServices.find(s => s.department === "GOVERNANCE");
-  const financeService = allServices.find(s => s.department === "FINANCE");
-
-  const strategicStages = strategicService?.stages || [];
-  const governanceStages = governanceService?.stages || [];
-  const financeStages = financeService?.stages || [];
-
-  const customServices = allServices.filter(s => !["STRATEGY", "GOVERNANCE", "FINANCE"].includes(s.department || ""));
-
+  // وأسماءُ الأقسام الثلاثة تُقرأ من إعدادات زاد لا من صفِّ الخدمة: هي
+  // تسميةُ المخطط عند زادٍ، تُغيَّر مرّةً فتُقرأ في كلِّ جمعية.
   const timelineNames = await getTimelineConfigs();
-  const strategyName = timelineNames["STRATEGY"] || "المخطط الزمني للتخطيط الاستراتيجي";
-  const governanceName = timelineNames["GOVERNANCE"] || "المخطط الزمني للحوكمة";
-  const financeName = timelineNames["FINANCE"] || "المخطط الزمني للمالية";
+  const core = CORE.map((dept) => {
+    const service = allowed.find((s) => s.department === dept);
+    return service ? { ...service, name: timelineNames[dept] || service.name } : null;
+  }).filter((s): s is NonNullable<typeof s> => s !== null);
 
-  const formattedServices = [
-    ...(strategicService ? [{ ...strategicService, name: strategyName }] : []),
-    ...(governanceService ? [{ ...governanceService, name: governanceName }] : []),
-    ...(financeService ? [{ ...financeService, name: financeName }] : []),
-    ...customServices
+  const services = [
+    ...core,
+    ...allowed.filter((s) => !CORE.includes((s.department ?? "") as (typeof CORE)[number])),
   ];
 
   return (
-    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-      <div className="bg-transparent border-b border-slate-200 dark:border-slate-800 pb-6 mb-8 transition-colors">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div className="flex items-center gap-4">
-            <div className="w-12 h-12 bg-white dark:bg-[#111] border border-slate-200 dark:border-slate-800 rounded-xl flex items-center justify-center text-emerald-500 dark:text-emerald-400 shrink-0 shadow-sm dark:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)]">
-              <Briefcase className="w-6 h-6" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <h2 className="font-bold text-primary dark:text-primary tracking-tight" style={{ fontSize: 'clamp(1.25rem, 2.5vw, 1.5rem)' }}>
-                المخططات والمراحل الزمنية
-              </h2>
-              <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
-                متابعة المراحل الزمنية لجمعية <span className="font-semibold text-slate-700 dark:text-slate-300">{decodedName}</span> لمختلف الأقسام.
-              </p>
-            </div>
-          </div>
-          <div className="shrink-0 flex items-center gap-3">
+    <div className="space-y-5" dir="rtl">
+      <PageHeader
+        icon={<Briefcase className="size-6" />}
+        title="الخدمات"
+        description="مراحل خدمات جمعيتك، وأين بلغت كل واحدة منها اليوم."
+        actions={
+          <ServicesGuideButton
+            sections={services.map((s) => ({
+              title: s.name,
+              isComingSoon: s.isComingSoon,
+              stages: s.stages,
+            }))}
+          />
+        }
+      />
 
-            <ServicesGuideButton
-              sections={[
-                ...(strategicStages.length > 0 ? [{ title: strategyName, stages: strategicStages }] : []),
-                ...(governanceStages.length > 0 ? [{ title: governanceName, stages: governanceStages }] : []),
-                ...(financeStages.length > 0 ? [{ title: financeName, stages: financeStages }] : []),
-                ...customServices.map(svc => ({ title: svc.name, stages: svc.stages })),
-              ]}
-            />
-          </div>
-        </div>
-      </div>
-
-      <div>
-        <ServicesTimelineViewer 
-          services={formattedServices}
-          charityName={decodedName}
-        />
-      </div>
+      <ServicesClient
+        services={services.map((s) => ({
+          id: s.id,
+          name: s.name,
+          isComingSoon: s.isComingSoon,
+          stages: s.stages,
+        }))}
+      />
     </div>
   );
 }

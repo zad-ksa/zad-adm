@@ -1,41 +1,41 @@
-import { governanceManuals, CharitySize } from "@/data/governanceManual";
+import type { Metadata } from "next";
 import { redirect } from "next/navigation";
-import SaveCharitySize from "@/components/SaveCharitySize";
-import GovernanceDocHub from "./GovernanceDocHub";
 import { requirePortalPermission } from "@/lib/portalAccess";
+import { guideSize, isGuideSize } from "@/lib/governanceGuide";
+import { governanceManuals } from "@/data/governanceManual";
+import GovernanceGuide from "./GovernanceGuide";
 
-export default async function GovernanceStandardsPage({ 
+export const metadata: Metadata = { title: "دليل الحوكمة" };
+
+/**
+ * معاييرُ الحوكمة بحجمٍ بعينه — ممارساتُها وشواهدُها.
+ *
+ * **والحارسُ هنا من جديدٍ**: هذا العنوانُ يُكتب مباشرةً ولا يمرُّ بالصفحة
+ * التي قبله، فالصلاحيّةُ تُفحص في كلِّ باب.
+ */
+export default async function GovernanceStandardsPage({
   params,
-  searchParams
-}: { 
-  params: Promise<{ name: string }>,
-  searchParams: Promise<{ size?: string }>
+  searchParams,
+}: {
+  params: Promise<{ name: string }>;
+  searchParams: Promise<{ size?: string }>;
 }) {
   const { name } = await params;
   const { size } = await searchParams;
-  const charityName = decodeURIComponent(name);
+  const access = await requirePortalPermission(name, "view_governance");
+  const base = `/portal/${encodeURIComponent(access.charity.name)}/governance`;
 
-  // Guarded independently of the parent page — this URL is reachable directly,
-  // which is precisely how the custom-surveys gap in the last audit happened.
-  await requirePortalPermission(name, "view_governance");
-
-  const sizeParam = (size?.toUpperCase() || "SMALL") as CharitySize;
-  
-  // Validate size
-  if (!governanceManuals[sizeParam]) {
-    redirect(`/portal/${encodeURIComponent(charityName)}/governance`);
-  }
-
-  const standards = governanceManuals[sizeParam] || [];
+  const picked = size?.toUpperCase();
+  // وحجمٌ مجهولٌ يُردّ إلى الاختيار لا يُستبدل بحجمٍ افتراضي: دليلُ جمعيةٍ
+  // صغيرةٍ يُعرض لكبيرةٍ خبرٌ كاذب، والصمتُ عنه أسوأ من ردّها.
+  if (!isGuideSize(picked)) redirect(`${base}?change=1`);
 
   return (
-    <>
-      <SaveCharitySize charityName={charityName} size={sizeParam} />
-      <GovernanceDocHub
-        standards={standards}
-        sizeParam={sizeParam}
-        charityName={charityName}
-      />
-    </>
+    <GovernanceGuide
+      charityName={access.charity.name}
+      size={picked}
+      sizeLabel={guideSize(picked)?.label ?? ""}
+      standards={governanceManuals[picked] ?? []}
+    />
   );
 }

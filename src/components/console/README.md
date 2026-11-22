@@ -13,8 +13,9 @@
 | الملف | العناصر |
 |---|---|
 | `ui.tsx` | `btn` · `field` · `Badge` · `Avatar` · `AvatarStack` · `CheckMark` · `IconTile` · `SectionHeader` · `Field` · `OptionRow` · `SelectAll` · `Note` · `NameList` · `Count` · `Dot` · `MONO` · `cx` |
-| | **الجديد:** `Spinner` · `Skeleton` · `SkeletonRows` · `MetricCard` · `NavCard` · `NavCircle` · `RecordCard` · `EntityCard` · `listRow` · `toolbarClass` |
+| | **الجديد:** `Spinner` · `Skeleton` · `SkeletonRows` · `MetricCard` · `NavCard` · `NavCircle` · `RecordCard` · `EntityCard` · `Highlight` · `listRow` · `toolbarClass` |
 | `layout.tsx` | `PageHeader` · `StatStrip` · `Tabs` · `Segmented` · `SearchField` · `TableShell` · `Th` · `SortTh` · `Rail` · `RailItem` · `EmptyState` |
+| `Accordion.tsx` | `Accordion` — قسمٌ يُطوى ويُفتح، بحالٍ عنده أو عند مُناديه |
 | `overlays.tsx` | `Sheet` · `ConfirmDialog` · `useToast`/`Toast` · `RowMenu` · `MenuItem` · `FooterStatus` |
 | `controls.tsx` | `Pagination` |
 | `Select.tsx` | `Select` — قائمة منسدلة بصيغتين |

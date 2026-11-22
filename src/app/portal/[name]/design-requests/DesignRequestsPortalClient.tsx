@@ -2,12 +2,14 @@
 
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Plus, Info, Palette, ListOrdered, Trash2, Archive, ArchiveRestore } from "lucide-react";
+import { Archive, ArchiveRestore, ListOrdered, Palette, Plus, Trash2 } from "lucide-react";
 import DesignRequestCard, { type DesignRequestCardData } from "@/components/design-requests/DesignRequestCard";
 import EditDesignRequestModal from "@/components/design-requests/EditDesignRequestModal";
 import DesignRequestLogModal from "@/components/design-requests/DesignRequestLogModal";
 import QueueOrderModal, { type QueueRow } from "@/components/design-requests/QueueOrderModal";
 import type { DesignRequestProgress } from "@/lib/designRequestProgress";
+import { EmptyState, PageHeader, StatStrip, Tabs } from "@/components/console/layout";
+import { Note, btn } from "@/components/console/ui";
 import { Toast } from "@/components/console/Toast";
 import { ConfirmDialog } from "@/components/console/ConfirmDialog";
 import RequestRevisionModal from "@/components/design-requests/RequestRevisionModal";
@@ -47,6 +49,26 @@ type Item = {
   progress: DesignRequestProgress;
 };
 
+type PortalTab =
+  | "AWAITING_REVIEW"
+  | "UNDER_REVIEW"
+  | "PENDING"
+  | "REVISION_REQUESTED"
+  | "COMPLETED"
+  | "REJECTED"
+  // الأرشيفُ تبويبٌ لا حالة: الصفُّ يحفظ حالته وهو مؤرشف.
+  | "ARCHIVED";
+
+/**
+ * طلبات التصاميم كما تراها الجمعية.
+ *
+ * **والترويسةُ هنا لا في الصفحة**: زرُّ «طلب جديد» يفتح نموذجاً، والنموذجُ
+ * حالٌ في هذا المكوِّن. وكانت الصفحةُ تكتب عنواناً ويكتب هذا عنواناً ثانياً
+ * تحته — «طلبات التصاميم» مرّتين في شاشةٍ واحدة.
+ *
+ * **والأرقامُ شريطٌ لا بطاقاتٌ ملوّنة**: بانتظارك، وقيد التنفيذ، والمنجز —
+ * واللونُ فيها حالٌ: الكهرمانيُّ لما ينتظر ردَّك.
+ */
 export default function DesignRequestsPortalClient({
   charityId,
   charityName,
@@ -65,15 +87,6 @@ export default function DesignRequestsPortalClient({
   const [editingId, setEditingId] = useState<string | null>(null);
   const [logRequestId, setLogRequestId] = useState<string | null>(null);
   const [isQueueOpen, setIsQueueOpen] = useState(false);
-  type PortalTab =
-    | "AWAITING_REVIEW"
-    | "UNDER_REVIEW"
-    | "PENDING"
-    | "REVISION_REQUESTED"
-    | "COMPLETED"
-    | "REJECTED"
-    // الأرشيفُ تبويبٌ لا حالة: الصفُّ يحفظ حالته وهو مؤرشف.
-    | "ARCHIVED";
   const [tab, setTab] = useState<PortalTab>("PENDING");
   const [archiveFor, setArchiveFor] = useState<{ id: string; mode: "archive" | "unarchive" } | null>(null);
   const [isArchiving, setIsArchiving] = useState(false);
@@ -87,12 +100,14 @@ export default function DesignRequestsPortalClient({
 
   // العدّاداتُ على غير المؤرشف: الشارةُ تعدّ ما يُرى.
   const live = useMemo(() => initialItems.filter((it) => !it.request.archivedAt), [initialItems]);
-  const reviewCount = live.filter((it) => it.request.status === "UNDER_REVIEW").length;
-  const awaitingYouCount = live.filter((it) => it.request.status === "AWAITING_REVIEW").length;
-  const revisionCount = live.filter((it) => it.request.status === "REVISION_REQUESTED").length;
-  const rejectedCount = live.filter((it) => it.request.status === "REJECTED").length;
-  const pendingCount = live.filter((it) => it.request.status === "PENDING").length;
-  const completedCount = live.filter((it) => it.request.status === "COMPLETED").length;
+  const countOf = (status: string) => live.filter((it) => it.request.status === status).length;
+  const reviewCount = countOf("UNDER_REVIEW");
+  const awaitingYouCount = countOf("AWAITING_REVIEW");
+  const revisionCount = countOf("REVISION_REQUESTED");
+  const rejectedCount = countOf("REJECTED");
+  const pendingCount = countOf("PENDING");
+  const completedCount = countOf("COMPLETED");
+  const archivedCount = initialItems.length - live.length;
 
   /**
    * أرشفةُ طلبٍ أو إخراجُه — والخادمُ هو من يفحص الشرط.
@@ -159,133 +174,85 @@ export default function DesignRequestsPortalClient({
   );
 
   return (
-    <div className="design-requests-ui space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500" dir="rtl">
-      {/* Bento Grid Header */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {/* Bento Box 1: Info & Stats */}
-        <div className="md:col-span-2 bg-white dark:bg-[#0A0A0A] border border-slate-200 dark:border-slate-800 rounded-3xl p-6 shadow-sm hover:shadow-md dark:shadow-none transition-shadow flex flex-col justify-between">
-          <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 mb-6">
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-2xl bg-primary/10 dark:bg-teal-500/10 flex items-center justify-center shrink-0 border border-primary/10 dark:border-teal-500/20">
-                <Palette className="w-6 h-6 text-primary dark:text-teal-400" />
-              </div>
-              <div>
-                <h1
-                  className="font-bold text-slate-900 dark:text-slate-100"
-                  style={{ fontSize: "var(--dr-fs-h1)", letterSpacing: "var(--dr-tracking-h1)" }}
-                >
-                  طلبات التصاميم
-                </h1>
-                <p className="text-slate-500 dark:text-slate-400 mt-1" style={{ fontSize: "var(--dr-fs-body)" }}>
-                  تُنجز الطلبات خلال 3 أيام عمل
-                </p>
-              </div>
-            </div>
-          </div>
-          
-          <div className="flex items-center gap-3 flex-wrap">
-            <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-50 dark:bg-[#111] border border-slate-100 dark:border-slate-800/80">
-              <span className="w-2 h-2 rounded-full bg-primary dark:bg-teal-400"></span>
-              <span className="text-slate-600 dark:text-slate-300 font-bold" style={{ fontSize: "var(--dr-fs-meta)" }}>{pendingCount} قيد التنفيذ</span>
-            </div>
-            <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-50 dark:bg-[#111] border border-slate-100 dark:border-slate-800/80">
-              <span className="w-2 h-2 rounded-full bg-slate-400 dark:bg-slate-500"></span>
-              <span className="text-slate-600 dark:text-slate-300 font-bold" style={{ fontSize: "var(--dr-fs-meta)" }}>{completedCount} منجز</span>
-            </div>
-          </div>
-        </div>
+    <div className="space-y-5" dir="rtl">
+      <PageHeader
+        icon={<Palette className="size-6" />}
+        title="طلبات التصاميم"
+        description="ارفع طلبك، وتابع دوره وموعد تسليمه، واعتمد ما يسلم إليك."
+        actions={
+          <>
+            {/* Shown whenever anything is scheduled at all, not only when there
+                are two to swap.
 
-        {/* Bento Box 2: Primary Action — hidden without view_design_requests.
-            Cosmetic only; the server action re-checks the same permission. */}
-        {canCreate && (
-        <div className="md:col-span-1 bg-white dark:bg-[#0A0A0A] border border-slate-200 dark:border-slate-800 rounded-3xl p-6 shadow-sm hover:shadow-md dark:shadow-none transition-shadow flex flex-col justify-center items-center text-center gap-4 group">
-          <div className="w-12 h-12 rounded-full bg-primary/5 dark:bg-teal-500/5 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-            <Plus className="w-6 h-6 text-primary dark:text-teal-400" />
-          </div>
-          <button
-            onClick={() => setIsFormOpen(true)}
-            className="w-full h-12 flex items-center justify-center gap-2 text-white bg-gradient-to-b from-[#17857c] via-primary to-[#0c645d] shadow-[var(--dr-shadow-cta)] hover:shadow-[var(--dr-shadow-cta-hover)] active:translate-y-px rounded-xl font-bold transition-all"
-            style={{ fontSize: "var(--dr-fs-body)" }}
-          >
-            طلب تصميم جديد
-          </button>
-
-          {/* Shown whenever anything is scheduled at all, not only when there
-              are two to swap.
-
-              It was gated on "more than one waiting", on the reasoning that a
-              queue of one cannot be reordered. True — but it made the schedule
-              itself invisible to seven of the eight charities, which have one
-              request queued or none. Seeing when your design starts and lands
-              is the point; rearranging it is the extra. */}
-          {queueRows.length > 0 && (
-            <button
-              onClick={() => setIsQueueOpen(true)}
-              className="w-full h-9 flex items-center justify-center gap-1.5 rounded-xl bg-slate-100 text-slate-600 dark:bg-[#111] dark:text-slate-400 border border-transparent dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 transition-colors font-bold"
-              style={{ fontSize: "var(--dr-fs-meta)" }}
-            >
-              <ListOrdered className="w-3.5 h-3.5" />
-              جدولة التنفيذ
-            </button>
-          )}
-        </div>
-        )}
-
-        {/* Bento Box 3: Tabs & Warning */}
-        <div className="md:col-span-3 bg-white dark:bg-[#0A0A0A] border border-slate-200 dark:border-slate-800 rounded-2xl p-3 shadow-sm flex items-center justify-between gap-3 flex-wrap">
-          <div className="flex items-center gap-1 bg-slate-50 dark:bg-[#111] border border-slate-100 dark:border-slate-800/80 rounded-xl p-1">
-            {(
-              [
-                { key: "AWAITING_REVIEW" as const, label: "بانتظار مراجعتك", count: awaitingYouCount },
-                { key: "PENDING" as const, label: "الطلبات الحالية", count: 0 },
-                { key: "REVISION_REQUESTED" as const, label: "قيد التعديل", count: revisionCount },
-                { key: "UNDER_REVIEW" as const, label: "قيد المراجعة", count: reviewCount },
-                { key: "COMPLETED" as const, label: "الطلبات المنجزة", count: 0 },
-                { key: "REJECTED" as const, label: "المُعادة للتعديل", count: rejectedCount },
-                { key: "ARCHIVED" as const, label: "الأرشيف", count: 0 },
-              ]
-            ).map(({ key: t, label, count }) => (
-              <button
-                key={t}
-                onClick={() => setTab(t)}
-                className={`h-9 px-5 rounded-lg font-bold transition-all duration-300 ${
-                  tab === t
-                    ? "bg-white dark:bg-[#222] text-primary dark:text-teal-300 shadow-sm border border-slate-200/50 dark:border-slate-700/50"
-                    : "text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300 hover:bg-black/5 dark:hover:bg-white/5"
-                }`}
-                style={{ fontSize: "var(--dr-fs-meta)" }}
-              >
-                {label}
-                {count > 0 && (
-                  <span
-                    className={`inline-flex min-w-[18px] h-[18px] px-1 ms-1.5 items-center justify-center rounded-full text-[10px] font-black text-white ${
-                      t === "REJECTED" ? "bg-rose-500" : "bg-amber-500"
-                    }`}
-                  >
-                    {count}
-                  </span>
-                )}
+                It was gated on "more than one waiting", on the reasoning that a
+                queue of one cannot be reordered. True — but it made the schedule
+                itself invisible to seven of the eight charities, which have one
+                request queued or none. Seeing when your design starts and lands
+                is the point; rearranging it is the extra. */}
+            {queueRows.length > 0 && (
+              <button type="button" onClick={() => setIsQueueOpen(true)} className={btn.secondary}>
+                <ListOrdered className="size-4" />
+                ترتيب التنفيذ
               </button>
-            ))}
-          </div>
-          
-          <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-amber-50 dark:bg-amber-500/10 border border-amber-100 dark:border-amber-500/20 text-amber-700 dark:text-amber-400">
-            <Info className="w-3.5 h-3.5 shrink-0" />
-            <span style={{ fontSize: "var(--dr-fs-meta)" }}>الطلبات تُنفَّذ بالترتيب، طلباً تلو الآخر</span>
-          </div>
-        </div>
-      </div>
+            )}
+            {/* Cosmetic only; the server action re-checks the same permission. */}
+            {canCreate && (
+              <button type="button" onClick={() => setIsFormOpen(true)} className={btn.primary}>
+                <Plus className="size-4" />
+                طلب تصميم جديد
+              </button>
+            )}
+          </>
+        }
+      />
+
+      <StatStrip
+        items={[
+          {
+            label: "بانتظار مراجعتك",
+            value: awaitingYouCount,
+            dot: awaitingYouCount > 0 ? "warn" : "muted",
+            hint: awaitingYouCount > 0 ? "سلمت ولم تعتمد بعد" : undefined,
+          },
+          { label: "قيد التنفيذ", value: pendingCount },
+          { label: "قيد المراجعة", value: reviewCount },
+          { label: "منجز", value: completedCount, dot: completedCount > 0 ? "active" : "muted" },
+        ]}
+      />
+
+      <Tabs
+        label="حالات الطلبات"
+        value={tab}
+        onChange={(next) => setTab(next)}
+        tabs={[
+          { id: "PENDING" as const, label: "الحالية", count: pendingCount },
+          { id: "AWAITING_REVIEW" as const, label: "بانتظار مراجعتك", count: awaitingYouCount },
+          { id: "REVISION_REQUESTED" as const, label: "قيد التعديل", count: revisionCount },
+          { id: "UNDER_REVIEW" as const, label: "قيد المراجعة", count: reviewCount },
+          { id: "REJECTED" as const, label: "المعادة للتعديل", count: rejectedCount },
+          { id: "COMPLETED" as const, label: "المنجزة", count: completedCount },
+          { id: "ARCHIVED" as const, label: "الأرشيف", count: archivedCount },
+        ]}
+      />
+
+      {tab === "PENDING" && pendingCount > 0 && (
+        <p className="text-meta text-slate-500 dark:text-slate-400">
+          الطلبات تنفذ بالترتيب، طلبا تلو الآخر — والمبدوء به أولا.
+        </p>
+      )}
+
       {filtered.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-16 gap-4 text-slate-400 dark:text-slate-600">
-          <div className="w-16 h-16 bg-slate-50 dark:bg-[#111] border border-slate-100 dark:border-slate-800/60 rounded-3xl flex items-center justify-center shadow-sm">
-            <Palette className="w-8 h-8 text-slate-300 dark:text-slate-600" />
-          </div>
-          <p className="font-bold text-slate-500 dark:text-slate-400" style={{ fontSize: "var(--dr-fs-title)" }}>
-            لا توجد طلبات تصاميم هنا
-          </p>
-        </div>
+        <EmptyState
+          icon={<Palette className="size-4" />}
+          title="لا طلبات في هذا التبويب"
+          description={
+            tab === "PENDING"
+              ? "ما رفعته واعتمد يظهر هنا بموعد تسليمه."
+              : "جرب تبويبا آخر، أو ارفع طلبا جديدا."
+          }
+        />
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
           {filtered.map((it) => (
             <DesignRequestCard
               key={it.request.id}
@@ -294,20 +261,15 @@ export default function DesignRequestsPortalClient({
               onOpenLog={() => setLogRequestId(it.request.id)}
               actions={
                 it.request.status === "AWAITING_REVIEW" ? (
-                  <div className="w-full mt-2 space-y-2">
+                  <div className="mt-2 w-full space-y-2">
                     {/* Zad's note, as a panel rather than a line in the detail
                         list. After a reply round this is the whole message —
                         what was done, what was not, and why — and the charity
                         is about to approve or push back on the strength of it. */}
                     {it.request.completionNote && (
-                      <div className="rounded-xl bg-primary/[0.06] dark:bg-teal-500/10 px-3 py-2.5">
-                        <p
-                          className="font-bold text-primary dark:text-teal-400 mb-2"
-                          style={{ fontSize: "var(--dr-fs-meta)" }}
-                        >
-                          {it.request.revisionNotes
-                            ? "ردّ فريق زاد على ملاحظاتكم"
-                            : "ملاحظات فريق زاد"}
+                      <div className="rounded-lg bg-primary/[0.06] px-3 py-2.5 dark:bg-teal-400/10">
+                        <p className="mb-2 text-caption font-semibold text-primary dark:text-teal-300">
+                          {it.request.revisionNotes ? "رد فريق زاد على ملاحظاتكم" : "ملاحظات فريق زاد"}
                         </p>
                         <RevisionNotesList notes={it.request.completionNote} tone="staff" />
                       </div>
@@ -316,11 +278,8 @@ export default function DesignRequestsPortalClient({
                     {/* And what you asked for, kept in view beside the reply —
                         judging an answer means seeing the question. */}
                     {it.request.revisionNotes && (
-                      <div className="rounded-xl bg-amber-500/[0.08] px-3 py-2.5">
-                        <p
-                          className="font-bold text-amber-700 dark:text-amber-400 mb-2"
-                          style={{ fontSize: "var(--dr-fs-meta)" }}
-                        >
+                      <div className="rounded-lg bg-amber-500/[0.08] px-3 py-2.5">
+                        <p className="mb-2 text-caption font-semibold text-amber-700 dark:text-amber-400">
                           ملاحظاتكم السابقة
                         </p>
                         <RevisionNotesList notes={it.request.revisionNotes} />
@@ -328,86 +287,77 @@ export default function DesignRequestsPortalClient({
                     )}
 
                     {canCreate && (
-                      <>
-                      <button
-                        onClick={() => setApprovingId(it.request.id)}
-                        className="w-full h-10 rounded-xl text-white bg-gradient-to-b from-[#17857c] via-primary to-[#0c645d] shadow-[var(--dr-shadow-cta)] hover:shadow-[var(--dr-shadow-cta-hover)] active:translate-y-px transition-all font-bold"
-                        style={{ fontSize: "var(--dr-fs-meta)" }}
-                      >
-                        اعتماد نهائي
-                      </button>
-                      <button
-                        onClick={() => setRevisionFor(it.request.id)}
-                        className="w-full h-8 rounded-lg text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800/60 transition-colors font-medium"
-                        style={{ fontSize: "var(--dr-fs-eyebrow)" }}
-                      >
-                        {it.request.revisionNotes ? "لديّ ملاحظات أخرى" : "لديّ ملاحظات"}
-                      </button>
-                      </>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() => setApprovingId(it.request.id)}
+                          className={btn.primary}
+                        >
+                          اعتماد نهائي
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setRevisionFor(it.request.id)}
+                          className={btn.ghost}
+                        >
+                          {it.request.revisionNotes ? "لدي ملاحظات أخرى" : "لدي ملاحظات"}
+                        </button>
+                      </div>
                     )}
                   </div>
                 ) : it.request.status === "REVISION_REQUESTED" ? (
-                  <div className="w-full mt-2 px-3 py-2.5 rounded-xl bg-amber-500/[0.08]">
-                    <p
-                      className="font-bold text-amber-700 dark:text-amber-400 mb-2"
-                      style={{ fontSize: "var(--dr-fs-meta)" }}
-                    >
+                  <div className="mt-2 w-full rounded-lg bg-amber-500/[0.08] px-3 py-2.5">
+                    <p className="mb-2 text-caption font-semibold text-amber-700 dark:text-amber-400">
                       ملاحظاتك
                     </p>
                     {it.request.revisionNotes ? (
                       <RevisionNotesList notes={it.request.revisionNotes} />
                     ) : (
-                      <span className="text-amber-700 dark:text-amber-400">—</span>
+                      <span className="text-body text-amber-700 dark:text-amber-400">—</span>
                     )}
                   </div>
                 ) : it.request.status === "REJECTED" ? (
-                  <div className="w-full mt-2 space-y-2">
-                    <div
-                      className="px-3 py-2.5 rounded-xl bg-rose-500/[0.06] text-rose-600 dark:text-rose-400 leading-relaxed"
-                      style={{ fontSize: "var(--dr-fs-meta)" }}
-                    >
-                      <span className="font-bold">ملاحظات فريق زاد: </span>
-                      {it.request.rejectionReason || "لم يُذكر سبب."}
-                    </div>
+                  <div className="mt-2 w-full space-y-2">
+                    <Note tone="danger">
+                      <span className="font-semibold">ملاحظات فريق زاد: </span>
+                      {it.request.rejectionReason || "لم يذكر سبب."}
+                    </Note>
                     {canCreate && (
                       <button
+                        type="button"
                         onClick={() => setResubmitId(it.request.id)}
-                        className="w-full h-9 rounded-xl bg-primary/10 text-primary dark:bg-teal-500/10 dark:text-teal-400 hover:bg-primary hover:text-white dark:hover:bg-teal-500 dark:hover:text-[#0A0A0A] transition-colors font-bold"
-                        style={{ fontSize: "var(--dr-fs-meta)" }}
+                        className={btn.secondary}
                       >
                         إعادة رفع الطلب
                       </button>
                     )}
                   </div>
                 ) : it.request.status === "UNDER_REVIEW" ? (
-                  <div className="w-full mt-2 space-y-2">
-                    <div
-                      className="px-3 py-2.5 rounded-xl bg-amber-500/[0.08] text-amber-700 dark:text-amber-400 leading-relaxed"
-                      style={{ fontSize: "var(--dr-fs-meta)" }}
-                    >
-                      قيد المراجعة — سيتم الرد خلال يوم عمل. الموعد الظاهر تقديري حتى الاعتماد.
-                    </div>
+                  <div className="mt-2 w-full space-y-2">
+                    <Note tone="warn">
+                      قيد المراجعة — سيرد عليك خلال يوم عمل. والموعد الظاهر تقديري حتى الاعتماد.
+                    </Note>
                     {/* Editable while it waits: nothing has been scheduled or
                         started, so the brief is still entirely yours. */}
                     {canCreate && (
-                      <div className="flex items-center gap-2">
+                      <div className="flex flex-wrap items-center gap-2">
                         <button
+                          type="button"
                           onClick={() => setEditingId(it.request.id)}
-                          className="flex-1 h-9 rounded-xl bg-slate-100 text-slate-600 dark:bg-[#111] dark:text-slate-400 border border-transparent dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 transition-colors font-bold"
-                          style={{ fontSize: "var(--dr-fs-meta)" }}
+                          className={btn.secondary}
                         >
                           تعديل الطلب
                         </button>
                         {/* Withdrawing is only offered here. One step later the
                             request has a promised date and a place in the queue. */}
                         <button
+                          type="button"
                           onClick={() => setDeletingId(it.request.id)}
+                          aria-label="حذف الطلب"
                           title="حذف الطلب"
-                          className="shrink-0 h-9 px-3 rounded-xl bg-rose-500/[0.08] text-rose-600 dark:text-rose-400 hover:bg-rose-500 hover:text-white transition-colors font-bold flex items-center gap-1.5"
-                          style={{ fontSize: "var(--dr-fs-meta)" }}
+                          className={btn.iconDanger}
                         >
-                          <Trash2 className="w-3.5 h-3.5" />
-                          حذف
+                          <Trash2 className="size-4" />
                         </button>
                       </div>
                     )}
@@ -417,31 +367,28 @@ export default function DesignRequestsPortalClient({
                 // has already started, where the card itself explains why and
                 // names who to call instead.
                 it.request.archivedAt ? (
-                  <div className="w-full mt-2 space-y-2">
-                    <div
-                      className="px-3 py-2.5 rounded-xl bg-slate-100 dark:bg-[#111] text-slate-500 dark:text-slate-400 leading-relaxed"
-                      style={{ fontSize: "var(--dr-fs-meta)" }}
-                    >
-                      في الأرشيف منذ {it.request.archivedAt}. وهو خارج الدور حتى تُخرجه، فيعود بموعدٍ جديد
-                      على ذيل الطابور.
-                    </div>
+                  <div className="mt-2 w-full space-y-2">
+                    <p className="rounded-lg bg-slate-100 px-3 py-2.5 text-meta leading-5 text-slate-500 dark:bg-slate-800/60 dark:text-slate-400">
+                      في الأرشيف منذ {it.request.archivedAt}. وهو خارج الدور حتى تخرجه، فيعود بموعد
+                      جديد على ذيل الطابور.
+                    </p>
                     {canCreate && (
                       <button
+                        type="button"
                         onClick={() => setArchiveFor({ id: it.request.id, mode: "unarchive" })}
-                        className="w-full h-9 flex items-center justify-center gap-1.5 rounded-xl bg-primary/10 text-primary dark:bg-teal-500/10 dark:text-teal-300 hover:bg-primary hover:text-white dark:hover:bg-teal-500 dark:hover:text-[#0A0A0A] transition-colors font-bold"
-                        style={{ fontSize: "var(--dr-fs-meta)" }}
+                        className={btn.secondary}
                       >
-                        <ArchiveRestore className="w-3.5 h-3.5" />
+                        <ArchiveRestore className="size-4" />
                         إعادته إلى الدور
                       </button>
                     )}
                   </div>
                 ) : canCreate && it.request.status === "PENDING" && !it.request.startedAt ? (
-                  <div className="flex flex-wrap items-center gap-2 w-full mt-2">
+                  <div className="mt-2 flex w-full flex-wrap items-center gap-2">
                     <button
+                      type="button"
                       onClick={() => setEditingId(it.request.id)}
-                      className="flex-1 min-w-[72px] h-9 rounded-xl bg-slate-100 text-slate-600 dark:bg-[#111] dark:text-slate-400 border border-transparent dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 transition-colors font-bold"
-                      style={{ fontSize: "var(--dr-fs-meta)" }}
+                      className={btn.secondary}
                     >
                       تعديل
                     </button>
@@ -450,21 +397,21 @@ export default function DesignRequestsPortalClient({
                         because that is where you are looking when you decide this
                         design should come sooner. */}
                     <button
+                      type="button"
                       onClick={() => setIsQueueOpen(true)}
-                      className="flex-1 min-w-[96px] h-9 flex items-center justify-center gap-1.5 rounded-xl bg-slate-100 text-slate-600 dark:bg-[#111] dark:text-slate-400 border border-transparent dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 transition-colors font-bold"
-                      style={{ fontSize: "var(--dr-fs-meta)" }}
+                      className={btn.secondary}
                     >
-                      <ListOrdered className="w-3.5 h-3.5" />
-                      إعادة الترتيب
+                      <ListOrdered className="size-4" />
+                      ترتيب التنفيذ
                     </button>
                     {/* ما لم يبدأ به المصمم للجمعية أن تُنزله من الدور: طلبٌ
                         لم يُعد له حاجةٌ لا يُشغل دوراً ولا يُحذف. */}
                     <button
+                      type="button"
                       onClick={() => setArchiveFor({ id: it.request.id, mode: "archive" })}
-                      className="flex-1 min-w-[96px] h-9 flex items-center justify-center gap-1.5 rounded-xl bg-slate-100 text-slate-600 dark:bg-[#111] dark:text-slate-400 border border-transparent dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 transition-colors font-bold"
-                      style={{ fontSize: "var(--dr-fs-meta)" }}
+                      className={btn.secondary}
                     >
-                      <Archive className="w-3.5 h-3.5" />
+                      <Archive className="size-4" />
                       أرشفة
                     </button>
                   </div>

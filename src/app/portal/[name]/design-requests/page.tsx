@@ -1,8 +1,7 @@
 import { prisma } from "@/lib/db";
 import { getSession } from "@/lib/auth";
-import { redirect, notFound } from "next/navigation";
+import { redirect } from "next/navigation";
 import type { Metadata } from "next";
-import { Palette } from "lucide-react";
 import { formatCivilDate } from "@/lib/businessDays";
 import { getDesignRequestProgress } from "@/lib/designRequestProgress";
 import DesignRequestsPortalClient from "./DesignRequestsPortalClient";
@@ -22,7 +21,6 @@ export async function generateMetadata({
 
 export default async function DesignRequestsPortalPage({ params }: { params: Promise<{ name: string }> }) {
   const { name } = await params;
-  const decodedName = decodeURIComponent(name);
 
   const session = await getSession();
   if (!session || session.userType !== "CHARITY_USER") redirect("/");
@@ -133,35 +131,18 @@ export default async function DesignRequestsPortalPage({ params }: { params: Pro
     };
   });
 
+  // والترويسةُ في الشاشة لا هنا: زرُّها يفتح نموذجاً، والنموذجُ حالٌ عندها.
+  // وكانت الصفحةُ تكتب عنواناً وتكتب الشاشةُ عنواناً ثانياً تحته.
   return (
-    <div className="design-requests-ui space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500" dir="rtl">
-      <div className="flex items-center gap-3 border-b border-slate-200 dark:border-slate-800 pb-6">
-        <div className="w-12 h-12 bg-white dark:bg-[#111] border border-slate-200 dark:border-slate-800 rounded-xl flex items-center justify-center shrink-0">
-          <Palette className="w-6 h-6 text-primary" />
-        </div>
-        <div>
-          <h1
-            className="font-bold text-primary dark:text-primary"
-            style={{ fontSize: "var(--dr-fs-h1)", letterSpacing: "var(--dr-tracking-h1)" }}
-          >
-            طلبات التصاميم
-          </h1>
-          <p className="text-slate-500 dark:text-slate-400" style={{ fontSize: "var(--dr-fs-meta)" }}>
-            {decodedName}
-          </p>
-        </div>
-      </div>
-
-      <DesignRequestsPortalClient
-        charityId={charity.id}
-        charityName={charity.name}
-        initialItems={items}
-        // Always true here: the page above already required this exact
-        // permission. Kept as a prop rather than inlined, so the client keeps
-        // reading a capability rather than assuming one.
-        canCreate={can("view_design_requests")}
-        designTypes={designTypes}
-      />
-    </div>
+    <DesignRequestsPortalClient
+      charityId={charity.id}
+      charityName={charity.name}
+      initialItems={items}
+      // Always true here: the page above already required this exact
+      // permission. Kept as a prop rather than inlined, so the client keeps
+      // reading a capability rather than assuming one.
+      canCreate={can("view_design_requests")}
+      designTypes={designTypes}
+    />
   );
 }

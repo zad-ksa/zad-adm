@@ -13,18 +13,33 @@ import {
 } from "@/lib/serviceStages";
 
 /**
- * مراحلُ خدمةٍ واحدةٍ كاملةً — مسارُها المتتابع وخدماتُها الدائمة.
+ * مراحلُ خدمةٍ واحدةٍ — مسارُها المتتابع وخدماتُها الدائمة.
  *
- * **وهي واحدةٌ لموضعين**: «دليل الخدمات» يعرض كلَّ خدمةٍ بهذا الشكل، وبطاقةُ
- * الخدمة تفتحه لخدمتها. وكانا شكلين مكتوبين مرّتين يختلفان في الألوان
- * والمقاسات وفي ترتيب المراحل نفسِه.
+ * **وهي واحدةٌ لموضعين بوجهين**:
+ *
+ * - `progress` — ما تفتحه بطاقةُ الخدمة في الشاشة: أين بلغت، فالشريطُ
+ *   والشاراتُ والمُنجَزُ مشطوبٌ خطُّه.
+ * - `reference` — «دليل الخدمات»: ما هي الخدمة، لا أين بلغت. مراحلُها
+ *   وخطواتُها كما وُضعت، بلا تقدّمٍ ولا حال — والدليلُ يُقرأ ليُعرف ما
+ *   تشمله الخدمة، وجوابُ «أين نحن» في الشاشة لا فيه.
+ *
+ * وكانا شكلين مكتوبين مرّتين يختلفان في الألوان والمقاسات وفي ترتيب
+ * المراحل نفسِه.
  *
  * **واللونُ حالٌ لا زينة**: الهويّةُ للمرحلة الجارية، والرماديُّ لما تمّ،
- * والكهرمانيُّ لما لم يُبدأ بعد — ولا تدرّجَ خلف البطاقة ولا نبضةَ خضراء.
+ * والكهرمانيُّ لما لم يُبدأ — ولا تدرّجَ خلف البطاقة ولا نبضةَ خضراء. وفي
+ * وجه المرجع لا لونَ أصلاً: لا حالَ يُقال.
  */
-export default function ServiceStages({ stages }: { stages: ServiceStage[] }) {
+export default function ServiceStages({
+  stages,
+  variant = "progress",
+}: {
+  stages: ServiceStage[];
+  variant?: "progress" | "reference";
+}) {
   const { sequential, continuous } = groupStages(stages);
-  const here = currentStage(stages);
+  const showing = variant === "progress";
+  const here = showing ? currentStage(stages) : null;
   const { at, total, percent, done } = serviceProgress(stages);
 
   if (sequential.length === 0 && continuous.length === 0) {
@@ -42,28 +57,31 @@ export default function ServiceStages({ stages }: { stages: ServiceStage[] }) {
       {sequential.length > 0 && (
         <section className="space-y-3">
           {/* شريطُ التقدّم أوّلاً: «أين نحن» يُقرأ بلمحةٍ قبل قراءة المراحل. */}
-          <div className="space-y-1.5">
-            <div className="flex items-baseline justify-between gap-3">
-              <p className="text-body font-medium text-slate-900 dark:text-slate-100">
-                {here ? here.name : "—"}
-              </p>
-              <p className="shrink-0 text-meta tabular-nums text-slate-500 dark:text-slate-400">
-                المرحلة {at} من {total} · أنجز {done}
-              </p>
+          {showing && (
+            <div className="space-y-1.5">
+              <div className="flex items-baseline justify-between gap-3">
+                <p className="text-body font-medium text-slate-900 dark:text-slate-100">
+                  {here ? here.name : "—"}
+                </p>
+                <p className="shrink-0 text-meta tabular-nums text-slate-500 dark:text-slate-400">
+                  المرحلة {at} من {total} · أنجز {done}
+                </p>
+              </div>
+              <div className="h-1 overflow-hidden rounded-full bg-slate-200 dark:bg-slate-800">
+                <div
+                  className="h-full rounded-full bg-primary transition-[width] duration-300 dark:bg-teal-400"
+                  style={{ width: `${percent}%` }}
+                />
+              </div>
             </div>
-            <div className="h-1 overflow-hidden rounded-full bg-slate-200 dark:bg-slate-800">
-              <div
-                className="h-full rounded-full bg-primary transition-[width] duration-300 dark:bg-teal-400"
-                style={{ width: `${percent}%` }}
-              />
-            </div>
-          </div>
+          )}
 
           <ol className="space-y-2">
             {sequential.map((stage, idx) => {
-              const isHere = here?.id === stage.id && !stage.isDone;
-              const passed = stage.isDone || (here ? idx < sequential.indexOf(here) : false);
-              const soon = isComingSoon(stage);
+              const isHere = showing && here?.id === stage.id && !stage.isDone;
+              const passed =
+                showing && (stage.isDone || (here ? idx < sequential.indexOf(here) : false));
+              const soon = showing && isComingSoon(stage);
               const steps = sortedSteps(stage);
 
               return (
@@ -107,7 +125,7 @@ export default function ServiceStages({ stages }: { stages: ServiceStage[] }) {
                       {steps.length > 0 && (
                         <ul className="mt-2.5 space-y-1.5">
                           {steps.map((step) => {
-                            const stepDone = step.isDone || passed;
+                            const stepDone = showing && (step.isDone || passed);
                             return (
                               <li
                                 key={step.id}
@@ -143,11 +161,12 @@ export default function ServiceStages({ stages }: { stages: ServiceStage[] }) {
           <h4 className="text-caption font-semibold text-slate-500 dark:text-slate-400">
             خدمات دائمة
           </h4>
-          {/* ولا ترتيبَ لها ولا تقدّم: تعمل أو لا تعمل — فشارةُ حالٍ تكفي. */}
+          {/* ولا ترتيبَ لها ولا تقدّم: تعمل أو لا تعمل — فشارةُ حالٍ تكفي.
+              وفي المرجع لا تُسأل عن عملها، فتُسرد بلا لون. */}
           <ul className="flex flex-wrap gap-1.5">
             {continuous.map((stage) => (
               <li key={stage.id}>
-                <Badge tone={stage.isActive ? "good" : "neutral"}>{stage.name}</Badge>
+                <Badge tone={showing && stage.isActive ? "good" : "neutral"}>{stage.name}</Badge>
               </li>
             ))}
           </ul>

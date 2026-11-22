@@ -74,11 +74,7 @@ export default async function ServicesPage({ params }: { params: Promise<{ name:
         description="مراحل خدمات جمعيتك، وأين بلغت كل واحدة منها اليوم."
         actions={
           <ServicesGuideButton
-            sections={services.map((s) => ({
-              title: s.name,
-              isComingSoon: s.isComingSoon,
-              stages: s.stages,
-            }))}
+            sections={services.map((s) => ({ title: s.name, stages: s.stages }))}
           />
         }
       />

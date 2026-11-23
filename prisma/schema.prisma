@@ -102,6 +102,7 @@ model Charity {
   mailRequiresApproval   Boolean                       @default(false)
   mailApprovers          CharityMailApprover[]
   designRequests         DesignRequest[]
+  docRequests            DocRequest[]
 
   // Attendance
   workSites         CharityWorkSite[]
@@ -234,6 +235,7 @@ model CharityUser {
   receivedMails     MailRecipient[]       @relation("CharityReceivedMails")
   mailApprovals     CharityMailApprover[]
   designRequests    DesignRequest[]       @relation("SubmittedDesignRequests")
+  docRequests       DocRequest[]          @relation("SubmittedDocRequests")
   attendanceRecords AttendanceRecord[]
   leaves            EmployeeLeave[]
   notifications     CharityNotification[]
@@ -687,6 +689,8 @@ model Employee {
   completedDesignRequests DesignRequest[]          @relation("CompletedDesignRequests")
   startedDesignRequests   DesignRequest[]          @relation("StartedDesignRequests")
   reviewedDesignRequests  DesignRequest[]          @relation("ReviewedDesignRequests")
+  generatedDocRequests    DocRequest[]             @relation("GeneratedDocRequests")
+  deliveredDocRequests    DocRequest[]             @relation("DeliveredDocRequests")
   templateNodes           TemplateNode[]           @relation("TemplateNodes")
   mailApprovals           MailApprover[]
   projectBuilderDocuments ProjectBuilderDocument[]
@@ -2799,4 +2803,94 @@ model PortalPopupSeen {
 
   @@unique([popupId, charityUserId])
   @@index([charityUserId])
+}
+
+// ── طلبات إنشاء وثائق المشاريع ───────────────────────────────────────────────
+
+/// حالُ طلب الوثيقة — أربعٌ لا أكثر.
+///
+/// ولا حالَ لـ«قيد المراجعة» كطلبات التصاميم: زادٌ لا تعتمد الطلبَ قبل الدور،
+/// بل تكتب الوثيقةَ منه مباشرةً. وما نقص فيه يُردّ بملاحظة.
+enum DocRequestStatus {
+  /// وصل وفي الدور — وفيه تُكتب الوثيقة وتُعاين.
+  PENDING
+  /// سُلّم الملفُّ النهائيُّ وينتظر تعميدَ الجمعية.
+  AWAITING_REVIEW
+  /// أعادته زادٌ بملاحظات — الجمعيةُ تُكمل وتُعيد الإرسال.
+  RETURNED
+  /// عمّدته الجمعية.
+  COMPLETED
+}
+
+/// طلبُ جمعيةٍ لإنشاء وثيقة مشروع، ومسارُه حتى التعميد.
+///
+/// **ومدخلاتُه مدخلاتُ المنشئ نفسِها** (`ProjectBuilderValues`): الجمعيةُ تكتب
+/// ما كان موظّفُ زادٍ يكتبه عنها في «منشئ وثائق المبادرات»، فيفتح الموظّفُ
+/// الطلبَ ويختار التفضيلاتِ والتوجيهات ويُنشئ. ولو اختُلف الحقلان لصار على
+/// الموظّف نقلُ الطلب بيده من شاشةٍ إلى شاشة.
+///
+/// **والوثيقةُ تُحفظ في الصفّ لا في وثائق الموظّف**: `ProjectBuilderDocument`
+/// ملكُ موظّفٍ بعينه، وهذه ملكُ الطلب — يقرؤها من يفتحه بعد شهر، ولو انتقل
+/// الموظّف.
+model DocRequest {
+  id        String  @id @default(uuid())
+  charityId String
+  charity   Charity @relation(fields: [charityId], references: [id], onDelete: Cascade)
+
+  // ── ما أرسلته الجمعية ──────────────────────────────────────────────────
+  /// اسمُ المبادرة — اختياريٌّ، وفراغُه يَكِل الاسمَ إلى الذكاء الاصطناعي.
+  programName        String?
+  programIdea        String  @db.Text
+  beneficiariesCount String?
+  programDuration    String?
+  targetCategory     String?
+  /// `YYYY-MM-DD` نصّاً كما في المنشئ: يومٌ مدنيٌّ لا لحظة، ولا يُزاح بمنطقة.
+  startDate          String?
+  endDate            String?
+  /// تضمينُ الميزانية قرارُ الجمعية، ومبلغُها نصٌّ كما كتبته.
+  budgetInclude      Boolean @default(false)
+  budgetTotal        String?
+  note               String? @db.Text
+
+  status          DocRequestStatus @default(PENDING)
+  submittedById   String?
+  submittedBy     CharityUser?     @relation("SubmittedDocRequests", fields: [submittedById], references: [id], onDelete: SetNull)
+  submittedAt     DateTime         @default(now())
+
+  /// أيامُ العمل المثبَّتةُ وقتَ الإنشاء — تُفسَّر بها المهلةُ بعد شهور ولو
+  /// تغيّر الإعدادُ الافتراضيّ بعدها.
+  workingDays            Int      @default(3)
+  scheduledStartDate     DateTime
+  expectedCompletionDate DateTime
+
+  // ── عملُ زاد ───────────────────────────────────────────────────────────
+  /// متنُ الوثيقة المولَّدة — تبقى للمعاينة والمراجعة قبل التسليم.
+  docContent     String?   @db.Text
+  /// خيارات الموظّف وقتَ الإنشاء: التفضيلاتُ والتوجيهاتُ والميزانية.
+  /// تُحفظ ليُعاد الإنشاءُ بها أو يُفهم لمَ خرجت الوثيقةُ هكذا.
+  builderOptions Json?
+  generatedAt    DateTime?
+  generatedById  String?
+  generatedBy    Employee? @relation("GeneratedDocRequests", fields: [generatedById], references: [id], onDelete: SetNull)
+
+  /// الملفُّ النهائيُّ بصيغة Word — يُرفَق عند التسليم.
+  fileUrl      String?
+  fileName     String?
+  fileSize     Int?
+  deliveredAt  DateTime?
+  deliveredById String?
+  deliveredBy  Employee? @relation("DeliveredDocRequests", fields: [deliveredById], references: [id], onDelete: SetNull)
+  deliveryNote String?   @db.Text
+
+  /// ملاحظةُ الردّ حين تُعاد إلى الجمعية — وتبقى مكتوبةً حتى تُعيد الإرسال.
+  returnNote String?   @db.Text
+  returnedAt DateTime?
+
+  completedAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([charityId, status])
+  @@index([status, scheduledStartDate])
 }

@@ -4,19 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { CHARITY_ATTENDANCE_ENABLED, isCharityMailOpen } from "@/lib/featureFlags";
 import { hasCharityPermission, seesCharityServicesTab } from "@/lib/charityPermissions";
-import { FolderOpen,
-  X,
-  ArrowLeft,
-  Briefcase,
-  Scale,
-  Target,
-  Coins,
-  Users,
-  ShieldCheck,
-  Palette,
-  Mail,
-  Megaphone
-} from "lucide-react";
+import { ArrowLeft, Briefcase, Coins, FileText, FolderOpen, Mail, Megaphone, Palette, Scale, ShieldCheck, Target, Users, X } from "lucide-react";
 import ZadLogo from "@/components/ZadLogo";
 import PrivacyPolicyModal from "@/components/PrivacyPolicyModal";
 import { useState, useEffect } from "react";
@@ -156,6 +144,9 @@ export default function CharitySidebar({
     // والعدّادُ ما ينتظر اعتمادَ الجمعية — وهو «التنبيهُ على التبويب».
     // والخطّةُ الإعلاميّةُ يراها كلُّ عضوٍ اطّلاعاً — تقويمُ جمعيتِه. والاعتمادُ
     // والتعديلُ لمن يحمل «تحرير الخطة الإعلامية»، والعدّادُ له وحدَه.
+    // وطلباتُ وثائق المشاريع: صلاحيّةٌ إداريّةٌ لا تتبع خدمة — الوثيقةُ
+    // تُطلب للمنح وللتخطيط وللعرض على شريك.
+    { id: "doc-requests", label: "طلبات وثائق المشاريع", href: `/portal/${encodeURIComponent(charityName)}/doc-requests`, exact: true, icon: FileText, show: can("view_doc_requests") },
     { id: "media", label: "الخطة الإعلامية", href: `/portal/${encodeURIComponent(charityName)}/media`, exact: true, icon: Megaphone, show: mediaPlanEnabled, badge: mediaWaiting },
     // No permission: the library is reference material shared with every
     // charity, and it is read-only on the server whoever opens it.

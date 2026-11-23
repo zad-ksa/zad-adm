@@ -4,7 +4,19 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { CHARITY_ATTENDANCE_ENABLED, isCharityMailOpen } from "@/lib/featureFlags";
 import { hasCharityPermission, seesCharityServicesTab } from "@/lib/charityPermissions";
-import { ArrowLeft, Briefcase, Coins, FolderOpen, Home, Mail, Megaphone, Palette, Scale, ShieldCheck, Target, Users, X } from "lucide-react";
+import { FolderOpen,
+  X,
+  ArrowLeft,
+  Briefcase,
+  Scale,
+  Target,
+  Coins,
+  Users,
+  ShieldCheck,
+  Palette,
+  Mail,
+  Megaphone
+} from "lucide-react";
 import ZadLogo from "@/components/ZadLogo";
 import PrivacyPolicyModal from "@/components/PrivacyPolicyModal";
 import { useState, useEffect } from "react";
@@ -131,9 +143,6 @@ export default function CharitySidebar({
   // true` across the board, so every member saw every section and found out
   // which ones were theirs by clicking into a refusal.
   const mainItems = [
-    // والرئيسيةُ أوّلُها: كانت البوّابةُ تُحوِّل الداخلَ إلى أوّل تبويبٍ
-    // يملكه، فلا موضعَ يجمع ما ينتظره. وهي exact لأنّ كلَّ صفحةٍ تحتها.
-    { id: "home", label: "الرئيسية", href: `/portal/${encodeURIComponent(charityName)}`, exact: true, icon: Home, show: true },
     // «الخدمات» تبويبٌ مشتقٌّ: يُعرض لمن له صلاحيّةٌ في خدمةٍ ما، وصفحتُه تسرد
     // خدماتِه وحدَها — لا صلاحيّةَ باسمه تُمنح (`view_services` متقاعدة).
     { id: "services", label: "الخدمات", href: `/portal/${encodeURIComponent(charityName)}/services`, exact: true, icon: Briefcase, show: seesCharityServicesTab(isOfficial, permissions) },

@@ -88,7 +88,12 @@ export async function POST(req: NextRequest) {
     });
   } catch (err) {
     console.error("Meeting PDF error:", err);
-    return NextResponse.json({ error: "تعذّر إنشاء ملف PDF للمحضر" }, { status: 500 });
+    // السببُ التقنيُّ يُذكر: المسارُ لمن يدير المحاضر فقط، وبه يُشخَّص العطلُ بلا سجلّ الخادم.
+    const detail = err instanceof Error ? err.message.slice(0, 200) : "";
+    return NextResponse.json(
+      { error: `تعذّر إنشاء ملف PDF للمحضر${detail ? ` (${detail})` : ""}` },
+      { status: 500 }
+    );
   } finally {
     await browser?.close().catch(() => {});
   }

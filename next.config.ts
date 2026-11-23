@@ -92,6 +92,11 @@ const nextConfig: NextConfig = {
   // متصفّحُ توليد PDF المحاضر (api/meetings/pdf): يُحمَّل كما هو من node_modules
   // لا يُحزَم — في الحزمة ملفُّ Chromium مضغوطٌ يُقرأ من مساره عند التشغيل.
   serverExternalPackages: ["@sparticuz/chromium", "puppeteer-core"],
+  // وملفُّ Chromium المضغوطُ يُقرأ من مساره لا يُستورد، فلا يراه تتبّعُ الملفات
+  // ولا يُرفع مع الدالّة — فيُضمَّن صراحةً.
+  outputFileTracingIncludes: {
+    "/api/meetings/pdf": ["./node_modules/@sparticuz/chromium/bin/**"],
+  },
   experimental: {
     serverActions: {
       bodySizeLimit: "50mb",

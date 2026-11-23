@@ -95,6 +95,8 @@ export const UPLOAD_PURPOSES = {
   avatar: { folder: "zad_avatars", maxBytes: 5 * MB },
   charity_logo: { folder: "zad_charity_logos", maxBytes: 5 * MB },
   landing_bg: { folder: "zad_landing", maxBytes: 10 * MB },
+  // الملفُّ النهائيُّ لطلب وثيقة مشروع — مستندُ وورد يُرفَق عند التسليم.
+  doc_request_file: { folder: "zad_doc_requests", maxBytes: CLOUDINARY_MAX_BYTES },
   // كليشةُ الجمعية في منشئ الوثائق — مستندُ وورد فيه رأسٌ وتذييلٌ وشعار.
   project_letterhead: { folder: "zad_project_letterheads", maxBytes: 20 * MB },
 } as const;

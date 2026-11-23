@@ -216,6 +216,9 @@ export default function EmployeeSidebar({
   }
   if (can("use_project_builder")) {
     navItems.push({ label: "منشئ وثائق المبادرات", href: "/main/project-builder", icon: Sparkles });
+    // وطلباتُ الجمعيات بصلاحيّة المنشئ نفسِها: من يكتب الوثيقةَ هو من يملك
+    // الأداةَ التي تكتبها، فلا صلاحيّةَ ثانيةٌ تُمنح وتُنسى.
+    navItems.push({ label: "طلبات وثائق المشاريع", href: "/main/doc-requests", icon: FileText });
   }
   // ولكل موظف كذلك: المبادراتُ التي كُتب اسمُه مديراً لها في خطط الجمعيات.
   // ولا صلاحيةَ لها: ما كُلِّفتَ به ليس امتيازاً يُمنح، والصفحةُ لا تعرض لأحدٍ

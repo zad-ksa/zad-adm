@@ -217,7 +217,9 @@ export default function EmployeeSidebar({
   if (can("use_project_builder")) {
     navItems.push({ label: "منشئ وثائق المبادرات", href: "/main/project-builder", icon: Sparkles });
     // وطلباتُ الجمعيات بصلاحيّة المنشئ نفسِها: من يكتب الوثيقةَ هو من يملك
-    // الأداةَ التي تكتبها، فلا صلاحيّةَ ثانيةٌ تُمنح وتُنسى.
+    // الأداةَ التي تكتبها، فلا صلاحيّةَ ثانيةٌ تُمنح وتُنسى. وموضعُها في
+    // مجموعة «الجمعيات» لا «زاد»: هي طابورُ طلباتٍ واردةٌ من الجمعيات
+    // كطلبات التصاميم، والمنشئُ أداةُ تنفيذها لا بابُها.
     navItems.push({ label: "طلبات وثائق المشاريع", href: "/main/doc-requests", icon: FileText });
   }
   // ولكل موظف كذلك: المبادراتُ التي كُتب اسمُه مديراً لها في خطط الجمعيات.
@@ -506,7 +508,7 @@ export default function EmployeeSidebar({
               {isExpanded && <div className="h-px bg-slate-100 dark:bg-slate-800 mx-2" />}
               {renderServicesGroup()}
               {isExpanded && <div className="h-px bg-slate-100 dark:bg-slate-800 mx-2" />}
-              {renderGroup("الجمعيات", ["الجمعيات", "العقود", "الاستبيانات", "التواصل", "الاجتماعات", "طلبات التصاميم"])}
+              {renderGroup("الجمعيات", ["الجمعيات", "العقود", "الاستبيانات", "التواصل", "الاجتماعات", "طلبات التصاميم", "طلبات وثائق المشاريع"])}
               {isExpanded && <div className="h-px bg-slate-100 dark:bg-slate-800 mx-2" />}
               {renderGroup("زاد", ["التحضير", "البريد الداخلي", "الاعتمادات", "الطلبات المالية", "آخر المستجدات", "الأخبار والإنجازات", "محاضر الاجتماعات", "منشئ وثائق المبادرات", "المهام والمنجزات", "مهامي", "مبادراتي"])}
               {isExpanded && <div className="h-px bg-slate-100 dark:bg-slate-800 mx-2" />}

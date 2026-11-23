@@ -1198,3 +1198,16 @@ export async function replyToCharityMail(data: {
   revalidatePath("/main/mail");
   return { ...mail, pending: needsApproval };
 }
+
+/**
+ * مستلمو البريد الداخلي — لنافذة الإنشاء حين تُفتح من خارج صفحة البريد
+ * (مشاركةُ محضرٍ PDF). القائمةُ نفسُها التي تبنيها صفحةُ البريد.
+ */
+export async function getMailRecipients() {
+  await getAuthenticatedUser();
+  return prisma.employee.findMany({
+    where: { isActive: true },
+    select: { id: true, name: true, role: true, avatarUrl: true },
+    orderBy: { name: "asc" },
+  });
+}

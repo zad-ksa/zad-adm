@@ -13,6 +13,7 @@ import { useRouter } from "next/navigation";
 import { createMeeting, updateMeeting, deleteMeeting, insertAiTasksIfEmpty } from "@/app/actions/meetings";
 import { handlePrint, handlePreview, downloadAllMeetingsZip } from "./utils/meetingPrint";
 import MeetingCard from "./components/MeetingCard";
+import ShareMeetingPdf from "./components/ShareMeetingPdf";
 import MeetingFormModal from "./components/MeetingFormModal";
 import PendingMeetingTasksPanel from "./components/PendingMeetingTasksPanel";
 import { Dialog } from "@/components/console/Dialog";
@@ -537,6 +538,13 @@ headerAction={<>
 <button onClick={() => handlePrint(viewingMeeting, meetingNumberMap.get(viewingMeeting.id))} className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-primary transition-colors" title="طباعة">
                   <Printer className="w-4 h-4" />
                 </button>
+<ShareMeetingPdf
+                  meeting={viewingMeeting}
+                  meetingNumber={meetingNumberMap.get(viewingMeeting.id)}
+                  sessionId={sessionId}
+                  iconClassName="w-4 h-4"
+                  className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-primary transition-colors disabled:opacity-60"
+                />
 </>}
 >
 <div>

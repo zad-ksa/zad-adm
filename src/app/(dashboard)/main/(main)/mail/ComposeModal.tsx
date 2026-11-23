@@ -41,6 +41,8 @@ interface ComposeModalProps {
   forwardMail?: any; // Mail object if it's a forward
   draft?: any; // Existing draft row (InternalMail with isDraft: true) being reopened
   currentUserId?: string; // so reply-all does not address you back to yourself
+  /** رسالةٌ جديدةٌ مُعدّةٌ من خارج البريد (مشاركةُ محضرٍ PDF مثلاً): موضوعٌ ومرفقاتٌ مرفوعةٌ سلفاً. */
+  preset?: { subject?: string; attachments?: { fileUrl: string; fileName: string; fileSize?: number }[] };
 }
 
 // Resolved from the shared table rather than restated here — the old copy
@@ -149,7 +151,7 @@ function initialReplyRecipients(replyTo: any, replyAll: boolean, currentUserId?:
   return { to, cc };
 }
 
-export default function ComposeModal({ isOpen, onClose, employees, onSuccess, replyTo, replyAll = false, forwardMail, draft, currentUserId }: ComposeModalProps) {
+export default function ComposeModal({ isOpen, onClose, employees, onSuccess, replyTo, replyAll = false, forwardMail, draft, currentUserId, preset }: ComposeModalProps) {
   const roleLabels = useRoleLabels();
 
   const initialRecipients = initialReplyRecipients(replyTo, replyAll, currentUserId);
@@ -189,7 +191,7 @@ export default function ComposeModal({ isOpen, onClose, employees, onSuccess, re
       ? `رد: ${replyTo.subject ?? ""}`
       : forwardMail
         ? `إعادة توجيه: ${forwardMail.subject}`
-        : "";
+        : preset?.subject || "";
 
   const initialBody = draft
     ? draft.body || ""
@@ -205,6 +207,7 @@ export default function ComposeModal({ isOpen, onClose, employees, onSuccess, re
   const [attachments, setAttachments] = useState<AttachmentItem[]>(() => [
     ...(draft?.attachments || []).map(toUploadedItem),
     ...(forwardMail?.attachments || []).map(toUploadedItem),
+    ...(preset?.attachments || []).map(toUploadedItem),
   ]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);

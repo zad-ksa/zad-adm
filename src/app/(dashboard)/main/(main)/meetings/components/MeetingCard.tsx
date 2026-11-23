@@ -4,6 +4,7 @@ import { Lock, Globe, Eye, LayoutTemplate, Printer, Edit2, Trash2 } from "lucide
 import { Meeting, Employee } from "../MeetingsClient";
 import { handlePrint, handlePreview } from "../utils/meetingPrint";
 import MeetingSummaryPanel from "./MeetingSummaryPanel";
+import ShareMeetingPdf from "./ShareMeetingPdf";
 
 type Props = {
   meeting: Meeting;
@@ -71,6 +72,12 @@ export default function MeetingCard({
           <button onClick={() => handlePrint(meeting, meetingNumber)} className="p-1 rounded hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-400 hover:text-primary transition-colors" title="طباعة">
             <Printer className="w-3 h-3" />
           </button>
+          <ShareMeetingPdf
+            meeting={meeting}
+            meetingNumber={meetingNumber}
+            sessionId={sessionId}
+            className="p-1 rounded hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-400 hover:text-primary transition-colors disabled:opacity-60"
+          />
           {canEditMeeting(meeting, sessionId, isTier1) && (
             <button onClick={() => onEdit(meeting)} className="p-1 rounded hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-400 hover:text-primary transition-colors" title="تعديل">
               <Edit2 className="w-3 h-3" />

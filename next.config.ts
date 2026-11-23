@@ -89,6 +89,9 @@ const nextConfig: NextConfig = {
   // حتى يُعاد تشغيله. وبهذا المتغيّر يبني المتحقِّق في مجلّدٍ آخر:
   //   NEXT_BUILD_DIR=.next-verify npx next build
   distDir: process.env.NEXT_BUILD_DIR || ".next",
+  // متصفّحُ توليد PDF المحاضر (api/meetings/pdf): يُحمَّل كما هو من node_modules
+  // لا يُحزَم — في الحزمة ملفُّ Chromium مضغوطٌ يُقرأ من مساره عند التشغيل.
+  serverExternalPackages: ["@sparticuz/chromium", "puppeteer-core"],
   experimental: {
     serverActions: {
       bodySizeLimit: "50mb",

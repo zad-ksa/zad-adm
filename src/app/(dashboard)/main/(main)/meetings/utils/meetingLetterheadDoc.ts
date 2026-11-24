@@ -92,6 +92,23 @@ ${numStr ? `<div class="lh-num">${escapeHtml(numStr)}</div>` : ""}
   var content = document.getElementById('content');
   content.innerHTML = ${safeBody};
 
+  // كلُّ عنوانٍ رئيسيٍّ (h1–h3) وما بعده حتى العنوانِ التالي كتلةٌ واحدة لا
+  // تنشطر بين صفحتين (break-inside: avoid): إن لم تسعها بقيّةُ الصفحة انتقلت
+  // كلُّها إلى التالية. ولا تنشطر إلا إن كانت أطولَ من صفحةٍ كاملة، فلا موضعَ
+  // يسعها — وعندها يقسمها المتصفّحُ بين الأسطر كسائر النصّ.
+  (function groupSections() {
+    var nodes = Array.prototype.slice.call(content.childNodes);
+    var section = null;
+    nodes.forEach(function(node) {
+      if (node.nodeType === 1 && /^H[1-3]$/.test(node.tagName)) {
+        section = document.createElement('div');
+        section.className = 'section';
+        content.insertBefore(section, node);
+      }
+      if (section) section.appendChild(node);
+    });
+  })();
+
   // صفُّ رؤوس الجدول (th) يصير thead، فيتكرّر في كلِّ صفحةٍ ينشطر عليها الجدول.
   Array.prototype.forEach.call(content.querySelectorAll('table'), function(t) {
     if (t.tHead || !t.rows.length) return;
@@ -166,6 +183,7 @@ const FLOW_CSS = `
   .content h3.sub-title { color: #0f766e; font-size: 10.5pt; font-weight: 700; text-align: center; margin: 6px 0 3px; }
   .content h4.sub-title { color: #0f766e; font-size: 10pt; font-weight: 700; margin: 5px 0 2px; }
   .content h1, .content h2, .content h3, .content h4, .content .meeting-title, .content p.keep-next { break-after: avoid; page-break-after: avoid; }
+  .content .section { break-inside: avoid; page-break-inside: avoid; }
   .content p { margin: 2px 0; } .content br { display: block; margin: 1px 0; }
   .content ul, .content ol { padding-right: 16px; margin: 2px 0 5px; } .content ul { list-style: disc; }
   .content li { margin-bottom: 2px; line-height: 1.45; break-inside: avoid; }

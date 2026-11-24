@@ -200,7 +200,7 @@ test("المرفقاتُ الفاسدةُ تُسقط، ولا تتجاوز خم�
   const many = Array.from({ length: 7 }, (_, i) => ({ ...FILE, url: `${FILE.url}?${i}` }));
   const res = cleanDocRequest({
     kind: "REVIEW",
-    attachments: [{ url: "", name: "x" }, { url: "u" } as never, ...many],
+    attachments: [{ url: "", name: "x", size: null }, { url: "u" } as never, ...many],
   });
   assert.ok(res.ok);
   assert.equal(res.value.attachments!.length, 5);

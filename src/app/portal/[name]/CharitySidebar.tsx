@@ -14,7 +14,7 @@ function NavItem({ item, isActive, isOpen, onClick }: { item: any, isActive: boo
   const content = (
     <>
       <item.icon className={`w-4 h-4 shrink-0 transition-colors duration-300 ml-0 ${isOpen ? "ml-2.5" : ""} ${isActive ? "text-primary dark:text-teal-400" : "text-slate-400 group-hover:text-primary dark:group-hover:text-teal-400"}`} />
-      {isOpen && <span className="whitespace-nowrap tracking-tight leading-none pt-0.5">{item.label || item.title}</span>}
+      {isOpen && <span className="whitespace-nowrap leading-none pt-0.5">{item.label || item.title}</span>}
 
       {item.comingSoon && isOpen && (
         <span className="mr-auto text-[10px] font-bold font-sans bg-slate-200/80 dark:bg-slate-700/80 text-slate-600 dark:text-slate-300 px-2 py-0.5 rounded-md border border-slate-300/50 dark:border-slate-600/50">
@@ -39,7 +39,7 @@ function NavItem({ item, isActive, isOpen, onClick }: { item: any, isActive: boo
     return (
       <div
         title={!isOpen ? `${item.label || item.title} (قريباً)` : undefined}
-        className={`flex items-center ${isOpen ? "justify-start px-2.5" : "justify-center"} py-1.5 rounded-lg text-slate-400 bg-slate-50/50 dark:bg-slate-900/30 cursor-not-allowed opacity-70 text-[15px] font-medium mb-0.5`}
+        className={`flex items-center ${isOpen ? "justify-start px-2.5" : "justify-center"} py-1.5 rounded-lg text-slate-400 bg-slate-50/50 dark:bg-slate-900/30 cursor-not-allowed opacity-70 text-caption font-semibold mb-0.5`}
       >
         <item.icon className={`w-4 h-4 shrink-0 transition-all ${isOpen ? "ml-2.5" : "ml-0"} opacity-60`} />
         {isOpen && <span className="whitespace-nowrap tracking-tight leading-none pt-0.5">{item.label || item.title}</span>}
@@ -58,7 +58,7 @@ function NavItem({ item, isActive, isOpen, onClick }: { item: any, isActive: boo
       onClick={onClick}
       title={!isOpen ? (item.label || item.title) : undefined}
       data-active={isActive}
-      className={`charity-nav-item flex items-center ${isOpen ? "justify-start px-2.5" : "justify-center"} py-1.5 mb-0.5 rounded-lg text-[15px] font-medium tracking-tight group relative overflow-hidden ${isActive
+      className={`charity-nav-item flex items-center ${isOpen ? "justify-start px-2.5" : "justify-center"} py-1.5 mb-0.5 rounded-lg text-caption font-semibold group relative overflow-hidden ${isActive
         ? "bg-primary/[0.07] dark:bg-primary/[0.12] text-primary dark:text-teal-400 shadow-[inset_0_0_0_1px_rgb(15_118_110_/_.16)] dark:shadow-[inset_0_0_0_1px_rgb(45_212_191_/_.20)]"
         : "text-slate-600 dark:text-slate-400 hover:bg-primary/[0.04] dark:hover:bg-teal-400/[0.05] hover:text-primary dark:hover:text-teal-400"
         }`}
@@ -269,16 +269,16 @@ export default function CharitySidebar({
         {/* Privacy Policy Button */}
         <button
           onClick={() => setIsPrivacyModalOpen(true)}
-          className="flex items-center justify-start px-3 w-full py-2 text-slate-400 dark:text-slate-500 hover:bg-slate-50 dark:hover:bg-white/5 hover:text-primary dark:hover:text-primary rounded-lg text-[15px] font-medium transition-all group"
+          className="flex items-center justify-start px-3 w-full py-2 text-slate-400 dark:text-slate-500 hover:bg-slate-50 dark:hover:bg-white/5 hover:text-primary dark:hover:text-primary rounded-lg text-caption font-semibold transition-all group"
         >
           <ShieldCheck className="w-4 h-4 shrink-0 transition-colors ml-3 text-slate-400 group-hover:text-primary" />
-          <span className="whitespace-nowrap text-[13px]">سياسة الخصوصية</span>
+          <span className="whitespace-nowrap">سياسة الخصوصية</span>
         </button>
 
         {!isCharityUser && (
           <Link
             href="/main"
-            className="flex items-center justify-start px-3 w-full py-2 text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-white/5 hover:text-slate-900 dark:hover:text-slate-200 rounded-lg text-[15px] font-medium transition-all group"
+            className="flex items-center justify-start px-3 w-full py-2 text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-white/5 hover:text-slate-900 dark:hover:text-slate-200 rounded-lg text-caption font-semibold transition-all group"
           >
             <ArrowLeft className="w-4 h-4 shrink-0 transition-colors ml-3 text-slate-400 group-hover:text-slate-700 dark:group-hover:text-slate-300" />
             <span className="whitespace-nowrap">العودة للوحة التحكم</span>

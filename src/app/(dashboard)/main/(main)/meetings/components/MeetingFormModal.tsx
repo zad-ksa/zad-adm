@@ -187,7 +187,9 @@ export default function MeetingFormModal({
       if (data.truncated) {
         setAiError("الملاحظات طويلة جداً وتم قطع المحضر — راجع النص وأكمل الناقص قبل الحفظ");
       }
-      setStep(2);
+      // الخطوةُ الثانية للمحضر الجديد وحدَه. ونافذةُ التعديل كلُّها في الأولى —
+      // المحضرُ المنسَّقُ فيها تحت الملاحظات — فنقلُها إلى الثانية كان يُفرغها.
+      if (!editingId) setStep(2);
     } catch (e: any) { setAiError(e.message || "حدث خطأ"); }
     finally { setAiLoading(false); }
   }

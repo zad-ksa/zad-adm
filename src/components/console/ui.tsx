@@ -286,11 +286,25 @@ export function SectionHeader({
   );
 }
 
-export function Field({ id, label, hint, children }: { id: string; label: string; hint?: string; children: ReactNode }) {
+export function Field({
+  id,
+  label,
+  hint,
+  required = false,
+  children,
+}: {
+  id: string;
+  label: string;
+  hint?: string;
+  /** حقلٌ إلزاميّ: نجمةٌ حمراءُ في آخر عنوانه، بلا عبارةٍ تشرح. */
+  required?: boolean;
+  children: ReactNode;
+}) {
   return (
     <div className="space-y-1.5">
       <label htmlFor={id} className="block text-body font-medium text-slate-700 dark:text-slate-300">
         {label}
+        {required && <span aria-hidden className="ms-0.5 text-rose-600">*</span>}
       </label>
       {children}
       {hint && <p className="text-meta text-slate-500">{hint}</p>}

@@ -336,7 +336,6 @@ export default function DocRequestsClient({
           size="md"
           icon={<Plus className="size-5" />}
           title="طلب جديد"
-          description="ما الذي تحتاجه من فريق زاد؟"
           onClose={() => setChoosing(false)}
         >
           <div className="grid gap-3 sm:grid-cols-2">
@@ -356,7 +355,6 @@ export default function DocRequestsClient({
                   <FilePlus2 className="size-5 text-primary" />
                 )}
                 <span className="text-title font-semibold text-slate-900 dark:text-slate-100">{k.label}</span>
-                <span className="text-meta text-slate-500 dark:text-slate-400">{k.hint}</span>
               </button>
             ))}
           </div>

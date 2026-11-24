@@ -60,9 +60,6 @@ export default function DocRequestForm({
       size="lg"
       icon={review ? <FileSearch className="size-5" /> : <Send className="size-5" />}
       title={title}
-      description={
-        review ? "أرفق الوثيقة، واكتب ما تريد التركيز عليه إن شئت." : "املأ ما تعرفه، والفكرة وحدها مطلوبة."
-      }
       onClose={onClose}
       busy={busy || uploading}
       closeOnBackdrop={false}
@@ -100,7 +97,6 @@ export default function DocRequestForm({
                 value={values.note}
                 onChange={(e) => setValues({ ...values, note: e.target.value.slice(0, MAX_NOTE) })}
                 rows={4}
-                placeholder="ما الذي تريد مراجعته أو التركيز عليه؟"
                 disabled={busy}
                 className={cx(field, "h-auto resize-y py-2")}
               />

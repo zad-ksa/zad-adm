@@ -8,7 +8,7 @@ import { FileText, Loader2, Paperclip, X } from "lucide-react";
 import { btn } from "@/components/console/ui";
 import { notify } from "@/components/console/toastBus";
 import { uploadFile } from "@/lib/clientUpload";
-import { ACCEPT_ATTRIBUTE, maxLabelFor } from "@/lib/uploadPurposes";
+import { ACCEPT_ATTRIBUTE } from "@/lib/uploadPurposes";
 import { MAX_ATTACHMENTS, type DocAttachment } from "@/lib/docRequests";
 
 export default function DocAttachmentsField({
@@ -55,7 +55,11 @@ export default function DocAttachmentsField({
     <div className="space-y-2">
       <div className="text-body font-medium text-slate-700 dark:text-slate-300">
         {label}
-        {!required && <span className="font-normal text-slate-400"> (اختياري)</span>}
+        {required ? (
+          <span aria-hidden className="ms-0.5 text-rose-600">*</span>
+        ) : (
+          <span className="font-normal text-slate-400"> (اختياري)</span>
+        )}
       </div>
 
       {value.length > 0 && (
@@ -110,9 +114,6 @@ export default function DocAttachmentsField({
           e.target.value = "";
         }}
       />
-      <p className="text-caption text-slate-400">
-        حتى {MAX_ATTACHMENTS} ملفات، وحجم الملف حتى {maxLabelFor("doc_request_attachment")}.
-      </p>
     </div>
   );
 }

@@ -89,25 +89,23 @@ export default function DocRequestFields({
       <Field
         id={`${idPrefix}-name`}
         label="اسم المبادرة (اختياري)"
-        hint={was("programName") ?? "اتركه فارغا ليقترح اسما."}
+        hint={was("programName")}
       >
         <input
           id={`${idPrefix}-name`}
           value={values.programName}
           onChange={(e) => set("programName", e.target.value)}
-          placeholder="مثال: مبادرة سقيا الماء"
           disabled={disabled}
           className={field}
         />
       </Field>
 
-      <Field id={`${idPrefix}-idea`} label="فكرة المبادرة أو البرنامج" hint={was("programIdea")}>
+      <Field id={`${idPrefix}-idea`} label="فكرة المبادرة أو البرنامج" hint={was("programIdea")} required>
         <textarea
           id={`${idPrefix}-idea`}
           value={values.programIdea}
           onChange={(e) => set("programIdea", e.target.value.slice(0, MAX_IDEA))}
           rows={5}
-          placeholder="اشرح الفكرة: ما المشكلة التي تعالجها، وما الذي سينفذ…"
           disabled={disabled}
           className={cx(field, "h-auto resize-y py-2")}
         />
@@ -123,7 +121,6 @@ export default function DocRequestFields({
             id={`${idPrefix}-benef`}
             value={values.beneficiariesCount}
             onChange={(e) => set("beneficiariesCount", e.target.value)}
-            placeholder="مثال: 500 مستفيد"
             disabled={disabled}
             className={field}
           />
@@ -138,7 +135,6 @@ export default function DocRequestFields({
             id={`${idPrefix}-duration`}
             value={values.programDuration}
             onChange={(e) => set("programDuration", e.target.value)}
-            placeholder="مثال: ثلاثة أشهر"
             disabled={disabled}
             className={field}
           />
@@ -150,7 +146,6 @@ export default function DocRequestFields({
           id={`${idPrefix}-target`}
           value={values.targetCategory}
           onChange={(e) => set("targetCategory", e.target.value)}
-          placeholder="مثال: الأسر المتعففة في المنطقة"
           disabled={disabled}
           className={field}
         />
@@ -188,25 +183,20 @@ export default function DocRequestFields({
           {values.budgetInclude ? "الميزانية مضمنة" : "تضمين ميزانية في المشروع"}
         </button>
 
-        {values.budgetInclude ? (
+        {values.budgetInclude && (
           <Field
             id={`${idPrefix}-budget`}
             label="الميزانية التقديرية (اختياري)"
-            hint={was("budgetTotal") ?? "اتركها فارغة لتقدر في الوثيقة."}
+            hint={was("budgetTotal")}
           >
             <input
               id={`${idPrefix}-budget`}
               value={values.budgetTotal}
               onChange={(e) => set("budgetTotal", e.target.value)}
-              placeholder="مثال: 150000 ريال"
               disabled={disabled}
               className={field}
             />
           </Field>
-        ) : (
-          <p className="text-meta text-slate-500 dark:text-slate-400">
-            بلا ميزانية لن يتضمن المشروع بند التكاليف.
-          </p>
         )}
       </div>
 
@@ -217,7 +207,6 @@ export default function DocRequestFields({
             value={values.note}
             onChange={(e) => set("note", e.target.value.slice(0, MAX_NOTE))}
             rows={3}
-            placeholder="أي شيء يراعى عند الكتابة"
             disabled={disabled}
             className={cx(field, "h-auto resize-y py-2")}
           />

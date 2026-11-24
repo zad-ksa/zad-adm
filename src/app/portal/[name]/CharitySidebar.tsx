@@ -42,7 +42,7 @@ function NavItem({ item, isActive, isOpen, onClick }: { item: any, isActive: boo
         className={`flex items-center ${isOpen ? "justify-start px-2.5" : "justify-center"} py-1.5 rounded-lg text-slate-400 bg-slate-50/50 dark:bg-slate-900/30 cursor-not-allowed opacity-70 text-caption font-semibold mb-0.5`}
       >
         <item.icon className={`w-4 h-4 shrink-0 transition-all ${isOpen ? "ml-2.5" : "ml-0"} opacity-60`} />
-        {isOpen && <span className="whitespace-nowrap tracking-tight leading-none pt-0.5">{item.label || item.title}</span>}
+        {isOpen && <span className="whitespace-nowrap leading-none pt-0.5">{item.label || item.title}</span>}
         {isOpen && (
           <span className="mr-auto text-[10px] font-bold font-sans bg-slate-200/80 dark:bg-slate-700/80 text-slate-600 dark:text-slate-300 px-2 py-0.5 rounded-md border border-slate-300/50 dark:border-slate-600/50">
             قريباً

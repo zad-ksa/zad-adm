@@ -1,9 +1,13 @@
 "use client";
 
 import { useEffect, useState, useTransition } from "react";
-import { Plus, Save, Sparkles, X } from "lucide-react";
+import { Plus, RotateCcw, Save, Sparkles, X } from "lucide-react";
 import { Dialog } from "@/components/console/Dialog";
 import { Field, Note, OptionRow, Spinner, btn, cx, field } from "@/components/console/ui";
+import DocRequestFields, {
+  docFieldsFrom,
+  type DocFieldValues,
+} from "@/components/doc-requests/DocRequestFields";
 import { notify } from "@/components/console/toastBus";
 import {
   getProjectBuilderCharityProfile,
@@ -34,6 +38,12 @@ export default function DocRequestBuilderDialog({
   onClose: () => void;
   onSaved: () => void;
 }) {
+  /** ما أرسلته الجمعيةُ — يبقى للمقارنة ولاستعادته. */
+  const original = docFieldsFrom(request);
+  /** وما يكتب به الموظّفُ الآن: محرَّرُه المحفوظُ إن كان، وإلّا ما أرسلته. */
+  const [values, setValues] = useState<DocFieldValues>(
+    () => (request.builderOptions?.values as DocFieldValues | undefined) ?? original
+  );
   const [prefs, setPrefs] = useState<ProjectBuilderPreference[]>([]);
   const [chosen, setChosen] = useState<Record<string, boolean>>(
     () => (request.builderOptions?.preferences as Record<string, boolean>) ?? {}
@@ -82,22 +92,23 @@ export default function DocRequestBuilderDialog({
         "/api/project-builder/generate",
         {
           charityId: request.charityId,
-          programName: request.programName ?? "",
-          programIdea: request.programIdea,
+          // والمكتوبُ الآن لا الصفُّ: الموظّفُ حرّر ما نقص قبل الضغط.
+          programName: values.programName.trim(),
+          programIdea: values.programIdea.trim(),
           cityOverride: cityOverride.trim(),
-          beneficiariesCount: request.beneficiariesCount ?? "",
-          programDuration: request.programDuration ?? "",
-          targetCategory: request.targetCategory ?? "",
-          startDate: request.startDate ?? "",
-          endDate: request.endDate ?? "",
+          beneficiariesCount: values.beneficiariesCount.trim(),
+          programDuration: values.programDuration.trim(),
+          targetCategory: values.targetCategory.trim(),
+          startDate: values.startDate,
+          endDate: values.endDate,
           preferences: Object.keys(chosen).filter((k) => chosen[k]),
-          // والميزانيةُ قرارُ الجمعية ومبلغُها منها، والاحتياطيُّ قرارُ الموظّف.
+          // والاحتياطيُّ قرارُ الموظّف وحدَه، وبقيّةُ الميزانية مما حُرّر.
           budget: {
-            include: request.budgetInclude,
-            total: request.budgetTotal ?? "",
+            include: values.budgetInclude,
+            total: values.budgetTotal.trim(),
             reserve,
           },
-          directives,
+          directives: values.note.trim() ? [...directives, values.note.trim()] : directives,
         },
         setLive
       );
@@ -113,11 +124,13 @@ export default function DocRequestBuilderDialog({
   const save = () =>
     startSave(async () => {
       const res = await saveDocRequestDocument(request.id, content, {
+        // والمحرَّرُ يُحفظ ولا يُكتب على صفِّ الطلب: الطلبُ قولُ الجمعية كما
+        // أرسلته، وهذا ما كُتبت به الوثيقةُ فعلاً — فيُقرأ الاثنان بعد شهر.
+        values,
         preferences: chosen,
         directives,
         reserve,
         cityOverride: cityOverride.trim(),
-        budget: { include: request.budgetInclude, total: request.budgetTotal ?? "" },
       });
       if (!res.ok) {
         notify("error", res.error);
@@ -125,6 +138,9 @@ export default function DocRequestBuilderDialog({
       }
       onSaved();
     });
+
+  /** هل غُيّر شيءٌ عمّا أرسلته الجمعية؟ */
+  const edited = JSON.stringify(values) !== JSON.stringify(original);
 
   const shown = writing ? live : content;
 
@@ -169,29 +185,29 @@ export default function DocRequestBuilderDialog({
         )}
         {error && <Note tone="danger">{error}</Note>}
 
-        {/* ما أرسلته الجمعيةُ يُقرأ هنا ولا يُحرَّر: الطلبُ قولُها، وتعديلُه
-            من شاشتها لا من هنا. */}
-        <section className="rounded-lg border border-slate-200 p-3 dark:border-slate-800">
-          <h3 className="text-caption font-semibold text-slate-500 dark:text-slate-400">
-            ما أرسلته الجمعية
-          </h3>
-          <p className="mt-1.5 whitespace-pre-line text-body leading-6 text-slate-700 dark:text-slate-200">
-            {request.programIdea}
-          </p>
-          <p className="mt-1.5 text-meta text-slate-400">
-            {[
-              request.beneficiariesCount && `المستفيدون: ${request.beneficiariesCount}`,
-              request.programDuration && `المدة: ${request.programDuration}`,
-              request.targetCategory && `الفئة: ${request.targetCategory}`,
-              request.startDate && `من ${request.startDate}`,
-              request.endDate && `إلى ${request.endDate}`,
-              request.budgetInclude
-                ? `ميزانية: ${request.budgetTotal || "بلا مبلغ محدد"}`
-                : "بلا ميزانية",
-            ]
-              .filter(Boolean)
-              .join(" · ")}
-          </p>
+        {/* مدخلاتُ الجمعية محرَّرةٌ هنا: ما أرسلته قد ينقص أو يُكتب على عجل،
+            والموظّفُ أعلمُ بما يحتاجه المنشئ. والأصلُ يبقى في صفِّ الطلب ولا
+            يُكتب عليه — ويُقرأ تحت كلِّ حقلٍ غُيّر. */}
+        <section className="space-y-3 rounded-lg border border-slate-200 p-3 dark:border-slate-800">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <h3 className="text-caption font-semibold text-slate-500 dark:text-slate-400">
+              مدخلات الطلب — حررها قبل الإنشاء
+            </h3>
+            {edited && (
+              <button type="button" onClick={() => setValues(original)} className={btn.ghost}>
+                <RotateCcw className="size-3.5" />
+                استعادة ما أرسلته الجمعية
+              </button>
+            )}
+          </div>
+
+          <DocRequestFields
+            values={values}
+            onChange={setValues}
+            idPrefix={`sdr-${request.id}`}
+            original={original}
+            disabled={writing || saving}
+          />
         </section>
 
         {prefs.length > 0 && (

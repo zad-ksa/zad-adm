@@ -85,11 +85,50 @@ export function docRequestCan(status: string) {
   };
 }
 
+// ── نوعُ الطلب ومرفقاته ───────────────────────────────────────────────────
+
+/** إنشاءُ وثيقةٍ من فكرة، أو مراجعةُ وثيقةٍ كتبتها الجمعية. */
+export type DocRequestKind = "CREATE" | "REVIEW";
+
+export function docRequestKindOf(value: unknown): DocRequestKind {
+  return value === "REVIEW" ? "REVIEW" : "CREATE";
+}
+
+export const DOC_REQUEST_KINDS: readonly { value: DocRequestKind; label: string; hint: string }[] = [
+  { value: "CREATE", label: "طلب إنشاء وثيقة", hint: "اكتب فكرة المبادرة، ويكتب فريق زاد وثيقتها." },
+  { value: "REVIEW", label: "طلب مراجعة وثيقة", hint: "أرفق وثيقتك، ويراجعها فريق زاد ويعيدها إليك." },
+];
+
+export function docRequestKindLabel(value: unknown): string {
+  return DOC_REQUEST_KINDS.find((k) => k.value === docRequestKindOf(value))!.label;
+}
+
+/** مرفقٌ من مرفقات الجمعية. */
+export type DocAttachment = { url: string; name: string; size: number | null };
+
+export const MAX_ATTACHMENTS = 5;
+
+/** مرفقاتٌ مقروءةٌ من JSON أو من الطلب — ما لا يصلح منها يُسقط. */
+export function docAttachmentsOf(value: unknown): DocAttachment[] {
+  if (!Array.isArray(value)) return [];
+  return value
+    .filter((a): a is Record<string, unknown> => !!a && typeof a === "object")
+    .map((a) => ({
+      url: typeof a.url === "string" ? a.url.trim() : "",
+      name: typeof a.name === "string" ? a.name.trim().slice(0, MAX_SHORT) : "",
+      size: typeof a.size === "number" && Number.isFinite(a.size) ? a.size : null,
+    }))
+    .filter((a) => a.url && a.name)
+    .slice(0, MAX_ATTACHMENTS);
+}
+
 export const MAX_IDEA = 4000;
 export const MAX_SHORT = 200;
 export const MAX_NOTE = 1000;
 
 export type DocRequestInput = {
+  kind?: DocRequestKind;
+  attachments?: DocAttachment[] | null;
   programName?: string | null;
   programIdea?: string | null;
   beneficiariesCount?: string | null;
@@ -103,6 +142,8 @@ export type DocRequestInput = {
 };
 
 export type CleanDocRequest = {
+  kind: DocRequestKind;
+  attachments: DocAttachment[] | null;
   programName: string | null;
   programIdea: string;
   beneficiariesCount: string | null;
@@ -135,6 +176,33 @@ export function cleanDocDate(value: string | null | undefined): string | null {
 export function cleanDocRequest(
   input: DocRequestInput
 ): { ok: true; value: CleanDocRequest } | { ok: false; error: string } {
+  const kind = docRequestKindOf(input.kind);
+  const attachments = docAttachmentsOf(input.attachments);
+  const note = (input.note ?? "").trim().slice(0, MAX_NOTE) || null;
+
+  // **والمراجعةُ إلزامُها المرفق**: الوثيقةُ هي موضوعُ الطلب، وما سواها
+  // ملاحظاتٌ اختياريّة — فلا يُطلب فيها فكرةٌ ولا حقولُ مبادرة.
+  if (kind === "REVIEW") {
+    if (attachments.length === 0) return { ok: false, error: "أرفق الوثيقة المراد مراجعتها" };
+    return {
+      ok: true,
+      value: {
+        kind,
+        attachments,
+        programName: null,
+        programIdea: "",
+        beneficiariesCount: null,
+        programDuration: null,
+        targetCategory: null,
+        startDate: null,
+        endDate: null,
+        budgetInclude: false,
+        budgetTotal: null,
+        note,
+      },
+    };
+  }
+
   const programIdea = (input.programIdea ?? "").trim().slice(0, MAX_IDEA);
   if (!programIdea) return { ok: false, error: "اكتب فكرة المبادرة أو البرنامج" };
 
@@ -150,6 +218,8 @@ export function cleanDocRequest(
   return {
     ok: true,
     value: {
+      kind,
+      attachments: attachments.length ? attachments : null,
       programName: short(input.programName),
       programIdea,
       beneficiariesCount: short(input.beneficiariesCount),
@@ -161,7 +231,7 @@ export function cleanDocRequest(
       // والمبلغُ لا يُحفظ إن لم تُضمَّن الميزانية: رقمٌ معلَّقٌ بلا بندٍ يُقرأ
       // خطأً في كلِّ شاشةٍ بعدها.
       budgetTotal: budgetInclude ? short(input.budgetTotal) : null,
-      note: (input.note ?? "").trim().slice(0, MAX_NOTE) || null,
+      note,
     },
   };
 }

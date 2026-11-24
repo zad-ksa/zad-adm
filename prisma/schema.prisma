@@ -2851,6 +2851,11 @@ model DocRequest {
   budgetInclude      Boolean @default(false)
   budgetTotal        String?
   note               String? @db.Text
+  /// CREATE: إنشاءُ وثيقةٍ من فكرة | REVIEW: مراجعةُ وثيقةٍ ترفعها الجمعية.
+  /// نصٌّ لا `enum`، كحالات الخطّة الإعلاميّة: نوعٌ يُزاد غداً سطرُ كودٍ لا `ALTER TYPE`.
+  kind               String  @default("CREATE")
+  /// مرفقاتُ الجمعية `[{ url, name, size }]` — إلزاميّةٌ في المراجعة، اختياريّةٌ في الإنشاء.
+  attachments        Json?
 
   status          DocRequestStatus @default(PENDING)
   submittedById   String?

@@ -3,6 +3,7 @@ import { FileText } from "lucide-react";
 import { PageHeader } from "@/components/console/layout";
 import { prisma } from "@/lib/db";
 import { formatCivilDate } from "@/lib/businessDays";
+import { docAttachmentsOf } from "@/lib/docRequests";
 import { requirePortalPermission } from "@/lib/portalAccess";
 import { getDocRequestSettings } from "@/app/actions/docRequests";
 import DocRequestsClient, { type PortalDocRequest } from "./DocRequestsClient";
@@ -33,6 +34,8 @@ export default async function PortalDocRequestsPage({ params }: { params: Promis
     });
     rows = found.map((r) => ({
       id: r.id,
+      kind: r.kind,
+      attachments: docAttachmentsOf(r.attachments),
       programName: r.programName,
       programIdea: r.programIdea,
       beneficiariesCount: r.beneficiariesCount,

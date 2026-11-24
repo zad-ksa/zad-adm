@@ -1,16 +1,19 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import type { Prisma } from "@prisma/client";
+import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/db";
 import { getSession } from "@/lib/auth";
 import { requirePermission } from "@/lib/guards";
 import { resolveCharityPortal } from "@/lib/portalAccess";
 import { computeDesignRequestDates } from "@/lib/businessDays";
+import { providerOf } from "@/lib/storage";
+import { storagePublicBase } from "@/lib/b2";
 import {
   DOC_REQUEST_SETTINGS_KEY,
   cleanDocRequest,
   docRequestCan,
+  type CleanDocRequest,
   normalizeDocRequestSettings,
   type DocRequestInput,
   type DocRequestSettings,
@@ -29,6 +32,23 @@ import {
  */
 
 type Result = { ok: true } | { ok: false; error: string };
+
+/**
+ * الطلبُ المنظَّفُ بصيغة الكتابة في القاعدة — مع فحص المرفقات.
+ *
+ * **والمرفقُ من مخزننا وحدَه**: الرابطُ يصل من المتصفّح، ورابطٌ يُكتب باليد
+ * إلى موقعٍ آخرَ يصير في بطاقة موظّفي زاد زرَّ تنزيلٍ لا يُدرى إلامَ يقود.
+ */
+function toRow(value: CleanDocRequest): { ok: true; data: Omit<CleanDocRequest, "attachments"> & { attachments: Prisma.InputJsonValue | typeof Prisma.DbNull } } | { ok: false; error: string } {
+  const base = storagePublicBase();
+  if (value.attachments?.some((a) => !providerOf(a.url, base))) {
+    return { ok: false, error: "مرفق غير صالح — ارفعه من جديد" };
+  }
+  return {
+    ok: true,
+    data: { ...value, attachments: value.attachments ? (value.attachments as Prisma.InputJsonValue) : Prisma.DbNull },
+  };
+}
 
 const SQL_HINT = "— وان لم يطبق بعد prisma/sql/doc-requests.sql فهذا سببه";
 
@@ -75,6 +95,8 @@ export async function createDocRequest(charityName: string, input: DocRequestInp
 
   const clean = cleanDocRequest(input);
   if (!clean.ok) return { ok: false, error: clean.error };
+  const row = toRow(clean.value);
+  if (!row.ok) return { ok: false, error: row.error };
 
   try {
     const settings = await readSettings();
@@ -85,7 +107,7 @@ export async function createDocRequest(charityName: string, input: DocRequestInp
     await prisma.docRequest.create({
       data: {
         charityId: access.charity.id,
-        ...clean.value,
+        ...row.data,
         submittedAt,
         submittedById: session?.userType === "CHARITY_USER" ? session.id : null,
         workingDays: settings.defaultWorkingDays,
@@ -121,11 +143,13 @@ export async function updateDocRequest(id: string, input: DocRequestInput): Prom
 
     const clean = cleanDocRequest(input);
     if (!clean.ok) return { ok: false, error: clean.error };
+    const next = toRow(clean.value);
+    if (!next.ok) return { ok: false, error: next.error };
 
     await prisma.docRequest.update({
       where: { id },
       data: {
-        ...clean.value,
+        ...next.data,
         ...(row.status === "RETURNED" ? { status: "PENDING" as const, returnNote: null } : {}),
       },
     });

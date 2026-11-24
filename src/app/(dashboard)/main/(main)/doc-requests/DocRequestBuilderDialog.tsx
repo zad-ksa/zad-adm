@@ -39,7 +39,7 @@ export default function DocRequestBuilderDialog({
   onSaved: () => void;
 }) {
   /** ما أرسلته الجمعيةُ — يبقى للمقارنة ولاستعادته. */
-  const original = docFieldsFrom(request);
+  const original = docFieldsFrom({ ...request, kind: undefined });
   /** وما يكتب به الموظّفُ الآن: محرَّرُه المحفوظُ إن كان، وإلّا ما أرسلته. */
   const [values, setValues] = useState<DocFieldValues>(
     () => (request.builderOptions?.values as DocFieldValues | undefined) ?? original

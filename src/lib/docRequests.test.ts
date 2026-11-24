@@ -151,3 +151,57 @@ test("ولكلِّ نمطٍ تسميةٌ وشرح", () => {
   assert.equal(docQueueModeLabel("PARALLEL"), "في وقت واحد");
   for (const m of DOC_QUEUE_MODES) assert.ok(m.hint.length > 0);
 });
+
+// ── نوعُ الطلب ومرفقاته ────────────────────────────────────────────────────
+
+const FILE = { url: "https://files.example/a.docx", name: "وثيقتنا.docx", size: 1200 };
+
+test("طلبُ المراجعة يلزمه مرفق، ولا يلزمه فكرة", () => {
+  const empty = cleanDocRequest({ kind: "REVIEW", note: "راجعوا الميزانية" });
+  assert.equal(empty.ok, false);
+
+  const res = cleanDocRequest({ kind: "REVIEW", attachments: [FILE], note: " راجعوا الميزانية " });
+  assert.ok(res.ok);
+  assert.equal(res.value.kind, "REVIEW");
+  assert.equal(res.value.programIdea, "");
+  assert.equal(res.value.note, "راجعوا الميزانية");
+  assert.deepEqual(res.value.attachments, [FILE]);
+});
+
+test("والمراجعةُ لا تحمل حقولَ مبادرةٍ ولو أُرسلت", () => {
+  const res = cleanDocRequest({
+    kind: "REVIEW",
+    attachments: [FILE],
+    programName: "اسم",
+    budgetInclude: true,
+    budgetTotal: "1000",
+  });
+  assert.ok(res.ok);
+  assert.equal(res.value.programName, null);
+  assert.equal(res.value.budgetInclude, false);
+  assert.equal(res.value.budgetTotal, null);
+});
+
+test("طلبُ الإنشاء: المرفقُ اختياريّ، والنوعُ الافتراضيّ إنشاء", () => {
+  const plain = cleanDocRequest({ programIdea: "فكرة" });
+  assert.ok(plain.ok);
+  assert.equal(plain.value.kind, "CREATE");
+  assert.equal(plain.value.attachments, null);
+
+  const withFile = cleanDocRequest({ programIdea: "فكرة", attachments: [FILE] });
+  assert.ok(withFile.ok);
+  assert.deepEqual(withFile.value.attachments, [FILE]);
+
+  // والفكرةُ ما زالت إلزاميّةً في الإنشاء ولو أُرفق ملف.
+  assert.equal(cleanDocRequest({ attachments: [FILE] }).ok, false);
+});
+
+test("المرفقاتُ الفاسدةُ تُسقط، ولا تتجاوز خمسة", () => {
+  const many = Array.from({ length: 7 }, (_, i) => ({ ...FILE, url: `${FILE.url}?${i}` }));
+  const res = cleanDocRequest({
+    kind: "REVIEW",
+    attachments: [{ url: "", name: "x" }, { url: "u" } as never, ...many],
+  });
+  assert.ok(res.ok);
+  assert.equal(res.value.attachments!.length, 5);
+});

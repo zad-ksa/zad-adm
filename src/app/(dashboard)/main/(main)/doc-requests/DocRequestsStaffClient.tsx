@@ -19,11 +19,13 @@ import { notify } from "@/components/console/toastBus";
 import {
   DOC_QUEUE_MODES,
   docRequestCan,
+  docRequestKindOf,
   docRequestStatusLabel,
   docRequestStatusOf,
   docRequestStatusTone,
   MAX_DOC_DAYS,
   MIN_DOC_DAYS,
+  type DocAttachment,
   type DocRequestSettings,
 } from "@/lib/docRequests";
 import {
@@ -32,11 +34,14 @@ import {
   updateDocRequestSettings,
 } from "@/app/actions/docRequests";
 import DocRequestBuilderDialog from "./DocRequestBuilderDialog";
+import FileOpenDownload from "@/components/FileOpenDownload";
 import DocRequestDeliverDialog from "./DocRequestDeliverDialog";
 import { DocPreview } from "../project-builder/DocPreview";
 
 export type StaffDocRequest = {
   id: string;
+  kind: string;
+  attachments: DocAttachment[];
   charityId: string;
   charityName: string;
   programName: string | null;
@@ -176,6 +181,7 @@ export default function DocRequestsStaffClient({
         <ul className="grid gap-3 xl:grid-cols-2">
           {shown.map((request) => {
             const can = docRequestCan(request.status);
+            const review = docRequestKindOf(request.kind) === "REVIEW";
             return (
               <li key={request.id} className={cx(card.static, "flex flex-col gap-3 p-4")}>
                 <div className="flex flex-wrap items-start justify-between gap-2">
@@ -184,10 +190,11 @@ export default function DocRequestsStaffClient({
                       {request.charityName}
                     </p>
                     <h3 className="text-title font-semibold text-slate-900 dark:text-slate-100">
-                      {request.programName || "مبادرة بلا اسم"}
+                      {review ? "مراجعة وثيقة" : request.programName || "مبادرة بلا اسم"}
                     </h3>
                   </div>
                   <div className="flex shrink-0 flex-wrap items-center gap-1.5">
+                    {review && <Badge tone="neutral">طلب مراجعة</Badge>}
                     {request.hasDocument && <Badge tone="brand">الوثيقة منشأة</Badge>}
                     <Badge tone={docRequestStatusTone(request.status)}>
                       {docRequestStatusLabel(request.status)}
@@ -195,9 +202,25 @@ export default function DocRequestsStaffClient({
                   </div>
                 </div>
 
-                <p className="whitespace-pre-line text-body leading-6 text-slate-600 dark:text-slate-300">
-                  {request.programIdea}
-                </p>
+                {request.programIdea && (
+                  <p className="whitespace-pre-line text-body leading-6 text-slate-600 dark:text-slate-300">
+                    {request.programIdea}
+                  </p>
+                )}
+
+                {/* مرفقاتُ الجمعية: في المراجعة هي موضوعُ الطلب، وفي الإنشاء عونٌ على الكتابة. */}
+                {request.attachments.length > 0 && (
+                  <div className="space-y-1">
+                    <p className="text-meta text-slate-400">{review ? "الوثيقة المراد مراجعتها" : "مرفقات الجمعية"}</p>
+                    <ul className="flex flex-wrap gap-2">
+                      {request.attachments.map((a) => (
+                        <li key={a.url}>
+                          <FileOpenDownload url={a.url} name={a.name} label={a.name.length > 40 ? a.name.slice(0, 38) + "…" : a.name} />
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
 
                 {/* وما ملأته الجمعيةُ وحدَه يُعرض: حقلٌ فارغٌ يُعرض «—» يُطيل
                     البطاقةَ ولا يقول شيئاً. */}
@@ -246,7 +269,7 @@ export default function DocRequestsStaffClient({
                 </p>
 
                 <div className="mt-auto flex flex-wrap items-center gap-2 pt-1">
-                  {can.generate && (
+                  {can.generate && !review && (
                     <button type="button" onClick={() => setBuilding(request)} className={btn.primary}>
                       <Sparkles className="size-4" />
                       {request.hasDocument ? "إعادة الإنشاء" : "إنشاء الوثيقة"}

@@ -8,6 +8,7 @@ import { getSession } from "@/lib/auth";
 import { hasPermission } from "@/lib/permissions";
 import { prisma } from "@/lib/db";
 import { formatCivilDate } from "@/lib/businessDays";
+import { docAttachmentsOf } from "@/lib/docRequests";
 import { getDocRequestSettings } from "@/app/actions/docRequests";
 import DocRequestsStaffClient, { type StaffDocRequest } from "./DocRequestsStaffClient";
 
@@ -42,6 +43,8 @@ export default async function DocRequestsPage() {
     });
     rows = found.map((r) => ({
       id: r.id,
+      kind: r.kind,
+      attachments: docAttachmentsOf(r.attachments),
       charityId: r.charity.id,
       charityName: r.charity.name,
       programName: r.programName,

@@ -2,7 +2,8 @@
 
 import { useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { CalendarClock, Download, FileText, Pencil, Plus } from "lucide-react";
+import { CalendarClock, Download, FilePlus2, FileSearch, FileText, Paperclip, Pencil, Plus } from "lucide-react";
+import { Dialog } from "@/components/console/Dialog";
 import { EmptyState, StatStrip, Tabs } from "@/components/console/layout";
 import { Badge, MONO, Note, btn, card, cx } from "@/components/console/ui";
 import { notify } from "@/components/console/toastBus";
@@ -18,12 +19,18 @@ import {
   docRequestStatusLabel,
   docRequestStatusOf,
   docRequestStatusTone,
+  docRequestKindOf,
+  DOC_REQUEST_KINDS,
+  type DocAttachment,
   type DocRequestInput,
+  type DocRequestKind,
 } from "@/lib/docRequests";
 import DocRequestForm from "./DocRequestForm";
 
 export type PortalDocRequest = {
   id: string;
+  kind: string;
+  attachments: DocAttachment[];
   programName: string | null;
   programIdea: string;
   beneficiariesCount: string | null;
@@ -68,7 +75,9 @@ export default function DocRequestsClient({
 }) {
   const router = useRouter();
   const [busy, start] = useTransition();
-  const [formOpen, setFormOpen] = useState(false);
+  /** نافذةُ اختيار نوع الطلب، ثمّ نموذجُ النوع المختار. */
+  const [choosing, setChoosing] = useState(false);
+  const [newKind, setNewKind] = useState<DocRequestKind | null>(null);
   const [editing, setEditing] = useState<PortalDocRequest | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [tab, setTab] = useState<Tab>("OPEN");
@@ -112,7 +121,7 @@ export default function DocRequestsClient({
       return;
     }
     run(() => createDocRequest(charityName, input), () => {
-      setFormOpen(false);
+      setNewKind(null);
       notify("ok", "أرسل الطلب إلى فريق زاد.");
     });
   };
@@ -157,9 +166,9 @@ export default function DocRequestsClient({
             { id: "COMPLETED" as const, label: "المعمدة", count: counts.completed },
           ]}
         />
-        <button type="button" onClick={() => { setError(null); setFormOpen(true); }} className={btn.primary}>
+        <button type="button" onClick={() => { setError(null); setChoosing(true); }} className={btn.primary}>
           <Plus className="size-4" />
-          طلب وثيقة جديدة
+          طلب جديد
         </button>
       </div>
 
@@ -180,20 +189,39 @@ export default function DocRequestsClient({
         <ul className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
           {shown.map((request) => {
             const can = docRequestCan(request.status);
+            const review = docRequestKindOf(request.kind) === "REVIEW";
             return (
               <li key={request.id} className={cx(card.static, "flex flex-col gap-2.5 p-4")}>
                 <div className="flex flex-wrap items-start justify-between gap-2">
                   <h3 className="min-w-0 text-title font-semibold text-slate-900 dark:text-slate-100">
-                    {request.programName || "مبادرة بلا اسم بعد"}
+                    {review ? "مراجعة وثيقة" : request.programName || "مبادرة بلا اسم بعد"}
                   </h3>
-                  <Badge tone={docRequestStatusTone(request.status)}>
-                    {docRequestStatusLabel(request.status)}
-                  </Badge>
+                  <div className="flex shrink-0 flex-wrap items-center gap-1.5">
+                    {review && <Badge tone="neutral">مراجعة</Badge>}
+                    <Badge tone={docRequestStatusTone(request.status)}>
+                      {docRequestStatusLabel(request.status)}
+                    </Badge>
+                  </div>
                 </div>
 
-                <p className="line-clamp-3 text-body leading-6 text-slate-500 dark:text-slate-400">
-                  {request.programIdea}
-                </p>
+                {(review ? request.note : request.programIdea) && (
+                  <p className="line-clamp-3 text-body leading-6 text-slate-500 dark:text-slate-400">
+                    {review ? request.note : request.programIdea}
+                  </p>
+                )}
+
+                {request.attachments.length > 0 && (
+                  <ul className="space-y-1">
+                    {request.attachments.map((a) => (
+                      <li key={a.url} className="flex min-w-0 items-center gap-1.5 text-meta">
+                        <Paperclip className="size-3.5 shrink-0 text-slate-400" />
+                        <a href={a.url} target="_blank" rel="noreferrer" className="truncate text-primary hover:underline">
+                          {a.name}
+                        </a>
+                      </li>
+                    ))}
+                  </ul>
+                )}
 
                 <dl className="flex flex-wrap gap-x-4 gap-y-1 text-meta text-slate-500 dark:text-slate-400">
                   <span>
@@ -285,20 +313,54 @@ export default function DocRequestsClient({
         </ul>
       )}
 
-      {formOpen && (
+      {choosing && (
+        <Dialog
+          size="md"
+          icon={<Plus className="size-5" />}
+          title="طلب جديد"
+          description="ما الذي تحتاجه من فريق زاد؟"
+          onClose={() => setChoosing(false)}
+        >
+          <div className="grid gap-3 sm:grid-cols-2">
+            {DOC_REQUEST_KINDS.map((k) => (
+              <button
+                key={k.value}
+                type="button"
+                onClick={() => {
+                  setChoosing(false);
+                  setNewKind(k.value);
+                }}
+                className={cx(card.static, "flex flex-col items-start gap-2 p-4 text-start transition-colors hover:border-primary/50 hover:bg-primary/5")}
+              >
+                {k.value === "REVIEW" ? (
+                  <FileSearch className="size-5 text-primary" />
+                ) : (
+                  <FilePlus2 className="size-5 text-primary" />
+                )}
+                <span className="text-title font-semibold text-slate-900 dark:text-slate-100">{k.label}</span>
+                <span className="text-meta text-slate-500 dark:text-slate-400">{k.hint}</span>
+              </button>
+            ))}
+          </div>
+        </Dialog>
+      )}
+
+      {newKind && (
         <DocRequestForm
-          title="طلب وثيقة مشروع"
+          kind={newKind}
+          title={DOC_REQUEST_KINDS.find((k) => k.value === newKind)!.label}
           busy={busy}
           error={error}
-          onClose={() => setFormOpen(false)}
+          onClose={() => setNewKind(null)}
           onSubmit={submit}
         />
       )}
 
       {editing && (
         <DocRequestForm
+          kind={docRequestKindOf(editing.kind)}
           title={docRequestStatusOf(editing.status) === "RETURNED" ? "إكمال الطلب وإعادة إرساله" : "تعديل الطلب"}
-          initial={editing}
+          initial={{ ...editing, kind: docRequestKindOf(editing.kind) }}
           busy={busy}
           error={error}
           onClose={() => setEditing(null)}

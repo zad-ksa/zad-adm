@@ -174,6 +174,9 @@ export default function MeetingFormModal({
 
   async function handleFormat() {
     if (!rawNotes.trim()) { setAiError("أدخل الملاحظات أولاً"); return; }
+    // يُطلب النوعُ هنا قبل الصياغة: حقلُه في هذه الخطوة، وطلبُه عند الحفظ في
+    // الخطوة الثانية يُرجع المستخدمَ إليها.
+    if (!meetingContext) { setAiError("اختر نوع الاجتماع"); return; }
     setAiLoading(true); setAiError("");
     try {
       const res = await fetch("/api/meetings/format", {
@@ -197,6 +200,8 @@ export default function MeetingFormModal({
   async function handleSaveClick() {
     if (!title.trim()) { setError("العنوان مطلوب"); return; }
     if (!date) { setError("التاريخ مطلوب"); return; }
+    // بلا نوعٍ لا يظهر المحضرُ في أيِّ قسم — فيُحفظ ويضيع.
+    if (!meetingContext) { setError("اختر نوع الاجتماع"); return; }
     if (!formattedContent.trim()) { setError("المحضر المنسق مطلوب"); return; }
     setError("");
 
@@ -312,7 +317,7 @@ footer={
                     className="w-full border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-caption bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-primary" />
                 </div>
                 <div>
-                  <label className="text-caption font-semibold text-slate-500 dark:text-slate-400 mb-1 block">نوع / سياق الاجتماع</label>
+                  <label className="text-caption font-semibold text-slate-500 dark:text-slate-400 mb-1 block">نوع / سياق الاجتماع *</label>
                   <Select
                     variant="soft"
                     value={meetingContext}

@@ -94,8 +94,12 @@ const CATEGORY_CARDS = [
   { key: "الإسناد الحكومي", label: "الإسناد الحكومي" },
 ];
 
+/** محضرٌ بلا نوعٍ لا قسمَ له — فبطاقةٌ تجمعه، تظهر ما دام منه شيء. */
+const UNTYPED = "__none";
+
 function getCategoryCount(meetings: Meeting[], key: string): number {
   if (key === "all") return meetings.length;
+  if (key === UNTYPED) return meetings.filter(m => !m.meetingContext).length;
   if (key === "زاد") return meetings.filter(m => m.meetingContext === "إدارة زاد").length;
   return meetings.filter(m => m.meetingContext === key).length;
 }
@@ -110,7 +114,10 @@ function CategorySelector({ meetings, onSelect, actions }: { meetings: Meeting[]
         actions={actions}
       />
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
-        {CATEGORY_CARDS.map((cat) => (
+        {[
+          ...CATEGORY_CARDS,
+          ...(getCategoryCount(meetings, UNTYPED) > 0 ? [{ key: UNTYPED, label: "بدون تصنيف" }] : []),
+        ].map((cat) => (
           <NavCard
             key={cat.key}
             onClick={() => onSelect(cat.key)}
@@ -148,13 +155,16 @@ export default function MeetingsClient({ meetings, charities, employees, session
   // المعروضة، لا نطاق "التوصيات غير المنجزة" التي يُفترض أن تغطّي المجموعة كاملة.
   const categoryMeetings = meetings.filter(m => {
     if (!selectedCategory || selectedCategory === "all") return true;
+    if (selectedCategory === UNTYPED) return !m.meetingContext;
     if (selectedCategory === "زاد") return m.meetingContext === "إدارة زاد";
     return m.meetingContext === selectedCategory;
   });
 
   const filteredMeetings = meetings.filter(m => {
     if (selectedCategory && selectedCategory !== "all") {
-      if (selectedCategory === "زاد") {
+      if (selectedCategory === UNTYPED) {
+        if (m.meetingContext) return false;
+      } else if (selectedCategory === "زاد") {
         if (m.meetingContext !== "إدارة زاد") return false;
       } else {
         if (m.meetingContext !== selectedCategory) return false;
@@ -224,7 +234,13 @@ export default function MeetingsClient({ meetings, charities, employees, session
   }
 
   function openCreate() {
-    setFormInitialData(undefined);
+    // المحضرُ الجديد من داخل قسمٍ نوعُه نوعُ القسم — فلا يُحفظ بلا نوعٍ فيضيع
+    // من كلِّ قسم.
+    const ctx =
+      !selectedCategory || selectedCategory === "all" || selectedCategory === UNTYPED
+        ? ""
+        : selectedCategory === "زاد" ? "زاد" : `service:${selectedCategory}`;
+    setFormInitialData(ctx ? { meetingContext: ctx } : undefined);
     setEditingId(null);
     setShowModal(true);
   }
@@ -373,7 +389,7 @@ export default function MeetingsClient({ meetings, charities, employees, session
   }
 
   const categoryTitle =
-    selectedCategory === "all" ? "كل المحاضر" : selectedCategory === "زاد" ? "إدارة زاد" : selectedCategory;
+    selectedCategory === "all" ? "كل المحاضر" : selectedCategory === UNTYPED ? "بدون تصنيف" : selectedCategory === "زاد" ? "إدارة زاد" : selectedCategory;
 
   return (
     <div className="space-y-3 animate-in fade-in slide-in-from-bottom-4 duration-500" dir="rtl">

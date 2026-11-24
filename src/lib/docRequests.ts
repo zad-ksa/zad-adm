@@ -35,7 +35,7 @@ export const DOC_REQUEST_STATUSES: readonly {
     value: "RETURNED",
     label: "أعيد بملاحظات",
     charityHint: "فريق زاد يحتاج تعديلا أو بيانا — أكملوه وأعيدوا الإرسال.",
-    tone: "danger",
+    tone: "warn",
   },
   {
     value: "COMPLETED",

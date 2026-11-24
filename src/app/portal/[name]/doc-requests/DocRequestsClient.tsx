@@ -170,7 +170,7 @@ export default function DocRequestsClient({
             {
               label: "أعيد بملاحظات",
               value: counts.returned,
-              dot: counts.returned > 0 ? "danger" : "muted",
+              dot: counts.returned > 0 ? "warn" : "muted",
             },
             { label: "معمد", value: counts.completed, dot: counts.completed > 0 ? "active" : "muted" },
           ]}
@@ -263,7 +263,7 @@ export default function DocRequestsClient({
                 <p className="text-meta text-slate-400">{docRequestStatusHint(request.status)}</p>
 
                 {request.returnNote && (
-                  <Note tone="danger">
+                  <Note tone="warn">
                     <span className="font-semibold">ملاحظات فريق زاد: </span>
                     {request.returnNote}
                   </Note>

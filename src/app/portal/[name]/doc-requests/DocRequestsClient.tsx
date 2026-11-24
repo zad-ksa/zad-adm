@@ -4,7 +4,7 @@ import { useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { CalendarClock, Download, FilePlus2, FileSearch, FileText, Paperclip, Pencil, Plus } from "lucide-react";
 import { Dialog } from "@/components/console/Dialog";
-import { EmptyState, StatStrip, Tabs } from "@/components/console/layout";
+import { EmptyState, PageHeader, StatStrip, Tabs } from "@/components/console/layout";
 import { Badge, MONO, Note, btn, card, cx } from "@/components/console/ui";
 import { notify } from "@/components/console/toastBus";
 import { confirmAction } from "@/components/console/confirmBus";
@@ -126,16 +126,38 @@ export default function DocRequestsClient({
     });
   };
 
+  // والترويسةُ هنا لا في الصفحة، كطلبات التصاميم: زرُّ «طلب جديد» بجانب
+  // العنوان، ونموذجُه حالٌ في هذا المكوِّن.
+  const header = (
+    <PageHeader
+      icon={<FileText className="size-6" />}
+      title="طلبات وثائق المشاريع"
+      description="اطلب من فريق زاد صياغة وثيقة مشروع أو مراجعة وثيقتك، وتابعها حتى تعميدها."
+      actions={
+        tableMissing ? undefined : (
+          <button type="button" onClick={() => { setError(null); setChoosing(true); }} className={btn.primary}>
+            <Plus className="size-4" />
+            طلب جديد
+          </button>
+        )
+      }
+    />
+  );
+
   if (tableMissing) {
     return (
-      <Note tone="warn">
-        قسم طلبات وثائق المشاريع لم يفعل بعد عند فريق زاد. راجعهم لتفعيله.
-      </Note>
+      <>
+        {header}
+        <Note tone="warn">
+          قسم طلبات وثائق المشاريع لم يفعل بعد عند فريق زاد. راجعهم لتفعيله.
+        </Note>
+      </>
     );
   }
 
   return (
     <>
+      {header}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <StatStrip
           items={[
@@ -155,7 +177,7 @@ export default function DocRequestsClient({
         />
       </div>
 
-      <div className="flex flex-wrap items-center justify-between gap-3">
+      <div>
         <Tabs
           label="حالات الطلبات"
           value={tab}
@@ -166,10 +188,6 @@ export default function DocRequestsClient({
             { id: "COMPLETED" as const, label: "المعمدة", count: counts.completed },
           ]}
         />
-        <button type="button" onClick={() => { setError(null); setChoosing(true); }} className={btn.primary}>
-          <Plus className="size-4" />
-          طلب جديد
-        </button>
       </div>
 
       <p className="text-meta text-slate-500 dark:text-slate-400">

@@ -1,6 +1,4 @@
 import type { Metadata } from "next";
-import { FileText } from "lucide-react";
-import { PageHeader } from "@/components/console/layout";
 import { prisma } from "@/lib/db";
 import { formatCivilDate } from "@/lib/businessDays";
 import { docAttachmentsOf } from "@/lib/docRequests";
@@ -66,11 +64,6 @@ export default async function PortalDocRequestsPage({ params }: { params: Promis
 
   return (
     <div className="space-y-5" dir="rtl">
-      <PageHeader
-        icon={<FileText className="size-6" />}
-        title="طلبات وثائق المشاريع"
-        description="اطلب من فريق زاد صياغة وثيقة مشروع، وتابعها حتى تعميدها."
-      />
       <DocRequestsClient
         charityName={charity.name}
         requests={rows}

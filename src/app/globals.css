@@ -175,6 +175,9 @@ body {
 /* Rich-text rendering for mail bodies (no @tailwindcss/typography installed) */
 .mail-prose { font-size: var(--text-body); line-height: 1.65; word-break: break-word; }
 .mail-prose p { margin-block: 0.5rem; }
+/* السطرُ الفارغ فقرةٌ فارغة (`<p></p>`) وارتفاعُها صفر، فكان يختفي عند العرض وهو
+   ظاهرٌ وقتَ الكتابة. فيأخذ سطراً كاملاً كما كتبه المرسل. */
+.mail-prose p:empty::before { content: "\00a0"; }
 .mail-prose strong { font-weight: 700; }
 .mail-prose ul, .mail-prose ol { padding-inline-start: 1.5rem; margin-block: 0.5rem; }
 .mail-prose ul { list-style: disc; }

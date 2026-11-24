@@ -54,8 +54,17 @@ export function sanitizeMailHtml(body: string | null | undefined): string {
   const truncated = body.length > MAX_BODY_LENGTH ? body.slice(0, MAX_BODY_LENGTH) : body;
 
   if (!isHtmlBody(truncated)) {
-    return escapeHtml(truncated).replace(/\n/g, "<br/>");
+    // والنصُّ كذلك: أسطرُه الفارغةُ في آخره وحدَها تُحذف.
+    return escapeHtml(truncated.replace(/\s+$/, "")).replace(/\n/g, "<br/>");
   }
 
-  return sanitizeHtml(truncated, SANITIZE_OPTIONS);
+  return trimTrailingBlankLines(sanitizeHtml(truncated, SANITIZE_OPTIONS));
+}
+
+/**
+ * الأسطرُ الفارغةُ في آخر الرسالة تُحذف — ولا يُمسّ ما في وسطها: سطرٌ فارغٌ بين
+ * فقرتين تنسيقٌ قصده المرسل، وما بعد آخر سطرٍ مكتوبٍ فراغٌ لا يقول شيئاً.
+ */
+export function trimTrailingBlankLines(html: string): string {
+  return html.replace(/(?:\s*<p[^>]*>(?:\s|&nbsp;|<br\s*\/?>)*<\/p>)+\s*$/i, "");
 }

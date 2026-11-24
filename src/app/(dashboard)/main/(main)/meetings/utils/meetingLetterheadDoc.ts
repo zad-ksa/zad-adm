@@ -3,7 +3,6 @@
 
 import type { Meeting } from "../MeetingsClient";
 import { meetingAssigneeName } from "./meetingAssignee";
-import { LETTERHEAD_CSS } from "@/lib/letterhead";
 // بناءُ HTML المحضر منطقٌ خالصٌ له اختباراته في العدة — والطباعةُ هنا تستعمله.
 import { escapeHtml, mdToHtml, replaceTasksTable } from "@/lib/meetingMarkdown";
 
@@ -39,6 +38,20 @@ function tasksTableHtml(tasks: LetterheadMeeting["meetingTasks"]): string {
 }
 
 
+/**
+ * صفحةُ المحضر بالكليشة.
+ *
+ * **المتصفّحُ يقسم الصفحات، لا سكربتٌ يقيس.** كان سكربتٌ يقيس كلَّ فقرةٍ على
+ * الشاشة ويوزّعها على صفحاتٍ مقفلةٍ تقصّ ما يفيض. والمتصفّحُ يكسر الأسطرَ عند
+ * الطباعة بفرقٍ يسيرٍ عن الشاشة، فتطول فقرةٌ سطراً فيُقصّ آخرُها بلا إنذار —
+ * وكلُّ «هامش أمان» يُزاد كان أصغرَ من سطر. فالآن يجري المحضرُ متّصلاً،
+ * ويقسمه محرّكُ الطباعة نفسُه بين الأسطر كما يفعل Word:
+ *   - الكليشةُ والرقمُ والتاريخ `position: fixed`، فتتكرّر على كلِّ صفحةٍ مطبوعة.
+ *   - هامشا الكليشة العلويُّ والسفليُّ رأسُ جدولٍ وذيلُه (`thead`/`tfoot`)،
+ *     وهما يتكرّران في كلِّ صفحة — فلا يمسّ النصُّ رأسَ الكليشة ولا تذييلَها.
+ *   - صفوفُ الجداول لا تنشطر، ورأسُ الجدول يتكرّر، والعنوانُ يلزم ما بعده.
+ * فلا شيءَ يُقاس، ولا شيءَ يُقصّ.
+ */
 export function buildLetterheadDoc(
   m: LetterheadMeeting,
   forPrint: boolean,
@@ -56,211 +69,112 @@ export function buildLetterheadDoc(
   const numStr = meetingNum ? `ZAD_M_${String(meetingNum).padStart(3, "0")}` : "";
   const letterheadUrl = `${origin}/assets/letterhead.png`;
 
-  const safeBody = JSON.stringify(body).replace(/<\/(script)/ig, "<\\/$1");
+  // المتنُ يُدرج بـinnerHTML لا في النصّ مباشرة: سكربتٌ في محتوى المحضر لا يُشغَّل.
+  const safeBody = JSON.stringify(body).replace(/<\/(script)/ig, "<\/$1");
 
   return `<!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head><meta charset="utf-8"><title>${escapeHtml(m.title)}</title>
-<style>${LETTERHEAD_CSS}</style>
+<style>${FLOW_CSS}</style>
 </head>
 <body>
-<div id="root"></div>
+<img class="lh-bg" src="${escapeHtml(letterheadUrl)}" alt="">
+${numStr ? `<div class="lh-num">${escapeHtml(numStr)}</div>` : ""}
+<div class="lh-date">${escapeHtml(dateStr)}</div>
+<table class="lh-frame">
+  <thead><tr><td class="lh-top"></td></tr></thead>
+  <tfoot><tr><td class="lh-bottom"></td></tr></tfoot>
+  <tbody><tr><td class="lh-body"><div class="content" id="content"></div></td></tr></tbody>
+</table>
 <script>
 (function() {
-  var letterheadUrl = ${JSON.stringify(letterheadUrl)};
-  var dateStr = ${JSON.stringify(dateStr)};
-  var numStr = ${JSON.stringify(numStr)};
   var shouldPrint = ${forPrint};
-  var tmp = document.createElement('div');
-  tmp.innerHTML = ${safeBody};
-  var nodes = Array.from(tmp.childNodes);
-  var root = document.getElementById('root');
+  var content = document.getElementById('content');
+  content.innerHTML = ${safeBody};
 
-  function newPage() {
-    var page = document.createElement('div');
-    page.className = 'page';
-    var img = document.createElement('img');
-    img.className = 'letterhead'; img.src = letterheadUrl;
-    page.appendChild(img);
-    if (numStr) {
-      var numDiv = document.createElement('div');
-      numDiv.className = 'number-area'; numDiv.textContent = numStr;
-      page.appendChild(numDiv);
-    }
-    var dateDiv = document.createElement('div');
-    dateDiv.className = 'date-area'; dateDiv.textContent = dateStr;
-    page.appendChild(dateDiv);
-    var ca = document.createElement('div');
-    ca.className = 'content-area';
-    page.appendChild(ca);
-    root.appendChild(page);
-    return ca;
-  }
-
-  function runLayout() {
-  // التوزيع يُقاس في الصفحة نفسها، لا يُقدَّر خارجها.
-  //
-  // كانت الارتفاعات تُجمع من offsetHeight في عنصرٍ مخفيّ، وoffsetHeight لا يشمل
-  // الهوامش: كل عنوانٍ وفقرةٍ وجدولٍ يُنقص الحساب عن الواقع، فيتراكم الفرق حتى
-  // يوضع الصف خارج المنطقة ويقصّه overflow:hidden بلا إنذار. وقيس ذلك في متصفح
-  // حقيقي: تجاوز ٩٠ بكسلاً في محضرٍ متوسط. فالآن يوضع العنصر في مكانه، ويُسأل
-  // المتصفح أين انتهى، فلا يبقى حسابٌ يخطئ.
-  var currentArea = newPage();
-
-  // فسحةٌ لفروق تقريب الطباعة عن الشاشة، ولهامش آخر عنصر في الصفحة.
-  var SAFE_GAP = 6;
-
-  function fits(el) {
-    return el.getBoundingClientRect().bottom <= currentArea.getBoundingClientRect().bottom - SAFE_GAP;
-  }
-
-  // عنصرٌ أطول من صفحةٍ كاملة لا موضع له يُقسم عنده. فيُترك ظاهراً ولو لامس
-  // تذييل الكليشة: نصٌّ فوق التذييل يُرى ويُصلَح، ونصٌّ مقصوصٌ يضيع بلا أثر.
-  function keepOversized(el) {
-    if (!fits(el)) currentArea.style.overflow = 'visible';
-  }
-
-  // يوضع الجدول في الصفحة صفّاً صفّاً، ويتكرر رأسه في كل صفحة. ويبقى الرأس
-  // داخل tbody نفسه ليستمر تلوين الصفوف بالتناوب كما هو.
-  function appendTable(table) {
-    var all = Array.prototype.slice.call(table.rows);
-    if (all.length < 2) { appendAtomic(table); return; }
-
-    var header = all[0];
-    var bodyRows = all.slice(1);
-    var i = 0;
-
-    while (i < bodyRows.length) {
-      var chunk = document.createElement("table");
-      var tbody = document.createElement("tbody");
-      chunk.appendChild(tbody);
-      tbody.appendChild(header.cloneNode(true));
-      currentArea.appendChild(chunk);
-
-      var placed = 0;
-      while (i < bodyRows.length) {
-        var row = bodyRows[i].cloneNode(true);
-        tbody.appendChild(row);
-        if (fits(chunk)) { placed++; i++; continue; }
-
-        if (placed === 0 && currentArea.firstChild === chunk) {
-          // صفٌّ أطول من صفحةٍ فارغة: لا يُسقط، فإسقاطه هو ما نمنعه هنا.
-          keepOversized(chunk);
-          placed++; i++;
-        } else {
-          tbody.removeChild(row);
-        }
-        break;
-      }
-
-      if (placed === 0) {
-        currentArea.removeChild(chunk);
-        currentArea = newPage();
-        continue;
-      }
-      if (i < bodyRows.length) currentArea = newPage();
-    }
-  }
-
-  // والقوائم مثل الجداول: تُقسم عند البند لا تُقصّ.
-  function appendList(list) {
-    var items = Array.prototype.slice.call(list.children);
-    if (items.length < 2) { appendAtomic(list); return; }
-
-    var i = 0;
-    while (i < items.length) {
-      var chunk = document.createElement(list.tagName);
-      currentArea.appendChild(chunk);
-
-      var placed = 0;
-      while (i < items.length) {
-        var item = items[i].cloneNode(true);
-        chunk.appendChild(item);
-        if (fits(chunk)) { placed++; i++; continue; }
-
-        if (placed === 0 && currentArea.firstChild === chunk) {
-          keepOversized(chunk);
-          placed++; i++;
-        } else {
-          chunk.removeChild(item);
-        }
-        break;
-      }
-
-      if (placed === 0) {
-        currentArea.removeChild(chunk);
-        currentArea = newPage();
-        continue;
-      }
-      if (i < items.length) currentArea = newPage();
-    }
-  }
-
-  // ما لا موضع يُقسم عنده يُنقل كاملاً إلى الصفحة التالية.
-  function appendAtomic(el) {
-    currentArea.appendChild(el);
-    if (fits(el)) return;
-    if (currentArea.firstChild !== el) {
-      currentArea.removeChild(el);
-      currentArea = newPage();
-      currentArea.appendChild(el);
-    }
-    keepOversized(el);
-  }
-
-  function appendToPage(el) {
-    var tag = el.tagName;
-    if (tag === "TABLE") appendTable(el);
-    else if (tag === "UL" || tag === "OL") appendList(el);
-    else appendAtomic(el);
-  }
-
-  nodes.forEach(function(node) {
-    if (node.nodeType === 3) {
-      if (node.textContent.trim()) {
-        var p = document.createElement('p');
-        p.textContent = node.textContent;
-        appendToPage(p);
-      }
-    } else if (node.nodeType === 1) {
-      appendToPage(node);
-    }
+  // صفُّ رؤوس الجدول (th) يصير thead، فيتكرّر في كلِّ صفحةٍ ينشطر عليها الجدول.
+  Array.prototype.forEach.call(content.querySelectorAll('table'), function(t) {
+    if (t.tHead || !t.rows.length) return;
+    var first = t.rows[0];
+    if (!first.querySelector('th')) return;
+    var head = t.createTHead();
+    head.appendChild(first);
   });
 
-  // علامةُ اكتمال التخطيط — مولِّدُ PDF على الخادم ينتظرها.
-  document.body.setAttribute("data-ready", "1");
+  // فقرةٌ غامقةٌ كلُّها («**٤. نموذج الإفصاح**») أو قصيرةٌ تنتهي بنقطتين عنوانٌ
+  // صغير: تلزم ما بعدها فلا تبقى وحدها آخرَ الصفحة.
+  Array.prototype.forEach.call(content.querySelectorAll('p'), function(p) {
+    var text = (p.textContent || '').trim();
+    if (!text) return;
+    var strong = p.querySelector('strong, b');
+    var allBold = strong && (strong.textContent || '').trim() === text;
+    if (allBold || (text.length <= 60 && /[:：]$/.test(text))) p.classList.add('keep-next');
+  });
 
-  if (shouldPrint) {
-    setTimeout(function() { window.print(); }, 300);
-  }
+  function done() {
+    // علامةُ الجاهزية — مولِّدُ PDF على الخادم ينتظرها.
+    document.body.setAttribute('data-ready', '1');
+    if (shouldPrint) setTimeout(function() { window.print(); }, 300);
   }
 
-  // Cairo loads via @import, and nothing on the page asks for it until this
-  // script runs — #root starts empty, so the browser has not even begun
-  // fetching it yet. Measuring immediately measures with
-  // the fallback font (Segoe UI/Tahoma), which wraps Arabic text at
-  // different widths than Cairo. Page breaks get decided on those wrong
-  // heights, then the real Cairo text reflows taller or shorter inside the
-  // already-fixed, already-clipped content-area — the same meeting prints
-  // clean sometimes and drops or blanks a row other times, purely depending
-  // on how fast the font happened to load that time. Forcing every weight
-  // actually used (400 body, 600 label, 700 titles/headers) to finish
-  // loading before measuring anything removes that race.
-  var fontsReady = (document.fonts && document.fonts.ready)
+  // تُنتظر أوزانُ خطّ Cairo وصورةُ الكليشة قبل الطباعة: بغيرها يُطبع بخطٍّ بديلٍ أو بلا كليشة.
+  var fontsReady = (document.fonts && document.fonts.load)
     ? Promise.all(['400', '600', '700'].map(function(w) {
         return document.fonts.load(w + ' 12px Cairo').catch(function() {});
-      })).then(function() { return document.fonts.ready; })
+      }))
     : Promise.resolve();
-
-  var started = false;
-  function start() {
-    if (started) return;
-    started = true;
-    runLayout();
-  }
-  fontsReady.then(start, start);
-  setTimeout(start, 1500);
+  var bg = document.querySelector('.lh-bg');
+  var imgReady = new Promise(function(res) {
+    if (!bg || bg.complete) return res();
+    bg.onload = bg.onerror = function() { res(); };
+  });
+  var finished = false;
+  function finish() { if (!finished) { finished = true; done(); } }
+  Promise.all([fontsReady, imgReady]).then(finish, finish);
+  setTimeout(finish, 4000);
 })();
 </script>
 </body></html>`;
 }
+
+// أبعادُ الكليشة كما في LETTERHEAD_CSS: رأسُها ٥٠مم، وتذييلُها ٥٥مم، وجانباها ١٧مم.
+const FLOW_CSS = `
+  @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap');
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  @page { size: A4; margin: 0; }
+  html, body { background: white; font-family: 'Cairo', 'Segoe UI', Tahoma, sans-serif; direction: rtl;
+    -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  body { width: 210mm; margin: 0 auto; position: relative; }
+  .lh-bg { position: fixed; top: 0; left: 0; width: 210mm; height: 297mm; z-index: 0; }
+  .lh-num, .lh-date { position: fixed; left: 12mm; z-index: 2; font-size: 8.5pt; color: #111; direction: ltr;
+    letter-spacing: 1px; font-family: 'Courier New', monospace; }
+  .lh-num { top: 14mm; } .lh-date { top: 19mm; }
+  @media screen {
+    html { background: #888; } body { background: white; min-height: 297mm; }
+    .lh-bg, .lh-num, .lh-date { position: absolute; }
+  }
+  table.lh-frame { width: 100%; border-collapse: collapse; position: relative; z-index: 1; }
+  table.lh-frame > thead > tr > td, table.lh-frame > tfoot > tr > td,
+  table.lh-frame > tbody > tr > td { border: none; padding: 0; background: none; }
+  td.lh-top { height: 50mm; } td.lh-bottom { height: 55mm; }
+  td.lh-body { padding: 0 17mm !important; }
+
+  .content { direction: rtl; text-align: right; font-size: 10.5pt; line-height: 1.55; color: #1a1a1a; orphans: 2; widows: 2; }
+  .content .meeting-label { text-align: center; font-size: 9pt; font-weight: 600; color: #0f766e; margin-bottom: 2px; letter-spacing: 0.5px; }
+  .content .meeting-title { text-align: center; font-size: 13pt; font-weight: 700; color: #1a1a1a; margin-bottom: 10px; border-bottom: 1.5px solid #bfe6e1; padding-bottom: 6px; }
+  .content h2.sec-title { color: #0f766e; font-size: 12pt; font-weight: 700; text-align: center; margin: 8px 0 4px; padding-bottom: 2px; border-bottom: 1.5px solid #bfe6e1; }
+  .content h3.sub-title { color: #0f766e; font-size: 10.5pt; font-weight: 700; text-align: center; margin: 6px 0 3px; }
+  .content h4.sub-title { color: #0f766e; font-size: 10pt; font-weight: 700; margin: 5px 0 2px; }
+  .content h1, .content h2, .content h3, .content h4, .content .meeting-title, .content p.keep-next { break-after: avoid; page-break-after: avoid; }
+  .content p { margin: 2px 0; } .content br { display: block; margin: 1px 0; }
+  .content ul, .content ol { padding-right: 16px; margin: 2px 0 5px; } .content ul { list-style: disc; }
+  .content li { margin-bottom: 2px; line-height: 1.45; break-inside: avoid; }
+  .content hr { border: none; border-top: 1px solid #ddd; margin: 5px 0; }
+  .content p.footer-note { text-align: center; color: #64748b; font-size: 9pt; margin: 2px 0; }
+  .content strong { font-weight: 700; }
+  .content table { width: 100%; border-collapse: collapse; margin: 6px 0; font-size: 9.5pt; direction: rtl; }
+  .content th, .content td { border: 1px solid #99c2bd; padding: 4px 8px; text-align: right; vertical-align: top; }
+  .content th { background-color: #e6f2f0; font-weight: 700; color: #0f766e; text-align: center; }
+  .content tr { break-inside: avoid; page-break-inside: avoid; }
+  .content tbody tr:nth-child(even) td { background-color: #f0f7f6; }
+`;

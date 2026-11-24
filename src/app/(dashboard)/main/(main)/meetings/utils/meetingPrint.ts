@@ -32,15 +32,33 @@ export function handlePrint(m: Meeting, meetingNum?: number) {
   }, 5000);
 }
 
-export function handlePreview(m: Meeting, meetingNum?: number) {
+/**
+ * العرضُ بالكليشة هو ملفُّ PDF نفسُه الذي يُشارَك بالبريد — فما يُرى هو ما
+ * يُرسَل ويُطبع، صفحةً صفحة. وإن تعذّر التوليدُ عُرضت الصفحةُ HTML كما كانت.
+ */
+export async function handlePreview(m: Meeting, meetingNum?: number) {
+  // تُفتح النافذةُ الآن، في لحظة النقر، وإلا حجبها المتصفّح بعد انتظار الملف.
   const win = window.open("", "_blank");
   if (!win) {
     notify("error", "الرجاء السماح بفتح النوافذ المنبثقة (Popups) لعرض الكليشة.");
     return;
   }
-  win.document.open();
-  win.document.write(buildLetterheadDoc(m, false, meetingNum));
-  win.document.close();
+  win.document.write(
+    '<p style="font-family:Tahoma,sans-serif;direction:rtl;text-align:center;margin-top:30vh;color:#475569">جارٍ تجهيز المحضر…</p>'
+  );
+  try {
+    const res = await fetch("/api/meetings/pdf", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ meetingId: m.id, meetingNum }),
+    });
+    if (!res.ok) throw new Error();
+    win.location.href = URL.createObjectURL(await res.blob());
+  } catch {
+    win.document.open();
+    win.document.write(buildLetterheadDoc(m, false, meetingNum));
+    win.document.close();
+  }
 }
 
 function sanitizeFileName(name: string): string {

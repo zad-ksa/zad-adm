@@ -1,6 +1,7 @@
 "use client";
 
 import { useTheme } from "next-themes";
+import { useThemeSwitch } from "@/components/console/useThemeSwitch";
 import Link from "next/link";
 import { Building2, Users, Sun, Moon, ArrowRight, ShieldCheck } from "lucide-react";
 import ZadLogo from "@/components/ZadLogo";
@@ -16,7 +17,8 @@ const onClient = () => true;
 const onServer = () => false;
 
 export default function PortalsSelectionPage() {
-  const { theme, setTheme } = useTheme();
+  const { theme } = useTheme();
+  const { switchTheme } = useThemeSwitch();
   const isMounted = useSyncExternalStore(noopSubscribe, onClient, onServer);
 
   useEffect(() => {
@@ -32,7 +34,7 @@ export default function PortalsSelectionPage() {
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col justify-center py-12 sm:px-6 lg:px-8 relative overflow-hidden font-sans transition-colors duration-300" dir="rtl">
       {/* Theme Toggle */}
       <button
-        onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+        onClick={(e) => switchTheme(e)}
         className="absolute top-6 left-6 p-2 rounded-full bg-white/50 dark:bg-white/10 hover:bg-white/80 dark:hover:bg-white/20 border border-slate-200 dark:border-white/10 text-slate-700 dark:text-slate-200 backdrop-blur-md transition-all shadow-sm z-50"
         aria-label="Toggle Theme"
       >

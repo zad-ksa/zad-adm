@@ -2,6 +2,7 @@
 
 import { useState, useTransition, useEffect } from "react";
 import { useTheme } from "next-themes";
+import { useThemeSwitch } from "@/components/console/useThemeSwitch";
 import { selectCharitySession } from "@/app/actions/authCharity";
 import { Building2, ArrowLeft, Loader2, Sun, Moon } from "lucide-react";
 import ZadLogo from "@/components/ZadLogo";
@@ -24,7 +25,8 @@ export default function SelectCharityClient({
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const [isMounted, setIsMounted] = useState(false);
-  const { theme, setTheme } = useTheme();
+  const { theme } = useTheme();
+  const { switchTheme } = useThemeSwitch();
 
   useEffect(() => {
     setIsMounted(true);
@@ -49,7 +51,7 @@ export default function SelectCharityClient({
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col justify-center py-12 sm:px-6 lg:px-8 relative overflow-hidden font-sans transition-colors duration-300" dir="rtl">
       {/* Theme Toggle */}
       <button
-        onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+        onClick={(e) => switchTheme(e)}
         className="absolute top-6 left-6 p-2 rounded-full bg-white/50 dark:bg-white/10 hover:bg-white/80 dark:hover:bg-white/20 border border-slate-200 dark:border-white/10 text-slate-700 dark:text-slate-200 backdrop-blur-md transition-all shadow-sm z-50"
         aria-label="Toggle Theme"
       >

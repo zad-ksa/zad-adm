@@ -70,21 +70,41 @@ function para(
   });
 }
 
+/** لونُ شريط جانت — كحليٌّ فاتحٌ من هويّة الوثيقة. */
+const GANTT_FILL = "8EAADB";
+/** خانةٌ لا شيءَ فيها إلا علامةُ شريط (▬ ■ █ ● ✓ ×…). */
+const GANTT_MARK = /^[\s▬━■▪◼◾█▇▆●✓✔×xX]+$/;
+
+/**
+ * هل الجدولُ مخطّطُ جانت؟ رؤوسُ أعمدته أرقامُ فتراتٍ (١، ٢، ٣ …)، أو خاناتُه
+ * علاماتٌ لا نصّ — وفي الحالين يُستثنى من دمج صفوف التصنيف والمجاميع: خاناتُه
+ * الفارغةُ أيامٌ لا عملَ فيها، لا فراغٌ يُدمج.
+ */
+function isGantt(cells: string[][]): boolean {
+  const [header = [], ...body] = cells;
+  const numbered = header.filter((h) => /^[\d٠-٩]+$/.test(h.trim())).length;
+  if (numbered >= 3) return true;
+  const marks = body.flat().filter((t) => GANTT_MARK.test(t)).length;
+  return marks >= 3;
+}
+
 function buildTable(rows: string[]) {
   const clean = rows.filter((r) => !/^\s*\|?\s*:?-{2,}/.test(r)); // حذف سطر الفواصل |---|
   const cells = clean.map((r) => r.replace(/^\s*\||\|\s*$/g, "").split("|").map((c) => c.trim()));
   const cols = Math.max(...cells.map((r) => r.length));
   const border = { style: BorderStyle.SINGLE, size: 4, color: "BFBFBF" } as const;
 
-  const cell = (text: string, opts: { header?: boolean; group?: boolean; span?: number }) =>
+  const cell = (text: string, opts: { header?: boolean; group?: boolean; span?: number; bar?: boolean }) =>
     new TableCell({
       columnSpan: opts.span && opts.span > 1 ? opts.span : undefined,
       borders: { top: border, bottom: border, left: border, right: border },
       shading: opts.header
         ? { type: ShadingType.CLEAR, fill: NAVY, color: "auto" }
-        : opts.group
-          ? { type: ShadingType.CLEAR, fill: "EEF1F6", color: "auto" }
-          : undefined,
+        : opts.bar
+          ? { type: ShadingType.CLEAR, fill: GANTT_FILL, color: "auto" }
+          : opts.group
+            ? { type: ShadingType.CLEAR, fill: "EEF1F6", color: "auto" }
+            : undefined,
       margins: { top: 80, bottom: 80, left: 100, right: 100 },
       children: [
         para(text.replace(/^\*\*(.*)\*\*$/, "$1"), {
@@ -97,12 +117,22 @@ function buildTable(rows: string[]) {
       ],
     });
 
+  const gantt = isGantt(cells);
+
   return new Table({
     visuallyRightToLeft: true,
     width: { size: 100, type: WidthType.PERCENTAGE },
     rows: cells.map((raw, ri) => {
       const row = Array.from({ length: cols }, (_, ci) => raw[ci] ?? "");
       if (ri === 0) return new TableRow({ tableHeader: true, children: row.map((t) => cell(t, { header: true })) });
+
+      // مخطّطُ جانت: لا دمجَ فيه — خاناتُه الفارغةُ هي الأيامُ التي لا عملَ فيها.
+      // وخانةُ العلامة تُلوَّن ويُحذف رمزُها، فيظهر الشريطُ لوناً متّصلاً.
+      if (gantt) {
+        return new TableRow({
+          children: row.map((t) => (GANTT_MARK.test(t) ? cell("", { bar: true }) : cell(t, {}))),
+        });
+      }
 
       // صفُّ تصنيفٍ أو مجموعٍ («٢ | العبوات والتغليف | | | |»، «| المجموع الجزئي | | | ٢٢٨,٠٥٠»):
       // خانتان فارغتان فأكثر — فكلُّ خانةٍ ذاتِ نصٍّ تُدمج مع الفارغات بعدها، والفارغاتُ

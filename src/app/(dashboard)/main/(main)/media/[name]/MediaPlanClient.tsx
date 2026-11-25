@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import Image from "next/image";
 import {
   Check,
+  FileSpreadsheet,
   ImagePlus,
   Megaphone,
   Pencil,
@@ -33,6 +34,7 @@ import {
 } from "@/components/media/MediaCalendar";
 import MediaPostSheet, { type MediaPostDraft } from "@/components/media/MediaPostSheet";
 import PublishingPlan from "@/components/media/PublishingPlan";
+import { exportMediaPlanXlsx } from "@/lib/exportMediaPlanXlsx";
 import MediaPostDetail, { type MediaPendingBaseView } from "@/components/media/MediaPostDetail";
 import { WEEKDAY_LABELS } from "@/lib/attendanceTime";
 import {
@@ -143,6 +145,33 @@ export default function MediaPlanClient({
 
   const reload = () => setReloads((n) => n + 1);
 
+  // تصديرُ الشهر المعروض — لزادٍ وحدَها: بوابةُ الجمعية شاشةٌ أخرى لا زرَّ فيها.
+  // ويُجلب الشهرُ كاملاً ولو كانت الهيئةُ أسبوعاً: التصديرُ للشهر لا لما يظهر منه.
+  const [exporting, setExporting] = useState(false);
+  const exportMonth = async () => {
+    setExporting(true);
+    try {
+      const { from, to } = monthRange(month);
+      const result = await listMediaPosts(charityId, from, to);
+      if (!("posts" in result) || !result.posts) throw new Error();
+      const list = result.posts.map(normalizePost);
+      if (!list.length) {
+        notify("error", "لا منشورات في هذا الشهر لتصديرها");
+        return;
+      }
+      await exportMediaPlanXlsx({
+        charityName,
+        monthLabel: monthLabel(month),
+        posts: list,
+        platformName: (key) => platformByKey.get(key)?.name ?? key,
+      });
+    } catch {
+      notify("error", "تعذر تصدير الخطة");
+    } finally {
+      setExporting(false);
+    }
+  };
+
   const platformByKey = useMemo(() => {
     const map = new Map<string, MediaPlatformView>();
     for (const p of platforms) map.set(p.key, p);
@@ -229,6 +258,16 @@ export default function MediaPlanClient({
             initialPlan={publishingPlan}
             save={(text) => setCharityPublishingPlan(charityId, text)}
           />
+          <button
+            type="button"
+            onClick={exportMonth}
+            disabled={exporting}
+            className={cx(btn.ghost, "h-9")}
+            title="تصدير الشهر المعروض إلى Excel"
+          >
+            {exporting ? <Spinner /> : <FileSpreadsheet className="size-4" />}
+            تصدير
+          </button>
           <button type="button" onClick={() => setManaging(true)} className={cx(btn.ghost, "h-9")}>
             <Settings2 className="size-4" />
             المنصّات

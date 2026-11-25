@@ -10,18 +10,19 @@ import {
   StatStrip,
   TableShell,
   Th,
+  rowClass,
   tbodyClass,
   tdClass,
   theadRowClass,
 } from "@/components/console/layout";
 import Select from "@/components/console/Select";
-import { MONO, btn, cx } from "@/components/console/ui";
+import { Badge, MONO, btn, cx } from "@/components/console/ui";
 import { ConfirmDialog } from "@/components/console/ConfirmDialog";
 import { notify } from "@/components/console/toastBus";
 import { deleteCharityClientAccount } from "@/app/actions/charityAccounts";
-import { charityTitleLabel } from "@/lib/charityPermissions";
+import { charityMemberLabel } from "@/lib/charityPermissions";
 import { CharityAccountSheet, type SheetState } from "./CharityAccountSheet";
-import type { AccountRow, CharityRow } from "./types";
+import type { AccountRow, CharityRow, Membership } from "./types";
 
 /**
  * حسابات الجمعيات — شاشةُ موارد بشرية كشاشة موظّفي زاد.
@@ -65,20 +66,36 @@ export default function CharityAccountsClient({
     };
   }, [accounts, charities]);
 
-  const shown = useMemo(() => {
+  /**
+   * صفٌّ لكلِّ عضويّةٍ لا لكلِّ حساب.
+   *
+   * **ووحدةُ هذه الشاشة عضويّةٌ لا حساب**: السؤالُ «من يعمل في أيِّ جمعيةٍ
+   * وبأيِّ صفة»، والمسمّى والخدماتُ والصلاحيّاتُ كلُّها لجمعيةٍ بعينها. وحسابٌ
+   * في جمعيّتين يُقرأ صفّين، وهو الصواب: هو شخصان في العمل وإن كان حساباً
+   * واحداً في القاعدة. وحسابٌ بلا عضويّةٍ يُعرض صفّاً كي لا يختفي.
+   */
+  const allRows = useMemo(
+    () =>
+      accounts.flatMap((account) =>
+        account.memberships.length === 0
+          ? [{ account, membership: null as Membership | null }]
+          : account.memberships.map((membership) => ({ account, membership }))
+      ),
+    [accounts]
+  );
+
+  const rows = useMemo(() => {
     const q = query.trim();
-    return accounts.filter((account) => {
-      if (charityFilter !== "all" && !account.memberships.some((m) => m.charityId === charityFilter)) {
-        return false;
-      }
+    return allRows.filter(({ account, membership }) => {
+      if (charityFilter !== "all" && membership?.charityId !== charityFilter) return false;
       if (!q) return true;
       return (
         account.name.includes(q) ||
         account.phone.includes(q) ||
-        account.memberships.some((m) => m.charityName.includes(q))
+        (membership?.charityName.includes(q) ?? false)
       );
     });
-  }, [accounts, query, charityFilter]);
+  }, [allRows, query, charityFilter]);
 
   const filtered = query.trim() !== "" || charityFilter !== "all";
 
@@ -162,9 +179,13 @@ export default function CharityAccountsClient({
       </div>
 
       <TableShell
-        footer={shown.length === accounts.length ? `${accounts.length} حساب` : `${shown.length} من ${accounts.length}`}
+        footer={
+          rows.length === allRows.length
+            ? `${allRows.length} عضوية في ${accounts.length} حساب`
+            : `${rows.length} من ${allRows.length}`
+        }
         empty={
-          shown.length === 0 ? (
+          rows.length === 0 ? (
             <EmptyState
               icon={<Users className="size-5" />}
               title={accounts.length === 0 ? "لا حسابات بعد" : "لا نتائج مطابقة"}
@@ -179,72 +200,87 @@ export default function CharityAccountsClient({
       >
         <thead>
           <tr className={theadRowClass}>
-            <Th>الحساب</Th>
-            <Th>الجوال</Th>
+            <Th>العضو</Th>
+            <Th>الجمعية</Th>
             <Th>المسمى</Th>
-            <Th>العضويات — انقرها لتعديل الوصول</Th>
+            <Th>الخدمات</Th>
+            <Th>الصلاحيات</Th>
             {canManage && <Th />}
           </tr>
         </thead>
         <tbody className={tbodyClass}>
-          {shown.map((account) => (
-            <tr key={account.id}>
-              <td className={cx(tdClass, "font-medium text-slate-900 dark:text-slate-100")}>
-                {account.name}
-              </td>
-              <td className={cx(tdClass, MONO, "text-slate-500")} dir="ltr">
-                {account.phone}
-              </td>
-              <td className={cx(tdClass, "text-slate-500 dark:text-slate-400")}>
-                {charityTitleLabel(account.title)}
-              </td>
+          {rows.map(({ account, membership }) => (
+            <tr
+              key={`${account.id}:${membership?.charityId ?? "none"}`}
+              onClick={() =>
+                canManage &&
+                membership &&
+                setSheet({ mode: "access", account, charityId: membership.charityId })
+              }
+              className={cx(canManage && membership && rowClass)}
+            >
               <td className={tdClass}>
-                {account.memberships.length === 0 ? (
-                  <span className="text-meta text-slate-400">بلا عضوية</span>
+                <span className="block font-medium text-slate-900 dark:text-slate-100">
+                  {account.name}
+                </span>
+                <span className={cx(MONO, "block text-meta text-slate-400")} dir="ltr">
+                  {account.phone}
+                </span>
+              </td>
+
+              <td className={tdClass}>
+                {membership ? (
+                  <span className="flex items-center gap-1.5 text-slate-700 dark:text-slate-200">
+                    {membership.isOfficial && (
+                      <ShieldCheck aria-hidden className="size-3.5 text-primary dark:text-teal-300" />
+                    )}
+                    {membership.charityName}
+                  </span>
                 ) : (
-                  <ul className="flex flex-wrap gap-1.5">
-                    {account.memberships.map((membership) => (
-                      <li key={membership.charityId}>
-                        <button
-                          type="button"
-                          disabled={!canManage}
-                          onClick={() =>
-                            setSheet({ mode: "access", account, charityId: membership.charityId })
-                          }
-                          className={cx(
-                            "inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-caption transition-colors outline-none",
-                            "focus-visible:ring-2 focus-visible:ring-primary/40",
-                            canManage && "hover:border-primary/40",
-                            membership.isOfficial
-                              ? "border-primary/25 bg-primary/[0.06] text-primary dark:border-teal-400/25 dark:bg-teal-400/10 dark:text-teal-300"
-                              : "border-slate-200 text-slate-600 dark:border-slate-700 dark:text-slate-300",
-                            !membership.isActive && "opacity-50"
-                          )}
-                          title={
-                            membership.isOfficial
-                              ? "الحساب الرسمي للجمعية"
-                              : `${membership.services.length} خدمة · ${membership.permissions.length} صلاحية`
-                          }
-                        >
-                          {membership.isOfficial && <ShieldCheck aria-hidden className="size-3" />}
-                          {membership.charityName}
-                          {!membership.isOfficial && (
-                            <span className={cx(MONO, "text-slate-400")}>
-                              {membership.services.length}/{membership.permissions.length}
-                            </span>
-                          )}
-                        </button>
-                      </li>
-                    ))}
-                  </ul>
+                  <span className="text-slate-400">بلا عضوية</span>
                 )}
               </td>
+
+              <td className={cx(tdClass, "text-slate-500 dark:text-slate-400")}>
+                {membership
+                  ? charityMemberLabel(membership.isOfficial, membership.title) || "—"
+                  : "—"}
+              </td>
+
+              <td className={tdClass}>
+                {!membership ? (
+                  <span className="text-slate-400">—</span>
+                ) : membership.isOfficial ? (
+                  <Badge tone="brand">كل الخدمات</Badge>
+                ) : membership.services.length === 0 ? (
+                  <span className="text-meta text-slate-400">لا خدمة</span>
+                ) : (
+                  <span className="flex flex-wrap gap-1">
+                    {membership.services.slice(0, 2).map((name) => (
+                      <Badge key={name} tone="neutral">
+                        {name}
+                      </Badge>
+                    ))}
+                    {membership.services.length > 2 && (
+                      <Badge tone="neutral">+{membership.services.length - 2}</Badge>
+                    )}
+                  </span>
+                )}
+              </td>
+
+              <td className={cx(tdClass, MONO, "text-slate-500")}>
+                {!membership ? "—" : membership.isOfficial ? "الكل" : membership.permissions.length}
+              </td>
+
               {canManage && (
                 <td className={cx(tdClass, "text-end")}>
                   <div className="flex items-center justify-end gap-1">
                     <button
                       type="button"
-                      onClick={() => setSheet({ mode: "link", account })}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setSheet({ mode: "link", account });
+                      }}
                       title="ضم إلى جمعية أخرى"
                       aria-label="ضم إلى جمعية أخرى"
                       className={btn.icon}
@@ -253,7 +289,10 @@ export default function CharityAccountsClient({
                     </button>
                     <button
                       type="button"
-                      onClick={() => setToDelete(account)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setToDelete(account);
+                      }}
                       title="حذف الحساب"
                       aria-label="حذف الحساب"
                       className={btn.iconDanger}

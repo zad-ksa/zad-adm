@@ -65,7 +65,13 @@ export function CharityAccountSheet({
 
   const [name, setName] = useState(linking ? state.account.name : "");
   const [phone, setPhone] = useState(linking ? state.account.phone : "");
-  const [title, setTitle] = useState(linking ? state.account.title : "FULL_TIME");
+  // ومسمّاه في الجمعية المفتوحة إن كانت، وإلّا الافتراضيّ — ولا يُنقل مسمّاه
+  // في جمعيةٍ أخرى: قد يكون مديراً هناك ومتطوّعاً هنا.
+  const [title, setTitle] = useState(
+    state.mode === "access"
+      ? state.account.memberships.find((m) => m.charityId === state.charityId)?.title || "FULL_TIME"
+      : "FULL_TIME"
+  );
   const [charityId, setCharityId] = useState(
     state.mode === "access" ? state.charityId : ""
   );
@@ -111,7 +117,7 @@ export function CharityAccountSheet({
           if (!hit) return;
           // ويُملأ مسمّاه القائم، وتُفرَّغ جمعيةٌ هو فيها بالفعل: اختيارٌ
           // صار مقفلاً لا يُترك محدَّداً فيُحفظ عليه.
-          setTitle(hit.title || "FULL_TIME");
+          // ولا يُنقل مسمّاه من جمعيةٍ أخرى: المطلوبُ مسمّاه في هذه.
           setCharityId((current) =>
             current && hit.memberships.some((m) => m.charityId === current) ? "" : current
           );
@@ -287,7 +293,7 @@ export function CharityAccountSheet({
             <Field
               id="ca-title"
               label="المسمى"
-              hint={found ? "على الحساب نفسه ومشترك مع كل جمعياته." : undefined}
+              hint={found ? "مسماه في الجمعية التي تضمه إليها — لا ينقل من غيرها." : undefined}
             >
               <Select value={title} onSelect={setTitle} options={TITLES} placeholder="اختر المسمى" />
             </Field>

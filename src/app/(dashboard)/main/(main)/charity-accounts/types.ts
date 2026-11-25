@@ -5,6 +5,8 @@ export type CharityRow = { id: string; name: string; services: string[] };
 export type Membership = {
   charityId: string;
   charityName: string;
+  /** مسمّاه في هذه الجمعية — لا على حسابه. */
+  title: string;
   isOfficial: boolean;
   isActive: boolean;
   permissions: string[];

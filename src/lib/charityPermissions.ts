@@ -341,3 +341,23 @@ export function charityMemberLabel(
   if (isOfficialAccount === true) return OFFICIAL_ACCOUNT_LABEL;
   return title ? charityTitleLabel(title) : "";
 }
+
+/**
+ * مسمّى العضو في جمعيةٍ بعينها: ما كُتب في عضويّته، وإلّا ما على حسابه.
+ *
+ * **والعضويّةُ تتقدّم**: المسمّى صار يُكتب لكلِّ جمعيةٍ على حدة — من كان
+ * مديراً تنفيذياً في واحدةٍ قد يكون متطوّعاً في أخرى. وكان عموداً على الحساب
+ * يسافر معه إلى كلِّ جمعيةٍ يخدمها، فيُكتب في شاشةِ ضمٍّ إلى جمعيةٍ واحدةٍ
+ * ويُسمّيه في جمعياته كلِّها.
+ *
+ * **والرجوعُ إلى عمود الحساب لا يُستغنى عنه**: صفوفُ العضويّة كُتبت قبل هذا
+ * العمود، فلا مسمّى فيها — ولا تُنقل نقلاً أعمى، إذ قد يصحّ المسمّى في جمعيةٍ
+ * ويخطئ في أخرى. فيُقرأ القديمُ حتى يُراجَع ويُكتب.
+ */
+export function memberTitleOf(
+  membershipTitle: string | null | undefined,
+  accountTitle: string | null | undefined
+): string {
+  const picked = (membershipTitle ?? "").trim() || (accountTitle ?? "").trim();
+  return picked;
+}

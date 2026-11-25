@@ -3,7 +3,7 @@ import { CHARITY_ATTENDANCE_ENABLED } from "@/lib/featureFlags";
 import { redirect } from "next/navigation";
 import { Users } from "lucide-react";
 import { prisma } from "@/lib/db";
-import { grantableCharityPermissions } from "@/lib/charityPermissions";
+import { grantableCharityPermissions, memberTitleOf } from "@/lib/charityPermissions";
 import { resolveCharityPortal } from "@/lib/portalAccess";
 import HrNav from "./HrNav";
 import StaffManagerClient from "./StaffManagerClient";
@@ -80,7 +80,8 @@ export default async function HrStaffPage({ params }: { params: Promise<{ name: 
     id: l.user.id,
     name: l.user.name,
     phone: l.user.phone,
-    title: l.user.title as string,
+    // ومسمّاه في هذه الجمعية، وإلّا فما على حسابه — صفوفٌ كُتبت قبل العمود.
+    title: memberTitleOf(l.title, l.user.title),
     permissions: l.permissions,
     services: l.services.map((s) => s.serviceName),
     isActive: l.isActive,

@@ -5,7 +5,7 @@ import { prisma } from "@/lib/db";
 import { getSession } from "@/lib/auth";
 import SetEmailBanner from "@/components/SetEmailBanner";
 import PortalPopupHost from "./PortalPopupHost";
-import { effectiveCharityPermissions } from "@/lib/charityPermissions";
+import { effectiveCharityPermissions, memberTitleOf } from "@/lib/charityPermissions";
 import { listCharityNotices } from "@/app/actions/charityNotifications";
 import { isMediaPlanEnabled } from "@/lib/mediaPlanToggle";
 import { fundraisingOpenFor } from "@/lib/portalFundraising";
@@ -137,7 +137,9 @@ export default async function CharityLayout({
       isDeveloper={session.isDeveloper}
       currentEmployeeId={session.originalId ? session.id : undefined}
       permissions={effectivePermissions}
-      title={session.title}
+      // ومسمّاه في هذه الجمعية لا على حسابه: الشريطُ يُكتب فيه ما هو
+      // عليه هنا، وقد يكون في جمعيةٍ أخرى غيرَه.
+      title={memberTitleOf(membership?.title, session.title)}
       accountName={session.name}
       isOfficial={isOfficial}
       unreadMail={unreadMail}

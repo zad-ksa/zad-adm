@@ -2,21 +2,21 @@
 
 import { useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { Building2, Plus, ShieldCheck, Trash2, UserPlus, Users, X } from "lucide-react";
+import { Building2, Pencil, Plus, ShieldCheck, Trash2, Users, X } from "lucide-react";
 import {
   EmptyState,
   PageHeader,
   SearchField,
+  Segmented,
   StatStrip,
   TableShell,
   Th,
-  rowClass,
   tbodyClass,
-  tdClass,
   theadRowClass,
 } from "@/components/console/layout";
 import Select from "@/components/console/Select";
-import { Badge, MONO, btn, cx } from "@/components/console/ui";
+import { Avatar, Badge, Count, Dot, MONO, btn, cx } from "@/components/console/ui";
+import { MenuItem, MenuSeparator, RowMenu, RowMenuTrigger, useRowMenu } from "@/components/console/overlays";
 import { ConfirmDialog } from "@/components/console/ConfirmDialog";
 import { notify } from "@/components/console/toastBus";
 import { deleteCharityClientAccount } from "@/app/actions/charityAccounts";
@@ -24,16 +24,24 @@ import { charityMemberLabel } from "@/lib/charityPermissions";
 import { CharityAccountSheet, type SheetState } from "./CharityAccountSheet";
 import type { AccountRow, CharityRow, Membership } from "./types";
 
+type StatusFilter = "all" | "official" | "member";
+
+const STATUS_OPTIONS: { id: StatusFilter; label: string }[] = [
+  { id: "all", label: "الكل" },
+  { id: "official", label: "رسمي" },
+  { id: "member", label: "عضو" },
+];
+
+/** صفُّ العرض: عضويّةٌ في جمعية — أو حسابٌ لا عضويّةَ له بعد. */
+type Row = { account: AccountRow; membership: Membership | null };
+
 /**
- * حسابات الجمعيات — شاشةُ موارد بشرية كشاشة موظّفي زاد.
+ * حسابات الجمعيات — شاشةُ موارد بشريّة بهيئة شاشة موظّفي زاد.
  *
- * **وكانت نموذجاً في نافذةٍ وجدولاً تحته**: الحسابُ صفٌّ واحدٌ مهما خدم من
- * جمعيات، ووصولُه في كلٍّ منها لا يُرى إلا بفتح لوحٍ منفصل. فصار الصفُّ
- * يعرض عضويّاتِه شاراتٍ تُنقر، فيُقرأ «أين هو وبأي صفة» من الجدول.
- *
- * **والضمُّ إلى جمعيةٍ أخرى من الصفِّ نفسِه**: الحسابُ واحدٌ لصاحبه، وكان
- * ضمُّه إلى جمعيةٍ ثانيةٍ متعذِّراً — فيُنشأ له حسابٌ ثانٍ برقمه، والقاعدةُ
- * تردُّه.
+ * **ووحدةُ الصفِّ عضويّةٌ لا حساب**: السؤالُ «من يعمل في أيِّ جمعيةٍ وبأيِّ
+ * صفة»، والمسمّى والخدماتُ والصلاحيّاتُ كلُّها لجمعيةٍ بعينها. وحسابٌ في
+ * جمعيّتين يُقرأ صفّين، وهو الصواب: هو عضوان في العمل وإن كان حساباً واحداً
+ * في القاعدة. وحسابٌ بلا عضويّةٍ يُعرض صفّاً كي لا يختفي من يحتاج إسناداً.
  */
 export default function CharityAccountsClient({
   charities,
@@ -48,46 +56,27 @@ export default function CharityAccountsClient({
   const [busy, start] = useTransition();
   const [query, setQuery] = useState("");
   const [charityFilter, setCharityFilter] = useState("all");
+  const [status, setStatus] = useState<StatusFilter>("all");
   const [sheet, setSheet] = useState<SheetState | null>(null);
   const [toDelete, setToDelete] = useState<AccountRow | null>(null);
+  const menu = useRowMenu();
 
-  const stats = useMemo(() => {
-    const officials = accounts.filter((a) => a.memberships.some((m) => m.isOfficial)).length;
-    const multi = accounts.filter((a) => a.memberships.length > 1).length;
-    // جمعيةٌ بلا حسابٍ رسميّ لا تستطيع منحَ أحد — وهو أهمُّ رقمٍ هنا.
-    const withOfficial = new Set(
-      accounts.flatMap((a) => a.memberships.filter((m) => m.isOfficial).map((m) => m.charityId))
-    );
-    return {
-      total: accounts.length,
-      officials,
-      multi,
-      orphanCharities: charities.filter((c) => !withOfficial.has(c.id)).length,
-    };
-  }, [accounts, charities]);
-
-  /**
-   * صفٌّ لكلِّ عضويّةٍ لا لكلِّ حساب.
-   *
-   * **ووحدةُ هذه الشاشة عضويّةٌ لا حساب**: السؤالُ «من يعمل في أيِّ جمعيةٍ
-   * وبأيِّ صفة»، والمسمّى والخدماتُ والصلاحيّاتُ كلُّها لجمعيةٍ بعينها. وحسابٌ
-   * في جمعيّتين يُقرأ صفّين، وهو الصواب: هو شخصان في العمل وإن كان حساباً
-   * واحداً في القاعدة. وحسابٌ بلا عضويّةٍ يُعرض صفّاً كي لا يختفي.
-   */
-  const allRows = useMemo(
+  const allRows: Row[] = useMemo(
     () =>
-      accounts.flatMap((account) =>
+      accounts.flatMap<Row>((account) =>
         account.memberships.length === 0
-          ? [{ account, membership: null as Membership | null }]
+          ? [{ account, membership: null }]
           : account.memberships.map((membership) => ({ account, membership }))
       ),
     [accounts]
   );
 
-  const rows = useMemo(() => {
+  const visible = useMemo(() => {
     const q = query.trim();
     return allRows.filter(({ account, membership }) => {
       if (charityFilter !== "all" && membership?.charityId !== charityFilter) return false;
+      if (status === "official" && !membership?.isOfficial) return false;
+      if (status === "member" && (!membership || membership.isOfficial)) return false;
       if (!q) return true;
       return (
         account.name.includes(q) ||
@@ -95,9 +84,32 @@ export default function CharityAccountsClient({
         (membership?.charityName.includes(q) ?? false)
       );
     });
-  }, [allRows, query, charityFilter]);
+  }, [allRows, query, charityFilter, status]);
 
-  const filtered = query.trim() !== "" || charityFilter !== "all";
+  const stats = useMemo(() => {
+    const officials = allRows.filter((r) => r.membership?.isOfficial).length;
+    const withOfficial = new Set(
+      allRows.filter((r) => r.membership?.isOfficial).map((r) => r.membership!.charityId)
+    );
+    return {
+      accounts: accounts.length,
+      memberships: allRows.filter((r) => r.membership).length,
+      officials,
+      orphans: charities.filter((c) => !withOfficial.has(c.id)).length,
+    };
+  }, [allRows, accounts.length, charities]);
+
+  const filtered = query.trim() !== "" || charityFilter !== "all" || status !== "all";
+  const clearFilters = () => {
+    setQuery("");
+    setCharityFilter("all");
+    setStatus("all");
+  };
+
+  /** الصفُّ المفتوحُ قائمتُه — بمعرّفٍ مركَّبٍ لأنّ الحسابَ قد يتكرّر. */
+  const menuRow = visible.find(
+    (r) => `${r.account.id}:${r.membership?.charityId ?? "none"}` === menu.anchor?.id
+  );
 
   const remove = () => {
     if (!toDelete) return;
@@ -115,17 +127,16 @@ export default function CharityAccountsClient({
   };
 
   return (
-    <div className="space-y-6 pb-10">
+    <div className="space-y-6 pb-10 text-slate-900 dark:text-slate-100">
       <PageHeader
         crumbs={[{ label: "لوحة التحكم", href: "/main/admin" }, { label: "حسابات الجمعيات" }]}
-        icon={<Users className="size-6" />}
         title="حسابات الجمعيات"
         description="حسابات موظفي الجمعيات: أين هو عضو، وبأي صفة، وما يصل إليه من خدمات وصلاحيات."
         actions={
           canManage ? (
             <button type="button" onClick={() => setSheet({ mode: "add" })} className={btn.primary}>
               <Plus className="size-4" />
-              حساب جديد
+              إضافة حساب
             </button>
           ) : undefined
         }
@@ -133,14 +144,32 @@ export default function CharityAccountsClient({
 
       <StatStrip
         items={[
-          { label: "الحسابات", value: stats.total, hint: `في ${charities.length} جمعية` },
-          { label: "حسابات رسمية", value: stats.officials, hint: "تمنح غيرها", dot: "active" },
-          { label: "يخدم أكثر من جمعية", value: stats.multi },
+          {
+            label: "الحسابات",
+            value: stats.accounts,
+            hint: `${stats.memberships} عضوية`,
+            onClick: clearFilters,
+          },
+          {
+            label: "حسابات رسمية",
+            value: stats.officials,
+            hint: "تمنح غيرها",
+            dot: "active",
+            onClick: () => setStatus("official"),
+            selected: status === "official",
+          },
+          {
+            label: "أعضاء",
+            value: stats.memberships - stats.officials,
+            hint: "بصلاحيات محددة",
+            onClick: () => setStatus("member"),
+            selected: status === "member",
+          },
           {
             label: "جمعيات بلا حساب رسمي",
-            value: stats.orphanCharities,
-            hint: stats.orphanCharities > 0 ? "لا تستطيع منح أحد" : undefined,
-            dot: stats.orphanCharities > 0 ? "danger" : "muted",
+            value: stats.orphans,
+            hint: stats.orphans > 0 ? "لا تستطيع منح أحد" : "كلها مغطاة",
+            dot: stats.orphans > 0 ? "danger" : "muted",
           },
         ]}
       />
@@ -153,25 +182,21 @@ export default function CharityAccountsClient({
           placeholder="ابحث بالاسم أو الجوال أو الجمعية"
           label="بحث في الحسابات"
         />
-        <Select
-          value={charityFilter}
-          onSelect={setCharityFilter}
-          placeholder="كل الجمعيات"
-          options={[
-            { value: "all", label: "كل الجمعيات" },
-            ...charities.map((c) => ({ value: c.id, label: c.name })),
-          ]}
-          className="min-w-44"
-        />
+        <div className="flex items-center gap-2">
+          <Segmented options={STATUS_OPTIONS} value={status} onChange={setStatus} label="الصفة" />
+          <Select
+            value={charityFilter}
+            onSelect={setCharityFilter}
+            placeholder="كل الجمعيات"
+            options={[
+              { value: "all", label: "كل الجمعيات" },
+              ...charities.map((c) => ({ value: c.id, label: c.name })),
+            ]}
+            className="min-w-40"
+          />
+        </div>
         {filtered && (
-          <button
-            type="button"
-            onClick={() => {
-              setQuery("");
-              setCharityFilter("all");
-            }}
-            className={cx(btn.ghost, "md:ms-auto")}
-          >
+          <button type="button" onClick={clearFilters} className={cx(btn.ghost, "md:ms-auto")}>
             <X className="size-3.5" />
             مسح التصفية
           </button>
@@ -179,139 +204,232 @@ export default function CharityAccountsClient({
       </div>
 
       <TableShell
-        footer={
-          rows.length === allRows.length
-            ? `${allRows.length} عضوية في ${accounts.length} حساب`
-            : `${rows.length} من ${allRows.length}`
-        }
         empty={
-          rows.length === 0 ? (
+          visible.length === 0 ? (
             <EmptyState
               icon={<Users className="size-5" />}
               title={accounts.length === 0 ? "لا حسابات بعد" : "لا نتائج مطابقة"}
               description={
                 accounts.length === 0
                   ? "أنشئ حسابا وأسنده إلى جمعية، ثم حدد خدماته وصلاحياته فيها."
-                  : "امسح التصفية أو جرب كلمة أخرى."
+                  : "جرّب كلمة بحث أخرى أو امسح التصفية."
+              }
+              action={
+                accounts.length === 0 ? (
+                  canManage ? (
+                    <button type="button" onClick={() => setSheet({ mode: "add" })} className={btn.primary}>
+                      <Plus className="size-4" />
+                      إضافة حساب
+                    </button>
+                  ) : undefined
+                ) : (
+                  <button type="button" onClick={clearFilters} className={btn.secondary}>
+                    مسح التصفية
+                  </button>
+                )
               }
             />
+          ) : undefined
+        }
+        footer={
+          visible.length > 0 ? (
+            <>
+              عرض <span className={MONO}>{visible.length}</span> من{" "}
+              <span className={MONO}>{allRows.length}</span>
+            </>
           ) : undefined
         }
       >
         <thead>
           <tr className={theadRowClass}>
             <Th>العضو</Th>
-            <Th>الجمعية</Th>
-            <Th>المسمى</Th>
-            <Th>الخدمات</Th>
-            <Th>الصلاحيات</Th>
-            {canManage && <Th />}
+            <Th className="hidden sm:table-cell">الجمعية</Th>
+            <Th className="hidden md:table-cell">المسمى</Th>
+            <Th className="hidden lg:table-cell">الوصول</Th>
+            <Th>الصفة</Th>
+            <th className="w-12" aria-label="إجراءات" />
           </tr>
         </thead>
         <tbody className={tbodyClass}>
-          {rows.map(({ account, membership }) => (
-            <tr
-              key={`${account.id}:${membership?.charityId ?? "none"}`}
-              onClick={() =>
-                canManage &&
-                membership &&
-                setSheet({ mode: "access", account, charityId: membership.charityId })
+          {visible.map(({ account, membership }) => {
+            const key = `${account.id}:${membership?.charityId ?? "none"}`;
+            const official = !!membership?.isOfficial;
+            const open = () => {
+              if (canManage && membership) {
+                setSheet({ mode: "access", account, charityId: membership.charityId });
               }
-              className={cx(canManage && membership && rowClass)}
-            >
-              <td className={tdClass}>
-                <span className="block font-medium text-slate-900 dark:text-slate-100">
-                  {account.name}
-                </span>
-                <span className={cx(MONO, "block text-meta text-slate-400")} dir="ltr">
-                  {account.phone}
-                </span>
-              </td>
+            };
+            const nothing =
+              !!membership &&
+              !official &&
+              membership.services.length === 0 &&
+              membership.permissions.length === 0;
 
-              <td className={tdClass}>
-                {membership ? (
-                  <span className="flex items-center gap-1.5 text-slate-700 dark:text-slate-200">
-                    {membership.isOfficial && (
-                      <ShieldCheck aria-hidden className="size-3.5 text-primary dark:text-teal-300" />
-                    )}
-                    {membership.charityName}
-                  </span>
-                ) : (
-                  <span className="text-slate-400">بلا عضوية</span>
+            return (
+              <tr
+                key={key}
+                onClick={open}
+                className={cx(
+                  "transition-colors",
+                  canManage && membership && "cursor-pointer hover:bg-slate-50/80 dark:hover:bg-slate-800/40",
+                  membership && !membership.isActive && "text-slate-500"
                 )}
-              </td>
-
-              <td className={cx(tdClass, "text-slate-500 dark:text-slate-400")}>
-                {membership
-                  ? charityMemberLabel(membership.isOfficial, membership.title) || "—"
-                  : "—"}
-              </td>
-
-              <td className={tdClass}>
-                {!membership ? (
-                  <span className="text-slate-400">—</span>
-                ) : membership.isOfficial ? (
-                  <Badge tone="brand">كل الخدمات</Badge>
-                ) : membership.services.length === 0 ? (
-                  <span className="text-meta text-slate-400">لا خدمة</span>
-                ) : (
-                  <span className="flex flex-wrap gap-1">
-                    {membership.services.slice(0, 2).map((name) => (
-                      <Badge key={name} tone="neutral">
-                        {name}
-                      </Badge>
-                    ))}
-                    {membership.services.length > 2 && (
-                      <Badge tone="neutral">+{membership.services.length - 2}</Badge>
-                    )}
-                  </span>
-                )}
-              </td>
-
-              <td className={cx(tdClass, MONO, "text-slate-500")}>
-                {!membership ? "—" : membership.isOfficial ? "الكل" : membership.permissions.length}
-              </td>
-
-              {canManage && (
-                <td className={cx(tdClass, "text-end")}>
-                  <div className="flex items-center justify-end gap-1">
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setSheet({ mode: "link", account });
-                      }}
-                      title="ضم إلى جمعية أخرى"
-                      aria-label="ضم إلى جمعية أخرى"
-                      className={btn.icon}
-                    >
-                      <Building2 className="size-4" />
-                    </button>
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setToDelete(account);
-                      }}
-                      title="حذف الحساب"
-                      aria-label="حذف الحساب"
-                      className={btn.iconDanger}
-                    >
-                      <Trash2 className="size-4" />
-                    </button>
+              >
+                <td className="px-4 py-3">
+                  <div className="flex items-center gap-3">
+                    <Avatar name={account.name} />
+                    <div className="min-w-0">
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          open();
+                        }}
+                        disabled={!canManage || !membership}
+                        className="block max-w-[16rem] truncate text-right text-body font-medium text-slate-900 outline-none hover:underline focus-visible:underline disabled:no-underline dark:text-slate-100"
+                      >
+                        {account.name}
+                      </button>
+                      <span className={cx(MONO, "block text-meta text-slate-500 dark:text-slate-400")} dir="ltr">
+                        {account.phone}
+                      </span>
+                      <span className="block text-meta text-slate-500 sm:hidden">
+                        {membership?.charityName ?? "بلا عضوية"}
+                      </span>
+                    </div>
                   </div>
                 </td>
-              )}
-            </tr>
-          ))}
+
+                <td className="hidden px-4 py-3 sm:table-cell">
+                  {membership ? (
+                    <span className="flex items-center gap-1.5 text-body text-slate-700 dark:text-slate-200">
+                      {official && (
+                        <ShieldCheck aria-hidden className="size-3.5 shrink-0 text-primary dark:text-teal-300" />
+                      )}
+                      {membership.charityName}
+                    </span>
+                  ) : (
+                    <span className="text-body text-amber-600 dark:text-amber-400">لا شيء</span>
+                  )}
+                </td>
+
+                <td className="hidden px-4 py-3 md:table-cell">
+                  {membership ? (
+                    <Badge tone={official ? "brand" : "neutral"}>
+                      {charityMemberLabel(official, membership.title) || "بلا مسمى"}
+                    </Badge>
+                  ) : (
+                    <span className="text-body text-slate-400">—</span>
+                  )}
+                </td>
+
+                <td className="hidden px-4 py-3 lg:table-cell">
+                  {!membership ? (
+                    <span className="text-body text-slate-400">—</span>
+                  ) : official ? (
+                    <span className="text-body text-slate-600 dark:text-slate-300">وصول كامل</span>
+                  ) : nothing ? (
+                    <Badge tone="warn">بلا صلاحيات</Badge>
+                  ) : (
+                    <span className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-body text-slate-600 dark:text-slate-300">
+                      <Count n={membership.services.length} unit="خدمة" />
+                      <Dot />
+                      <Count n={membership.permissions.length} unit="صلاحية" />
+                    </span>
+                  )}
+                </td>
+
+                <td className="px-4 py-3">
+                  <span className="inline-flex items-center gap-2 text-body">
+                    <span
+                      aria-hidden
+                      className={cx(
+                        "size-2 rounded-full",
+                        !membership
+                          ? "bg-amber-500 shadow-[0_0_0_3px_rgb(245_158_11/0.15)]"
+                          : membership.isActive
+                            ? "bg-emerald-500 shadow-[0_0_0_3px_rgb(16_185_129/0.15)]"
+                            : "bg-slate-400"
+                      )}
+                    />
+                    <span
+                      className={
+                        membership?.isActive ? "text-slate-700 dark:text-slate-200" : "text-slate-500"
+                      }
+                    >
+                      {!membership
+                        ? "بلا إسناد"
+                        : official
+                          ? "حساب الجمعية"
+                          : membership.isActive
+                            ? "نشط"
+                            : "موقوف"}
+                    </span>
+                  </span>
+                </td>
+
+                <td className="px-2 py-3">
+                  <RowMenuTrigger
+                    label={`إجراءات ${account.name}`}
+                    expanded={menu.anchor?.id === key}
+                    onToggle={(e) => menu.toggle(e, key)}
+                  />
+                </td>
+              </tr>
+            );
+          })}
         </tbody>
       </TableShell>
 
-      {stats.orphanCharities > 0 && (
-        <p className="flex items-center gap-1.5 text-meta text-slate-500 dark:text-slate-400">
-          <UserPlus aria-hidden className="size-3.5 text-slate-400" />
-          {stats.orphanCharities} جمعية بلا حساب رسمي — ولا يستطيع أحد داخلها منح الصلاحيات حتى
-          ينشأ لها واحد.
+      <RowMenu anchor={menu.anchor}>
+        {menuRow && (
+          <>
+            <MenuItem
+              icon={<Pencil className="size-4" />}
+              disabled={!canManage || !menuRow.membership}
+              onClick={() => {
+                if (menuRow.membership) {
+                  setSheet({
+                    mode: "access",
+                    account: menuRow.account,
+                    charityId: menuRow.membership.charityId,
+                  });
+                }
+                menu.close();
+              }}
+            >
+              تعديل الوصول في هذه الجمعية
+            </MenuItem>
+            <MenuItem
+              icon={<Building2 className="size-4" />}
+              disabled={!canManage}
+              onClick={() => {
+                setSheet({ mode: "link", account: menuRow.account });
+                menu.close();
+              }}
+            >
+              ضم إلى جمعية أخرى
+            </MenuItem>
+            <MenuSeparator />
+            <MenuItem
+              icon={<Trash2 className="size-4" />}
+              tone="danger"
+              disabled={!canManage}
+              onClick={() => {
+                setToDelete(menuRow.account);
+                menu.close();
+              }}
+            >
+              حذف الحساب
+            </MenuItem>
+          </>
+        )}
+      </RowMenu>
+
+      {stats.orphans > 0 && (
+        <p className="text-meta text-slate-500 dark:text-slate-400">
+          {stats.orphans} جمعية بلا حساب رسمي — ولا يستطيع أحد داخلها منح الصلاحيات حتى ينشأ لها
+          واحد.
         </p>
       )}
 

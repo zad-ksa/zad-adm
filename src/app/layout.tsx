@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import ToastHost from "@/components/console/ToastHost";
 import DialogHost from "@/components/console/DialogHost";
+import GlobalFileDrop from "@/components/GlobalFileDrop";
 import { inter, cairo } from "@/app/siteFonts";
 import { Analytics } from "@vercel/analytics/next";
 
@@ -79,6 +80,8 @@ export default function RootLayout({
               والصفحات العامة معاً. انظر console/toastBus.ts */}
           <ToastHost />
           <DialogHost />
+          {/* الإفلاتُ واللصقُ لكلِّ خانة إرفاقٍ في الموقع. انظر GlobalFileDrop.tsx */}
+          <GlobalFileDrop />
           <Analytics />
         </ThemeProvider>
       </body>

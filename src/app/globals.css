@@ -467,3 +467,15 @@ body {
     animation: none !important;
   }
 }
+
+/* خانةُ إرفاقٍ أثناء سحب ملفٍّ فوق الصفحة — هنا يُفلَت. انظر GlobalFileDrop.tsx */
+[data-file-zone] {
+  outline: 2px dashed var(--color-primary);
+  outline-offset: 3px;
+  border-radius: 0.5rem;
+  background-color: rgb(15 118 110 / 0.06);
+}
+.dark [data-file-zone] {
+  outline-color: rgb(45 212 191);
+  background-color: rgb(45 212 191 / 0.08);
+}

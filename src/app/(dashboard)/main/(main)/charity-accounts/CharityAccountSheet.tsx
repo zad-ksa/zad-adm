@@ -106,7 +106,15 @@ export function CharityAccountSheet({
       void lookupCharityAccountByPhone(phone)
         .then((res) => {
           if (mine !== seq.current) return;
-          setFound(res.success && res.found ? res.account : null);
+          const hit = res.success && res.found ? res.account : null;
+          setFound(hit);
+          if (!hit) return;
+          // ويُملأ مسمّاه القائم، وتُفرَّغ جمعيةٌ هو فيها بالفعل: اختيارٌ
+          // صار مقفلاً لا يُترك محدَّداً فيُحفظ عليه.
+          setTitle(hit.title || "FULL_TIME");
+          setCharityId((current) =>
+            current && hit.memberships.some((m) => m.charityId === current) ? "" : current
+          );
         })
         .finally(() => {
           if (mine === seq.current) setChecking(false);
@@ -115,32 +123,43 @@ export function CharityAccountSheet({
     return () => clearTimeout(timer);
   }, [phone, adding]);
 
-  /** الجمعياتُ التي ليس الحسابُ عضواً فيها — وهي وحدَها تُعرض عند الضمّ. */
-  const linkTargets = (account: AccountRow) =>
-    charities.filter((c) => !account.memberships.some((m) => m.charityId === c.id));
+  /**
+   * الحسابُ الذي يُعمل عليه: المفتوحُ من الجدول، أو الذي وجده البحثُ بالجوّال.
+   *
+   * **فالبحثُ يُكمل ولا يصرف**: من وجد صاحبَ الرقم لا يُقال له «أغلق اللوح
+   * وابدأ من جديد» — يُملأ اسمُه ويُقفل، وتُعرض الجمعياتُ وما هو عضوٌ فيه
+   * منها مقفلٌ لا يُختار، ويُكمل المسمّى والخدماتِ والصلاحياتِ في مكانه.
+   */
+  const working =
+    state.mode === "add"
+      ? found
+        ? { id: found.id, memberships: found.memberships }
+        : null
+      : { id: state.account.id, memberships: state.account.memberships };
 
   const submit = () => {
     setError(null);
+    if (!charityId) return setError("اختر الجمعية");
 
-    if (state.mode === "access" || state.mode === "link") {
-      const account = state.account;
-      if (!charityId) return setError("اختر الجمعية");
+    // حسابٌ قائم: تُكتب عضويّتُه في هذه الجمعية — تُنشأ إن لم تكن.
+    if (working) {
       start(async () => {
         const res = await setCharityAccountAccess({
-          accountId: account.id,
+          accountId: working.id,
           charityId,
           isOfficial,
           permissions,
           services,
+          title: state.mode === "access" ? null : title,
         });
         if (!res.success) return setError(res.error ?? "تعذر الحفظ");
-        notify("ok", state.mode === "link" ? "ضم الحساب إلى الجمعية." : "حفظ الوصول.");
+        notify("ok", state.mode === "access" ? "حفظ الوصول." : "ضم الحساب إلى الجمعية.");
         onSaved();
       });
       return;
     }
 
-    if (!name.trim() || !phone.trim() || !charityId) {
+    if (!name.trim() || !phone.trim()) {
       return setError("الاسم والجوال والجمعية مطلوبة");
     }
     start(async () => {
@@ -161,14 +180,28 @@ export function CharityAccountSheet({
 
   const heading =
     state.mode === "add"
-      ? "حساب جديد"
+      ? found
+        ? `ضم «${found.name}» إلى جمعية`
+        : "حساب جديد"
       : state.mode === "link"
         ? `ضم «${state.account.name}» إلى جمعية`
         : `وصول «${state.account.name}»`;
 
-  const charityOptions = (
-    state.mode === "link" ? linkTargets(state.account) : charities
-  ).map((c) => ({ value: c.id, label: c.name }));
+  /**
+   * الجمعياتُ كلُّها، وما هو عضوٌ فيه منها **مقفلٌ لا محذوف**.
+   *
+   * فحذفُها يُخفي الخبر: من لم يجد الجمعيةَ في القائمة ظنَّ عطلاً. وقفلُها
+   * باسمها يقول «هو فيها بالفعل» — والخبرُ جوابُ السؤال لا حجبُه.
+   */
+  const charityOptions = charities.map((c) => {
+    const member = working?.memberships.find((m) => m.charityId === c.id);
+    const locked = !!member && state.mode !== "access";
+    return {
+      value: c.id,
+      label: locked ? `${c.name} — عضو فيها` : c.name,
+      disabled: locked,
+    };
+  });
 
   return (
     <Sheet
@@ -193,7 +226,7 @@ export function CharityAccountSheet({
           </button>
           <button type="submit" disabled={busy} className={btn.primary}>
             {busy ? <Loader2 className="size-4 animate-spin" /> : <Check className="size-4" />}
-            {state.mode === "add" ? "إنشاء الحساب" : "حفظ"}
+            {state.mode === "add" ? (found ? "ضم إلى الجمعية" : "إنشاء الحساب") : "حفظ"}
           </button>
         </>
       }
@@ -219,32 +252,43 @@ export function CharityAccountSheet({
               </div>
             </Field>
 
-            {/* ووجودُ الحساب يُقال قبل الكتابة لا بعد الحفظ: الرقمُ فريدٌ في
-                القاعدة، فإنشاءٌ ثانٍ به مردودٌ لا محالة. */}
+            {/* ووجودُ الحساب خبرٌ يُكمل به لا صرفٌ عنه: الرقمُ فريدٌ في
+                القاعدة فلا يُنشأ حسابٌ ثانٍ، ويُضمُّ صاحبُه إلى جمعيةٍ أخرى
+                من هذا اللوح نفسِه. */}
             {found && (
-              <Note tone="warn">
+              <Note tone="brand">
                 <span className="font-semibold">{found.name}</span> له حساب في المنصة
                 {found.memberships.length > 0 && (
                   <>
-                    {" "}— عضو في{" "}
-                    {found.memberships.map((m) => m.charityName).join("، ")}
+                    {" "}— عضو في {found.memberships.map((m) => m.charityName).join("، ")}
                   </>
                 )}
-                . لا ينشأ له حساب ثان؛ أغلق هذا اللوح واضممه من صفه في الجدول.
+                . اختر جمعية أخرى لتضمه إليها، وحدد خدماته وصلاحياته فيها.
               </Note>
             )}
 
-            <Field id="ca-name" label="الاسم">
+            <Field
+              id="ca-name"
+              label="الاسم"
+              // والاسمُ لا يُعدَّل من هنا: الحسابُ قائمٌ لصاحبه، وتغييرُه
+              // يُسمّيه في جمعياته كلِّها من شاشةِ ضمٍّ إلى واحدة.
+              hint={found ? "اسم الحساب القائم — لا يعدل من هنا." : undefined}
+            >
               <input
                 id="ca-name"
-                value={name}
+                value={found ? found.name : name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="الاسم الثلاثي"
-                className={field}
+                readOnly={!!found}
+                className={cx(field, found && "bg-slate-50 text-slate-500 dark:bg-slate-900")}
               />
             </Field>
 
-            <Field id="ca-title" label="المسمى">
+            <Field
+              id="ca-title"
+              label="المسمى"
+              hint={found ? "على الحساب نفسه ومشترك مع كل جمعياته." : undefined}
+            >
               <Select value={title} onSelect={setTitle} options={TITLES} placeholder="اختر المسمى" />
             </Field>
           </>
@@ -255,12 +299,12 @@ export function CharityAccountSheet({
             id="ca-charity"
             label="الجمعية"
             hint={
-              state.mode === "link"
-                ? "الجمعيات التي ليس عضوا فيها بعد."
+              state.mode === "link" || found
+                ? "ما هو عضو فيه مقفل لا يختار."
                 : "جمعية واحدة الآن، وتضاف غيرها من صف الحساب."
             }
           >
-            {charityOptions.length === 0 ? (
+            {charityOptions.every((o) => o.disabled) ? (
               <Note tone="brand">هو عضو في كل الجمعيات المتاحة.</Note>
             ) : (
               <Select

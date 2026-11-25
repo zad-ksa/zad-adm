@@ -12,21 +12,24 @@ import { cx } from "@/components/console/ui";
  *
  * ومشتركٌ بين إنشاء الحساب وتعديل وصوله: نسختان تفترقان عند أوّل صلاحيّةٍ
  * تُضاف، فيُنشأ الحسابُ بما لا يُعدَّل.
+ *
+ * **ويُبلّغ تغييرَه في نداءٍ واحدٍ (`onChange`) لا نداءين**: إلغاءُ خدمةٍ
+ * يُسقط صلاحيّاتِها معها، فيُبلَّغ الاثنان معاً. وكان نداءين، فيبني كلٌّ منهما
+ * على نسخةٍ قديمةٍ من الحال ويُلغي الثاني ما كتبه الأوّل — فيُنقَر اسمُ الخدمة
+ * ولا يتغيّر لونُها، ويُظنّ العطلُ في الرسم وهو في الحال.
  */
 export default function AccessPicker({
   charityServices,
   services,
   permissions,
-  onServices,
-  onPermissions,
+  onChange,
   disabled,
 }: {
   /** خدماتُ زادٍ المقدَّمةُ لهذه الجمعية. */
   charityServices: string[];
   services: string[];
   permissions: string[];
-  onServices: (next: string[]) => void;
-  onPermissions: (next: string[]) => void;
+  onChange: (next: { services: string[]; permissions: string[] }) => void;
   disabled?: boolean;
 }) {
   const groups = charityPermissionGroups(services);
@@ -36,12 +39,14 @@ export default function AccessPicker({
     // وتُنقّى الصلاحيّاتُ التي لا تبقى لها خدمة: قيمةٌ تَثبُت في الصفِّ ولا يظهر
     // لها مربَّعٌ يُلغيها أسوأُ من قيمةٍ لا تُمنح.
     const allowed = new Set(charityPermissionGroups(next).flatMap((g) => g.permissions.map((p) => p.id)));
-    onServices(next);
-    onPermissions(permissions.filter((id) => allowed.has(id)));
+    onChange({ services: next, permissions: permissions.filter((id) => allowed.has(id)) });
   };
 
   const togglePermission = (id: string) => {
-    onPermissions(permissions.includes(id) ? permissions.filter((p) => p !== id) : [...permissions, id]);
+    onChange({
+      services,
+      permissions: permissions.includes(id) ? permissions.filter((p) => p !== id) : [...permissions, id],
+    });
   };
 
   const chip = (active: boolean) =>

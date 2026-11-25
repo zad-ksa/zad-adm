@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { Building2, LogOut, Moon, Sun, User } from "lucide-react";
 import { useTheme } from "next-themes";
+import { useThemeSwitch } from "@/components/console/useThemeSwitch";
 import { logout } from "@/app/actions/auth";
 import PortalNotices from "./PortalNotices";
 import { charityMemberLabel } from "@/lib/charityPermissions";
@@ -55,7 +56,8 @@ export default function PortalTopBar({
   // المسمّى وسمٌ عربيٌّ لا قيمةَ تعدادٍ: «FULL_TIME» تحت اسم الموظَّف ليست مسمّىً.
   // وحسابُ الجمعية يُكتب باسمه لا بمسمّىً وظيفيٍّ لم يكن له يوماً.
   const titleLabel = charityMemberLabel(isOfficial, accountTitle) || null;
-  const { resolvedTheme, setTheme } = useTheme();
+  const { resolvedTheme } = useTheme();
+  const { switchTheme } = useThemeSwitch();
   const [open, setOpen] = useState(false);
   const boxRef = useRef<HTMLDivElement>(null);
 
@@ -86,7 +88,7 @@ export default function PortalTopBar({
           أوّل تفاعل. */}
       <button
         type="button"
-        onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}
+        onClick={(e) => switchTheme(e)}
         title="تبديل الوضع الداكن/الفاتح"
         aria-label="تبديل الوضع الداكن/الفاتح"
         className="grid size-9 place-items-center rounded-full bg-slate-100 text-slate-500 outline-none transition hover:text-primary focus-visible:ring-2 focus-visible:ring-primary/40 dark:bg-slate-800 dark:text-slate-400"

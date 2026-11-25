@@ -1,6 +1,7 @@
 "use client";
 
 import { useTheme } from "next-themes";
+import { useThemeSwitch } from "@/components/console/useThemeSwitch";
 import Link from "next/link";
 import { ArrowRight, Shield, Lock, FileText, Database, Globe, Eye, UserCheck, Bell, Mail, Sun, Moon } from "lucide-react";
 import ZadLogo from "@/components/ZadLogo";
@@ -8,7 +9,8 @@ import { cairo } from "@/app/siteFonts";
 import { useEffect, useState } from "react";
 
 export default function PrivacyPolicyPage() {
-  const { theme, setTheme } = useTheme();
+  const { theme } = useTheme();
+  const { switchTheme } = useThemeSwitch();
   const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
@@ -220,7 +222,7 @@ export default function PrivacyPolicyPage() {
       
       {/* Theme Toggle */}
       <button
-        onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+        onClick={(e) => switchTheme(e)}
         className="fixed top-6 left-6 p-3 rounded-full bg-white/80 dark:bg-slate-800/80 hover:bg-white dark:hover:bg-slate-700 border border-slate-200 dark:border-white/10 text-slate-700 dark:text-slate-200 backdrop-blur-md transition-all shadow-sm z-50"
         aria-label="Toggle Theme"
       >

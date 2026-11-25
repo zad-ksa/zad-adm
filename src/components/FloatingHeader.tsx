@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { User, Bell, Moon, Sun, Edit, ShieldAlert, LogOut, Settings, Trash2 } from "lucide-react";
 import Image from "next/image";
 import { useTheme } from "next-themes";
+import { useThemeSwitch } from "@/components/console/useThemeSwitch";
 import { markNotificationAsRead, markAllNotificationsAsRead, deleteNotification, deleteAllNotifications } from "@/app/actions/notifications";
 import { useRoleLabels } from "@/components/RoleLabelsProvider";
 import Link from "next/link";
@@ -24,7 +25,8 @@ export default function FloatingHeader({
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const [localCount, setLocalCount] = useState(appNotifications?.count || 0);
   const [localNotifs, setLocalNotifs] = useState(appNotifications?.notifications || []);
-  const { theme, setTheme } = useTheme();
+  const { theme } = useTheme();
+  const { switchTheme } = useThemeSwitch();
   const [mounted, setMounted] = useState(false);
   const notifRef = useRef<HTMLDivElement>(null);
   const profileRef = useRef<HTMLDivElement>(null);
@@ -132,7 +134,7 @@ export default function FloatingHeader({
         {/* Theme Toggle */}
         {mounted && (
           <button
-            onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+            onClick={(e) => switchTheme(e)}
             className="flex items-center justify-center w-9 h-9 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-primary transition-colors cursor-pointer"
             title="تبديل الوضع الداكن/الفاتح"
           >

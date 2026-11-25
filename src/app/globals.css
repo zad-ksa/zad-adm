@@ -439,3 +439,31 @@ body {
   from { opacity: 0; }
   to { opacity: 1; }
 }
+
+/* ── تبديل المظهر: دائرةٌ تتّسع ───────────────────────────────────────────
+   المتصفّحُ يُحرّك الصورتين تلاشياً افتراضاً، ونحن نُحرّك قناعَ الجديدة
+   وحدَها (انظر `useThemeSwitch`) — فيُطفأ تحريكُه لئلّا يجتمع تلاشٍ واتّساع
+   فيبهت المشهد. والجديدةُ فوق القديمة، وإلّا اتّسعت الدائرةُ تحتها فلا تُرى. */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
+}
+
+::view-transition-old(root) {
+  z-index: 1;
+}
+
+::view-transition-new(root) {
+  z-index: 2;
+}
+
+/* ومن طلب تقليلَ الحركة لا انتقالَ له أصلاً — والخطّاف يُبدّل مباشرةً،
+   وهذا حارسٌ ثانٍ لو بدأ انتقالٌ من مكانٍ آخر. */
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation: none !important;
+  }
+}

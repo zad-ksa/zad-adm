@@ -2,6 +2,7 @@
 
 import { useState, useTransition, useEffect, useRef } from "react";
 import { useTheme } from "next-themes";
+import { useThemeSwitch } from "@/components/console/useThemeSwitch";
 import { requestEmployeeOTP, verifyEmployeeOTP, loginWithEmployeeEmail } from "@/app/actions/auth";
 import { AlertCircle, Lock, Loader2, Phone, ArrowLeft, ShieldCheck, Sun, Moon, Home, Mail, Eye, EyeOff } from "lucide-react";
 import ZadLogo from "@/components/ZadLogo";
@@ -24,7 +25,8 @@ export default function EmployeeLoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const { theme, setTheme } = useTheme();
+  const { theme } = useTheme();
+  const { switchTheme } = useThemeSwitch();
 
   const phoneRefs = useRef<(HTMLInputElement | null)[]>([]);
   const otpRefs = useRef<(HTMLInputElement | null)[]>([]);
@@ -209,7 +211,7 @@ export default function EmployeeLoginPage() {
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex items-center justify-center px-4 py-6 relative overflow-hidden font-sans transition-colors duration-300" dir="rtl">
       {/* Theme Toggle */}
       <button
-        onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+        onClick={(e) => switchTheme(e)}
         className="absolute top-6 left-6 p-2 rounded-full bg-white/50 dark:bg-white/10 hover:bg-white/80 dark:hover:bg-white/20 border border-slate-200 dark:border-white/10 text-slate-700 dark:text-slate-200 backdrop-blur-md transition-all shadow-sm z-50"
         aria-label="Toggle Theme"
       >

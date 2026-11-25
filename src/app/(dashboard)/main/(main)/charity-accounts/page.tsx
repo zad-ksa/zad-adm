@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
 import CharityAccountsClient from "./CharityAccountsClient";
 import { hasPermission } from "@/lib/permissions";
+import { memberTitleOf } from "@/lib/charityPermissions";
 
 export default async function CharityAccountsPage() {
   const session = await getSession();
@@ -58,6 +59,8 @@ export default async function CharityAccountsPage() {
         title: a.title,
         // عضويّاتُه بتفاصيلها: منها يُفتح لوحُ تعديل الوصول لجمعيةٍ بعينها.
         memberships: a.charities.map((c) => ({
+          // ومسمّاه في هذه الجمعية، وإلّا فما على حسابه.
+          title: memberTitleOf(c.title, a.title),
           charityId: c.charityId,
           charityName: c.charity.name,
           isOfficial: c.isAdmin,

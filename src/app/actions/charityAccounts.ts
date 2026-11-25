@@ -132,6 +132,9 @@ export async function addCharityClientAccount(data: {
           create: data.charityIds.map(id => ({
             charityId: id,
             isAdmin: data.isAdmin === true,
+            // والمسمّى في العضويّة لا في الحساب وحدَه: هو مسمّاه في هذه
+            // الجمعية، وقد يختلف في غيرها.
+            title: (data.isAdmin === true ? "SYSTEM_ADMIN" : data.title) as CharityUserTitle,
             permissions,
             services: { create: servicesFor(id).map((serviceName) => ({ serviceName })) },
           }))
@@ -307,17 +310,15 @@ export async function setCharityAccountAccess(input: {
     const retitle = picked ?? auto;
 
     await prisma.$transaction([
-      ...(retitle
-        ? [
-            prisma.charityUser.update({
-              where: { id: input.accountId },
-              data: { title: retitle as CharityUserTitle },
-            }),
-          ]
-        : []),
       prisma.charityUserCharity.update({
         where: { id: link.id },
-        data: { isAdmin: input.isOfficial, permissions },
+        // والمسمّى في العضويّة: هذه جمعيةٌ واحدةٌ من جمعياته، ولا يُسمّى
+        // بها في غيرها.
+        data: {
+          isAdmin: input.isOfficial,
+          permissions,
+          ...(retitle ? { title: retitle as CharityUserTitle } : {}),
+        },
       }),
       prisma.charityMemberService.deleteMany({ where: { membershipId: link.id } }),
       ...(services.length > 0

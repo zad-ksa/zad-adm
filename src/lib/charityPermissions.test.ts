@@ -8,6 +8,7 @@ import {
   OFFICIAL_ACCOUNT_LABEL,
   RETIRED_CHARITY_PERMISSION_IDS,
   charityMemberLabel,
+  memberTitleOf,
   charityPermissionGroups,
   charityPermissionLabel,
   charityPermissionsOfService,
@@ -176,4 +177,22 @@ test("حسابُ الجمعية يُكتب مسمّاه «حساب الجمعي�
   assert.equal(charityMemberLabel(false, null), "");
   // وحسابٌ قديمٌ مسمّاه SYSTEM_ADMIN ولم يُعلَّم رسميّاً: يُقرأ وسمُه القديم.
   assert.equal(charityMemberLabel(false, "SYSTEM_ADMIN"), OFFICIAL_ACCOUNT_LABEL);
+});
+
+test("مسمّى العضو: عضويّتُه أوّلاً ثمّ حسابُه", () => {
+  assert.equal(memberTitleOf("VOLUNTEER", "CEO"), "VOLUNTEER");
+  assert.equal(memberTitleOf(null, "CEO"), "CEO");
+  assert.equal(memberTitleOf(undefined, "CEO"), "CEO");
+  assert.equal(memberTitleOf("  ", "CEO"), "CEO");
+});
+
+test("ولا مسمّى في الاثنين: نصٌّ فارغ", () => {
+  assert.equal(memberTitleOf(null, null), "");
+  assert.equal(memberTitleOf("", undefined), "");
+});
+
+test("ومسمّى العضويّة يُقرأ ولو خالف الحساب في الجمعيتين", () => {
+  // هو مديرٌ تنفيذيٌّ على حسابه، ومتطوّعٌ في هذه الجمعية.
+  assert.equal(charityTitleLabel(memberTitleOf("VOLUNTEER", "CEO")), "متطوع");
+  assert.equal(charityTitleLabel(memberTitleOf(null, "CEO")), "مدير تنفيذي");
 });

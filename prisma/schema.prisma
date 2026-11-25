@@ -262,6 +262,17 @@ model CharityUserCharity {
   // what they held, alongside their attendance history.
   isActive Boolean @default(true)
 
+  /// مسمّى صاحب الحساب **في هذه الجمعية**.
+  ///
+  /// **وليس مشتركاً**: من كان مديراً تنفيذياً في جمعيةٍ قد يكون متطوّعاً في
+  /// أخرى. وكان على `CharityUser` وحدَه، فيسافر معه إلى كلِّ جمعيةٍ يخدمها —
+  /// ويُكتب في شاشةِ ضمٍّ إلى جمعيةٍ واحدةٍ فيُسمّيه في جمعياته كلِّها.
+  ///
+  /// **و`null` تعني «ما على الحساب»**: الصفوفُ القديمةُ كُتبت قبل هذا
+  /// العمود، فتُقرأ منه — ولا تُنقل نقلاً أعمى: مسمّى الحساب قد يكون صحيحاً
+  /// في جمعيةٍ خاطئاً في أخرى، والصوابُ أن يُكتب حيث يُراجَع.
+  title CharityUserTitle?
+
   // Administrator OF THIS CHARITY — the blanket "may do anything here" flag.
   //
   // This lives on the link for the same reason `permissions` does. It used to be

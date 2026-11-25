@@ -355,7 +355,13 @@ export async function createCharityStaff(
         title: data.title as CharityUserTitle,
         isActive: true,
         charities: {
-          create: { charityId, permissions: grant.permissions, isAdmin: false },
+          create: {
+            charityId,
+            permissions: grant.permissions,
+            isAdmin: false,
+            // والمسمّى في العضويّة: الجمعيةُ تُسمّي عضوَها عندها لا عند غيرها.
+            title: data.title as CharityUserTitle,
+          },
         },
       },
       select: {
@@ -467,17 +473,13 @@ export async function updateCharityStaff(
     }
 
     await prisma.$transaction([
-      ...(titleChanged
-        ? [
-            prisma.charityUser.update({
-              where: { id: targetUserId },
-              data: { title: data.title as CharityUserTitle },
-            }),
-          ]
-        : []),
       prisma.charityUserCharity.update({
         where: { id: link.id },
-        data: { permissions, isAdmin: false },
+        data: {
+          permissions,
+          isAdmin: false,
+          ...(titleChanged ? { title: data.title as CharityUserTitle } : {}),
+        },
       }),
       ...(services === null
         ? []

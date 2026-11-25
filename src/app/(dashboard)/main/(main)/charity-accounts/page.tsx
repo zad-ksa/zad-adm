@@ -48,14 +48,14 @@ export default async function CharityAccountsPage() {
   });
 
   return (
-    <CharityAccountsClient 
-      charities={charities} 
+    <CharityAccountsClient
+      charities={charities}
+      canManage={can("manage_charity_accounts")}
       accounts={accounts.map(a => ({
         id: a.id,
         name: a.name,
         phone: a.phone,
         title: a.title,
-        charityNames: a.charities.map(c => c.charity.name),
         // عضويّاتُه بتفاصيلها: منها يُفتح لوحُ تعديل الوصول لجمعيةٍ بعينها.
         memberships: a.charities.map((c) => ({
           charityId: c.charityId,

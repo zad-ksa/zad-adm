@@ -11,6 +11,7 @@ import {
 import { logAudit } from "@/lib/auditLog";
 import { CharityUserTitle } from "@prisma/client";
 import { hashPassword, normalizeEmail, validateCredentialPair } from "@/lib/password";
+import { normalizeSaudiPhone, saudiPhoneVariants } from "@/lib/phone";
 
 export async function addCharityClientAccount(data: {
   name: string;
@@ -219,13 +220,45 @@ export async function setCharityAccountAccess(input: {
       return { success: false as const, error: "غير مصرح لك بإجراء هذه العملية" };
     }
 
-    const link = await prisma.charityUserCharity.findUnique({
+    let link = await prisma.charityUserCharity.findUnique({
       where: {
         charityUserId_charityId: { charityUserId: input.accountId, charityId: input.charityId },
       },
       select: { id: true, isAdmin: true, user: { select: { name: true } }, charity: { select: { name: true } } },
     });
-    if (!link) return { success: false as const, error: "لا عضويّةَ لهذا الحساب في هذه الجمعية" };
+
+    // **والعضويّةُ تُنشأ إن لم تكن**: الحسابُ واحدٌ لصاحبه وقد يخدم جمعيتين،
+    // وكان هذا الفعلُ يردّ «لا عضويّة» فلا سبيلَ إلى ضمِّه إلى جمعيةٍ أخرى
+    // إلّا بإنشاء حسابٍ ثانٍ برقمه — وهو ما تمنعه القاعدة. فصار منحُ الوصول
+    // في جمعيةٍ جديدةٍ ينشئ العضويّةَ، وهو المقصودُ من الفعل نفسِه.
+    if (!link) {
+      const charity = await prisma.charity.findUnique({
+        where: { id: input.charityId },
+        select: { name: true },
+      });
+      const account = await prisma.charityUser.findUnique({
+        where: { id: input.accountId },
+        select: { name: true },
+      });
+      if (!charity || !account) return { success: false as const, error: "الحساب أو الجمعية غير موجود" };
+
+      const created = await prisma.charityUserCharity.create({
+        data: {
+          charityUserId: input.accountId,
+          charityId: input.charityId,
+          isActive: true,
+          isAdmin: false,
+          permissions: [],
+        },
+        select: { id: true, isAdmin: true },
+      });
+      link = {
+        id: created.id,
+        isAdmin: created.isAdmin,
+        user: { name: account.name },
+        charity: { name: charity.name },
+      };
+    }
 
     // حسابُ الجمعية يحمل كلَّ شيءٍ محسوباً، فلا تُخزَّن له مصفوفةٌ تتخلّف عن
     // الكتالوج يومَ تُزاد صلاحيّة.
@@ -309,4 +342,64 @@ export async function setCharityAccountAccess(input: {
     console.error("setCharityAccountAccess failed", error);
     return { success: false as const, error: error.message || "تعذّر حفظ الصلاحيات" };
   }
+}
+
+/**
+ * بحثٌ عن حسابٍ بجوّاله قبل إنشاء حسابٍ جديد — من شاشة زاد.
+ *
+ * **والمشكلة التي يحلّها**: الحسابُ واحدٌ لصاحبه وإن خدم جمعيتين. فإنشاءُ
+ * حسابٍ ثانٍ لمن له حسابٌ يُنتج شخصين برقمٍ واحد، ويُرفض عند الحفظ بعد أن
+ * كُتب كلُّ شيء. والبحثُ يقول ذلك قبل الكتابة، ويُظهر أين هو عضوٌ اليوم —
+ * فيُضاف إلى جمعيةٍ أخرى بدل أن يُعاد إنشاؤه.
+ *
+ * **ونظيرتُه في البوّابة** (`lookupStaffByPhone`) تحرسها صلاحيّةُ الجمعية،
+ * وهذه تحرسها صلاحيّةُ زاد — فلا تُستعمل إحداهما مكان الأخرى.
+ */
+export async function lookupCharityAccountByPhone(phone: string) {
+  const session = await getSession();
+  if (!hasPermission(session?.role || "", session?.permissions || [], "manage_charity_accounts")) {
+    return { success: false as const, error: "غير مصرح لك بإجراء هذه العملية" };
+  }
+
+  const canonical = normalizeSaudiPhone(phone);
+  if (!canonical) return { success: false as const, error: "رقم الجوال غير صحيح" };
+
+  const existing = await prisma.charityUser.findFirst({
+    where: { phone: { in: saudiPhoneVariants(canonical) } },
+    select: {
+      id: true,
+      name: true,
+      phone: true,
+      title: true,
+      isActive: true,
+      charities: {
+        select: {
+          charityId: true,
+          isActive: true,
+          isAdmin: true,
+          charity: { select: { name: true } },
+        },
+      },
+    },
+  });
+
+  if (!existing) return { success: true as const, found: false as const };
+
+  return {
+    success: true as const,
+    found: true as const,
+    account: {
+      id: existing.id,
+      name: existing.name,
+      phone: existing.phone,
+      title: existing.title as string,
+      isActive: existing.isActive,
+      memberships: existing.charities.map((c) => ({
+        charityId: c.charityId,
+        charityName: c.charity.name,
+        isActive: c.isActive,
+        isOfficial: c.isAdmin,
+      })),
+    },
+  };
 }

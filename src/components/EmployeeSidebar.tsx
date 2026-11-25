@@ -186,6 +186,11 @@ export default function EmployeeSidebar({
   if (can("view_charities")) {
     navItems.push({ label: "الجمعيات", href: "/main/charities", icon: Building2 });
   }
+  // وحساباتُ الجمعيات: كانت لا تُبلَغ إلّا من بطاقةٍ في لوحة التحكم، وهي
+  // شاشةُ عملٍ يوميّةٍ لا إعداداً يُضبط مرّة.
+  if (can("manage_charity_accounts")) {
+    navItems.push({ label: "حسابات الجمعيات", href: "/main/charity-accounts", icon: Users });
+  }
 
   if (can("view_services_overview")) {
     navItems.push({ label: "عرض الخدمات", href: "/main/services-overview", icon: LayoutGrid });
@@ -508,7 +513,7 @@ export default function EmployeeSidebar({
               {isExpanded && <div className="h-px bg-slate-100 dark:bg-slate-800 mx-2" />}
               {renderServicesGroup()}
               {isExpanded && <div className="h-px bg-slate-100 dark:bg-slate-800 mx-2" />}
-              {renderGroup("الجمعيات", ["الجمعيات", "العقود", "الاستبيانات", "التواصل", "الاجتماعات", "طلبات التصاميم", "طلبات وثائق المشاريع"])}
+              {renderGroup("الجمعيات", ["الجمعيات", "حسابات الجمعيات", "العقود", "الاستبيانات", "التواصل", "الاجتماعات", "طلبات التصاميم", "طلبات وثائق المشاريع"])}
               {isExpanded && <div className="h-px bg-slate-100 dark:bg-slate-800 mx-2" />}
               {renderGroup("زاد", ["التحضير", "البريد الداخلي", "الاعتمادات", "الطلبات المالية", "آخر المستجدات", "الأخبار والإنجازات", "محاضر الاجتماعات", "منشئ وثائق المبادرات", "المهام والمنجزات", "مهامي", "مبادراتي"])}
               {isExpanded && <div className="h-px bg-slate-100 dark:bg-slate-800 mx-2" />}

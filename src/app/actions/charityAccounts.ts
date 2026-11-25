@@ -5,6 +5,7 @@ import { getSession } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
 import { hasPermission } from "@/lib/permissions";
 import {
+  CHARITY_USER_TITLE_IDS,
   GRANTABLE_CHARITY_PERMISSION_IDS,
   sanitizeCharityPermissions,
 } from "@/lib/charityPermissions";
@@ -213,6 +214,8 @@ export async function setCharityAccountAccess(input: {
   isOfficial: boolean;
   permissions: string[];
   services: string[];
+  /** مسمّى الحساب — على الحساب نفسِه ومشتركٌ مع كلِّ جمعياته. */
+  title?: string | null;
 }) {
   try {
     const session = await getSession();
@@ -290,12 +293,18 @@ export async function setCharityAccountAccess(input: {
     // على الحساب، ومشتركٌ مع كلِّ جمعيةٍ يخدمها.
     const soleMembership =
       (await prisma.charityUserCharity.count({ where: { charityUserId: input.accountId } })) === 1;
-    const retitle =
+    const auto =
       soleMembership && input.isOfficial !== link.isAdmin
         ? input.isOfficial
           ? "SYSTEM_ADMIN"
           : "FULL_TIME"
         : null;
+
+    // **والمسمّى المُرسَلُ يسبق المحسوب**: الموظّفُ اختاره بيده في اللوح،
+    // والمحسوبُ استدراكٌ لمن لم يختر. ويُفحص أنّه من الكتالوج لا من الطلب.
+    const picked =
+      input.title && CHARITY_USER_TITLE_IDS.includes(input.title) ? input.title : null;
+    const retitle = picked ?? auto;
 
     await prisma.$transaction([
       ...(retitle

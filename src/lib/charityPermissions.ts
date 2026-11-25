@@ -305,6 +305,9 @@ export const CHARITY_USER_TITLES: { id: string; label: string }[] = [
   { id: "VOLUNTEER", label: "متطوع" },
 ];
 
+/** معرّفاتُها وحدَها — يُفحص بها ما يأتي من طلب. */
+export const CHARITY_USER_TITLE_IDS: string[] = CHARITY_USER_TITLES.map((t) => t.id);
+
 /** وسمُ حساب الجمعية الرسميِّ — يُكتب مكان المسمّى، لا بجانبه. */
 export const OFFICIAL_ACCOUNT_LABEL = "حساب الجمعية";
 

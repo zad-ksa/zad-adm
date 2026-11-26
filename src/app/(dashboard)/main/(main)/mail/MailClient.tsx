@@ -341,7 +341,7 @@ export default function MailClient({
    * الخطِّ يجعل الزرَّ يبدو معطَّلاً. ثمّ تُجلب القائمةُ لتوافق القاعدة.
    */
   const handleMarkRead = async () => {
-    const mailIds = selectedMails.map(resolveMailId).filter(Boolean) as string[];
+    const mailIds = selectedMails.flatMap(resolveThreadMailIds);
     if (mailIds.length === 0) return;
 
     setMails((prev) =>
@@ -363,17 +363,27 @@ export default function MailClient({
     }
   };
 
-  const resolveMailId = (rowId: string) => {
-    const mailObj = mails.find((m) => m.id === rowId);
-    return mailObj?.mail?.id || mailObj?.id;
+  /**
+   * رسائلُ الصفِّ المحدَّد — كلُّها لا المعروضةَ وحدَها.
+   *
+   * فالصفُّ محادثةٌ بعد الجمع (`groupMailThreads`)، ولو عمل الفعلُ على آخر
+   * رسالةٍ فيها لبقي سائرُها في الصندوق: مَن ضغط «نقل للمهملات» على صفٍّ فيه
+   * ثلاثُ رسائلَ رآه يعود كما هو برسالتين. والمسوداتُ ليست محادثات، فصفُّها
+   * رسالتُه وحدَها.
+   */
+  const resolveThreadMailIds = (rowId: string): string[] => {
+    const row = mails.find((m) => m.id === rowId);
+    if (!row) return [];
+    if (Array.isArray(row.threadMailIds) && row.threadMailIds.length > 0) return row.threadMailIds;
+    const mailId = row.mail?.id || row.id;
+    return mailId ? [mailId] : [];
   };
 
   const runBulkAction = async (action: (mailId: string) => Promise<any>) => {
     setIsBulkPending(true);
     try {
-      for (const rowId of selectedMails) {
-        const mailId = resolveMailId(rowId);
-        if (mailId) await action(mailId);
+      for (const mailId of selectedMails.flatMap(resolveThreadMailIds)) {
+        await action(mailId);
       }
       await fetchMails();
     } finally {
@@ -597,7 +607,8 @@ export default function MailClient({
                 total={total}
                 pageSize={20}
                 onChange={setPage}
-                unit="رسالة"
+                // الصفُّ محادثةٌ لا رسالة، فالعدُّ على المحادثات.
+                unit={currentTab === "drafts" ? "مسودة" : "محادثة"}
               />
             </div>
           </>

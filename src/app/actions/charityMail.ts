@@ -6,6 +6,13 @@ import { sanitizeMailHtml } from "@/lib/sanitizeMail";
 import { requireCharityMembership } from "@/lib/guards";
 import { effectiveCharityPermissions, hasCharityPermission } from "@/lib/charityPermissions";
 import { isDelivered, serviceConversationRecipients } from "@/lib/serviceTeams";
+import {
+  groupMailThreads,
+  threadIdOf,
+  threadPage,
+  type MailThread,
+  type ThreadSeed,
+} from "@/lib/mailThreads";
 import { notifyMailDelivered } from "@/lib/mailNotify";
 import { isCharityMailOpen } from "@/lib/featureFlags";
 
@@ -134,10 +141,24 @@ export async function getPortalMailOptions(charityName: string) {
   };
 }
 
-/** الوارد: ما وصلني **في هذه الجمعية**. */
+/** ما تُزيده السلسلةُ على صفِّ القائمة — كصندوق زاد سواءً. */
+function portalThreadMeta(thread: MailThread) {
+  return {
+    threadId: thread.threadId,
+    threadCount: thread.count,
+    threadMailIds: thread.mailIds,
+  };
+}
+
+/**
+ * الوارد: ما وصلني **في هذه الجمعية** — مجموعاً في سلاسل.
+ *
+ * وصفٌّ واحدٌ للمحادثة لا صفٌّ لكلِّ رسالة: الردُّ كان يصل في صندوقٍ مستقلٍّ
+ * عن رسالته الأولى وهما محادثةٌ واحدة. والترقيمُ على السلاسل بعد الجمع، لا
+ * على الرسائل قبله.
+ */
 export async function getPortalInbox(charityName: string, page = 1, limit = 20, search = "") {
   const ctx = await requirePortalContext(charityName);
-  const skip = (page - 1) * limit;
   const mailFilter = portalSearchFilter(search);
 
   const where = {
@@ -148,24 +169,49 @@ export async function getPortalInbox(charityName: string, page = 1, limit = 20, 
     ...(mailFilter ? { mail: mailFilter } : {}),
   };
 
-  const [rows, total] = await Promise.all([
-    prisma.mailRecipient.findMany({
-      where,
-      include: { mail: { include: PORTAL_MAIL_INCLUDE } },
-      orderBy: { mail: { createdAt: "desc" } },
-      skip,
-      take: limit,
-    }),
-    prisma.mailRecipient.count({ where }),
-  ]);
+  const seeds = await prisma.mailRecipient.findMany({
+    where,
+    select: {
+      id: true,
+      isRead: true,
+      isStarred: true,
+      mail: { select: { id: true, parentId: true, createdAt: true } },
+    },
+    orderBy: { mail: { createdAt: "desc" } },
+  });
 
-  return { mails: rows, total, totalPages: Math.ceil(total / limit) };
+  const threads = groupMailThreads(
+    seeds.map(
+      (row): ThreadSeed => ({
+        rowId: row.id,
+        mailId: row.mail.id,
+        threadId: threadIdOf(row.mail),
+        createdAt: row.mail.createdAt,
+        isRead: row.isRead,
+        isStarred: row.isStarred,
+      })
+    )
+  );
+
+  const shown = threadPage(threads, page, limit);
+  const rows = await prisma.mailRecipient.findMany({
+    where: { id: { in: shown.map((thread) => thread.latestRowId) } },
+    include: { mail: { include: PORTAL_MAIL_INCLUDE } },
+  });
+  const byRowId = new Map(rows.map((row) => [row.id, row]));
+
+  const mails = shown.flatMap((thread) => {
+    const row = byRowId.get(thread.latestRowId);
+    if (!row) return [];
+    return [{ ...row, isRead: !thread.isUnread, isStarred: thread.isStarred, ...portalThreadMeta(thread) }];
+  });
+
+  return { mails, total: threads.length, totalPages: Math.ceil(threads.length / limit) };
 }
 
-/** المُرسَل: ما أرسلتُه **من هذه الجمعية**. */
+/** المُرسَل: ما أرسلتُه **من هذه الجمعية** — مجموعاً في سلاسل كذلك. */
 export async function getPortalSent(charityName: string, page = 1, limit = 20, search = "") {
   const ctx = await requirePortalContext(charityName);
-  const skip = (page - 1) * limit;
 
   const where = {
     senderCharityUserId: ctx.session.id,
@@ -177,18 +223,38 @@ export async function getPortalSent(charityName: string, page = 1, limit = 20, s
     ...(portalSearchFilter(search) ?? {}),
   };
 
-  const [mails, total] = await Promise.all([
-    prisma.internalMail.findMany({
-      where,
-      include: PORTAL_MAIL_INCLUDE,
-      orderBy: { createdAt: "desc" },
-      skip,
-      take: limit,
-    }),
-    prisma.internalMail.count({ where }),
-  ]);
+  const seeds = await prisma.internalMail.findMany({
+    where,
+    select: { id: true, parentId: true, createdAt: true },
+    orderBy: { createdAt: "desc" },
+  });
 
-  return { mails, total, totalPages: Math.ceil(total / limit) };
+  const threads = groupMailThreads(
+    seeds.map(
+      (mail): ThreadSeed => ({
+        rowId: mail.id,
+        mailId: mail.id,
+        threadId: threadIdOf(mail),
+        createdAt: mail.createdAt,
+        isRead: true,
+        isStarred: false,
+      })
+    )
+  );
+
+  const shown = threadPage(threads, page, limit);
+  const rows = await prisma.internalMail.findMany({
+    where: { id: { in: shown.map((thread) => thread.latestMailId) } },
+    include: PORTAL_MAIL_INCLUDE,
+  });
+  const byId = new Map(rows.map((row) => [row.id, row]));
+
+  const mails = shown.flatMap((thread) => {
+    const row = byId.get(thread.latestMailId);
+    return row ? [{ ...row, ...portalThreadMeta(thread) }] : [];
+  });
+
+  return { mails, total: threads.length, totalPages: Math.ceil(threads.length / limit) };
 }
 
 /** عدد غير المقروء في هذه الجمعية وحدها. */

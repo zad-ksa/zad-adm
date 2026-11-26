@@ -4,6 +4,8 @@ import { useCallback } from "react";
 import { promptAction } from "@/components/console/promptBus";
 import Select from "@/components/console/Select";
 import { useEditor, useEditorState, EditorContent, type Editor } from "@tiptap/react";
+import { DOMParser as ProseMirrorDOMParser } from "@tiptap/pm/model";
+import { pastedTextLines } from "@/lib/mailText";
 import StarterKit from "@tiptap/starter-kit";
 import { TextStyle, FontSize } from "@tiptap/extension-text-style";
 import TextAlign from "@tiptap/extension-text-align";
@@ -251,6 +253,32 @@ export default function MailRichTextEditor({ value, onChange, placeholder }: Mai
       attributes: {
         dir: "rtl",
         class: "mail-prose mail-editor px-6 py-4 min-h-full outline-none",
+      },
+
+      /**
+       * لصقُ نصٍّ عاديٍّ — بسطوره الفارغة كما نُسخت.
+       *
+       * وProseMirror يقسّم المُلصَقَ بـ`/(?:\r\n?|\n)+/`، فالأسطرُ المتتاليةُ
+       * فاصلٌ واحدٌ عنده: فمن نسخ خطاباً من وورد أو من محادثةٍ وألصقه هنا
+       * خرجت فقراتُه كلُّها متلاصقةً بلا السطور الفارغة التي كتبها — ولا يراه
+       * في شيءٍ يكتبه بيده، إذ الفقرةُ الفارغةُ تبقى حين يُطبَع Enter.
+       *
+       * والبناءُ هنا هو بناءُ ProseMirror نفسُه: فقرةٌ لكلِّ سطر، تُفسَّر
+       * بمُفسِّر المخطَّط — إلّا أنّ القسمة على سطرٍ واحدٍ (`pastedTextLines`)،
+       * فالسطرُ الفارغ فقرةٌ فارغةٌ لا عدم.
+       */
+      clipboardTextParser: (text, $context) => {
+        const dom = document.createElement("div");
+        for (const line of pastedTextLines(text)) {
+          const paragraph = dom.appendChild(document.createElement("p"));
+          if (line) paragraph.appendChild(document.createTextNode(line));
+        }
+        return ProseMirrorDOMParser.fromSchema($context.doc.type.schema).parseSlice(dom, {
+          // كما في `parseFromClipboard` للنصِّ العاديّ: المسافاتُ في داخل
+          // السطر جزءٌ منه، فلا تُطوى.
+          preserveWhitespace: true,
+          context: $context,
+        });
       },
     },
     onUpdate: ({ editor }) => onChange(editor.isEmpty ? "" : editor.getHTML()),

@@ -27,6 +27,13 @@ export type MailListItem = {
   isStarred: boolean;
   hasAttachments: boolean;
   createdAt: Date | string;
+  /**
+   * عددُ رسائل المحادثة في هذا الصندوق — واحدٌ لرسالةٍ بلا ردود.
+   *
+   * والصفُّ محادثةٌ لا رسالة (`groupMailThreads`)، فالعددُ هو ما يقول إنّ خلف
+   * هذا السطر سلسلةً تُفتح مطويّةً في صفحة الرسالة.
+   */
+  threadCount: number;
 };
 
 /**
@@ -109,6 +116,8 @@ export function normalizeMailListItem(
     isStarred: !!item.isStarred,
     hasAttachments: !!(mail.attachments && mail.attachments.length > 0),
     createdAt: tab === "drafts" ? mail.updatedAt || mail.createdAt : mail.createdAt,
+    // المسوداتُ ليست محادثات، وبقيّةُ الصناديق تأتي مجموعةً من الخادم.
+    threadCount: Math.max(1, Number(item.threadCount) || 1),
   };
 }
 

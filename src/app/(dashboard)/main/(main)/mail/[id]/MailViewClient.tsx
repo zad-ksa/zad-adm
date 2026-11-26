@@ -98,13 +98,37 @@ export default function MailViewClient({ session, mail, employees }: MailViewCli
     () => new Set([lastMessageId, mail.openedId].filter(Boolean))
   );
 
+  /** رسالةٌ وصلتني ولم أقرأها بعد. */
+  const isMineUnread = (message: ThreadMessage) =>
+    (message.recipients || []).some((r) => r.employeeId === session?.id && r.isRead === false);
+
+  /**
+   * يُحدِّد مقروءاً ويُخبر شارةَ الشريط — فهي تُرسمها طبقةٌ لا تُعاد عند هذا
+   * الفعل، فلو تُركت لتكتشف قالت «غيرُ مقروءة» ورسالةٌ مفتوحةٌ أمام القارئ.
+   */
+  const markRead = (ids: string[]) => {
+    if (ids.length === 0) return;
+    markManyAsRead(ids)
+      .then(notifyMailUnreadChanged)
+      .catch((error) => console.error("Error marking mail as read:", error));
+  };
+
   const toggleExpanded = (id: string) => {
+    const willOpen = !expanded.has(id);
     setExpanded((prev) => {
       const next = new Set(prev);
       if (next.has(id)) next.delete(id);
       else next.add(id);
       return next;
     });
+
+    // **ما ظهر متنُه قُرئ**: السلسلةُ تُفتح مطويّةً إلا المفتوحةَ والأخيرة، فلو
+    // بقي التحديدُ على لحظة الدخول وحدَها لظلّ سطرُ المحادثة في القائمة عريضاً
+    // بعد أن يُقرأ ما فيها — القائمةُ تعدُّ السلسلةَ غيرَ مقروءةٍ إن كانت فيها
+    // رسالةٌ لم تُقرأ.
+    if (!willOpen) return;
+    const message = messages.find((m) => m.id === id);
+    if (message && isMineUnread(message)) markRead([id]);
   };
 
   const expandAll = () => setExpanded(new Set(messages.map((m) => m.id)));
@@ -113,7 +137,9 @@ export default function MailViewClient({ session, mail, employees }: MailViewCli
   const handleDelete = async () => {
     setIsDeleting(true);
     try {
-      await moveToTrash(mail.id);
+      // السلسلةُ كلُّها تُنقل: الصفُّ في القائمة محادثةٌ، ولو نُقلت رسالةٌ
+      // منها عاد السطرُ كما هو ببقيّتها.
+      for (const message of messages) await moveToTrash(message.id);
       router.push("/main/mail");
     } catch (error) {
       console.error(error);
@@ -145,18 +171,9 @@ export default function MailViewClient({ session, mail, employees }: MailViewCli
     if (marked.current) return;
     marked.current = true;
 
-    const mine = (m: ThreadMessage) =>
-      (m.recipients || []).some((r) => r.employeeId === session?.id && r.isRead === false);
-    const ids = messages.filter((m) => expanded.has(m.id) && mine(m)).map((m) => m.id);
-    if (ids.length === 0) return;
-
-    markManyAsRead(ids)
-      // شارةُ الشريط ترسمها طبقةٌ لا تُعاد عند التنقّل، فتُخبَر ولا تُترك
-      // لتكتشف — وإلّا قالت «غيرُ مقروءة» ورسالةٌ مفتوحةٌ أمام القارئ.
-      .then(notifyMailUnreadChanged)
-      .catch((error) => console.error("Error marking mail as read:", error));
-    // مرّةً واحدةً عند الفتح: `marked` يَحرُسها، و`expanded` تتغيّر بالطيّ
-    // والتوسيع بعدها ولا يُعاد التحديد لذلك.
+    markRead(messages.filter((m) => expanded.has(m.id) && isMineUnread(m)).map((m) => m.id));
+    // مرّةً واحدةً عند الفتح: `marked` يَحرُسها. وما يُوسَّع بعدها يُحدَّد في
+    // `toggleExpanded` لا هنا.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -259,7 +276,11 @@ export default function MailViewClient({ session, mail, employees }: MailViewCli
       <ConfirmDialog
         isOpen={isConfirmDeleteOpen}
         title="نقل إلى المهملات"
-        message="هل أنت متأكد من نقل هذه الرسالة إلى المهملات؟"
+        message={
+          messages.length > 1
+            ? `سيتم نقل المحادثة كلها (${messages.length} رسائل) إلى المهملات.`
+            : "هل أنت متأكد من نقل هذه الرسالة إلى المهملات؟"
+        }
         onCancel={() => setIsConfirmDeleteOpen(false)}
         onConfirm={handleDelete}
         isPending={isDeleting}

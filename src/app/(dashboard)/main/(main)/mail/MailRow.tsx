@@ -98,6 +98,29 @@ export default function MailRow({
     <span className="hidden sm:block" />
   );
 
+  /**
+   * عددُ رسائل المحادثة — كجيميل: رقمٌ صغيرٌ إلى جانب المرسِل، ولا يظهر
+   * لرسالةٍ وحيدة.
+   *
+   * وهو ما يقول إنّ الصفَّ محادثةٌ لا رسالة: الردُّ لم يَعُد صفّاً مستقلاًّ،
+   * فلا بدّ من علامةٍ تُخبر أنّ وراء السطر أكثرَ من رسالة.
+   */
+  const threadCount =
+    item.threadCount > 1 ? (
+      <span
+        title={`${item.threadCount} رسائل في هذه المحادثة`}
+        className={cx(
+          MONO,
+          "inline-flex h-4 shrink-0 items-center rounded px-1 text-caption",
+          isUnread
+            ? "bg-primary/[0.10] text-primary dark:bg-teal-400/10 dark:text-teal-300"
+            : "bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400"
+        )}
+      >
+        {item.threadCount}
+      </span>
+    ) : null;
+
   // المرسِلُ كالعنوان: عريضٌ في غير المقروءة، عاديٌّ في المقروءة. فثِقَلُ
   // الخطِّ كلُّه في الصفّ يقول شيئاً واحداً — «هذه لم تُقرأ» — فإن بقي أحدُهما
   // ثقيلاً بدا الصفُّ نصفَ مقروء.
@@ -154,6 +177,7 @@ export default function MailRow({
         <div className="flex min-w-0 items-center gap-2">
           <Avatar name={item.displayName} src={item.avatarUrl} size="sm" />
           <span className="min-w-0 flex-1 truncate">{senderName}</span>
+          {threadCount}
           {item.hasAttachments && <Paperclip className="size-3.5 shrink-0 text-slate-400" />}
           {unreadDot}
           {date}
@@ -174,6 +198,7 @@ export default function MailRow({
         <div className="flex min-w-0 items-center gap-2">
           <Avatar name={item.displayName} src={item.avatarUrl} size="sm" />
           {senderName}
+          {threadCount}
         </div>
         {item.toLabel && (
           <span

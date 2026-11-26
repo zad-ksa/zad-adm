@@ -94,14 +94,17 @@ function escapeHtml(text: string): string {
     .replace(/>/g, "&gt;");
 }
 
-function buildQuoteHtml(source: any, kind: "reply" | "forward"): string {
+/**
+ * متنُ رسالةٍ معادِ توجيهها: ترويسةٌ تقول من أين جاءت، ثمّ نصُّها اقتباساً.
+ *
+ * وهو للتوجيه وحدَه — فالردُّ يبدأ فارغاً، والمحادثةُ تُقرأ من السلسلة لا من
+ * نسخةٍ في كلِّ ردّ (انظر `initialBody`).
+ */
+function buildForwardHtml(source: any): string {
   const originalBody = source.body || "";
   const safeBody = isHtmlBody(originalBody) ? originalBody : escapeHtml(originalBody).replace(/\n/g, "<br/>");
   const date = new Date(source.createdAt).toLocaleString("ar-SA");
-  const head =
-    kind === "reply"
-      ? `في ${date}، كتب ${source.sender?.name || source.senderCharityUser?.name || ""}:`
-      : `--- رسالة معاد توجيهها --- من: ${source.sender?.name || source.senderCharityUser?.name || ""}، التاريخ: ${date}، الموضوع: ${source.subject || ""}`;
+  const head = `--- رسالة معاد توجيهها --- من: ${source.sender?.name || source.senderCharityUser?.name || ""}، التاريخ: ${date}، الموضوع: ${source.subject || ""}`;
 
   return `<p></p><div class="mail-quote"><p class="mail-quote-head">${escapeHtml(head)}</p><blockquote>${safeBody}</blockquote></div>`;
 }
@@ -193,13 +196,24 @@ export default function ComposeModal({ isOpen, onClose, employees, onSuccess, re
         ? `إعادة توجيه: ${forwardMail.subject}`
         : preset?.subject || "";
 
+  /**
+   * الردُّ يبدأ فارغاً، والمُعاد توجيهُه يحمل رسالتَه.
+   *
+   * وكان الردُّ يُفتح والرسالةُ الأصليّةُ منسوخةً في متنه بين `mail-quote` —
+   * ولا تنجو: المحرِّر (Tiptap) لا يعرف من مخطَّطه `div` ولا الأصنافَ، فيُسقط
+   * الغلافَ والصنفَ ويبقى النصُّ مُسطَّحاً. فلا يجد `splitQuotedHtml` علامته
+   * فلا يُطوى شيء، وصار كلُّ ردٍّ يُعيد المحادثةَ كلَّها في متنه فقراتٍ
+   * متلاصقة — وفي القاعدة ردٌّ واحدٌ من تسعةٍ وعشرين نجت علامتُه.
+   *
+   * والسلسلةُ تُعرض الآن كاملةً في صفحة الرسالة مطويّةً، فالتاريخُ هناك حيث
+   * يُقرأ مرّةً لا مرّةً في كلِّ ردّ. والبوّابةُ تفعل هذا أصلاً، فاستوت
+   * الشاشتان.
+   */
   const initialBody = draft
     ? draft.body || ""
-    : replyTo
-      ? buildQuoteHtml(replyTo, "reply")
-      : forwardMail
-        ? buildQuoteHtml(forwardMail, "forward")
-        : "";
+    : forwardMail
+      ? buildForwardHtml(forwardMail)
+      : "";
 
   const [subject, setSubjectRaw] = useState(initialSubject);
   const [body, setBodyRaw] = useState(initialBody);

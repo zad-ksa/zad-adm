@@ -1,7 +1,15 @@
 "use server";
 
+import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/db";
 import { EXTERNAL_CHARITIES, externalOnly } from "@/lib/charityScope";
+import {
+  groupMailThreads,
+  threadIdOf,
+  threadPage,
+  type MailThread,
+  type ThreadSeed,
+} from "@/lib/mailThreads";
 import { getSession } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
 import { sanitizeMailHtml } from "@/lib/sanitizeMail";
@@ -330,68 +338,123 @@ export async function deleteDraft(id: string) {
   return { success: true };
 }
 
+/**
+ * ما يُعرض عن الرسالة في سطرٍ من القائمة.
+ *
+ * وكان مكتوباً بحروفه ثلاث مرّات (الوارد والمميَّزة والمهملات)، فأيُّ حقلٍ
+ * يُزاد في السطر يُنسى في واحدٍ منها.
+ */
+const MAIL_LIST_INCLUDE = {
+  sender: { select: { id: true, name: true, avatarUrl: true, role: true } },
+  // بريدٌ من جمعية: مرسِله عضوٌ لا موظف. وبريدٌ من زاد إلى جمعية: يُعرض
+  // باسم خدمته وجمعيته لا باسم كاتبه.
+  senderCharityUser: { select: { id: true, name: true } },
+  charity: { select: { id: true, name: true } },
+  attachments: true,
+  // للعمود «إلى» في القائمة — يُغربَل بـstripHiddenBcc فلا يرى مستلمٌ عاديّ
+  // (أو مَن نُسخ إليه خفيةً) غيرَه من أسماء النسخة المخفيّة.
+  recipients: {
+    select: {
+      type: true,
+      employeeId: true,
+      employee: { select: { id: true, name: true } },
+      charityUserId: true,
+      charityUser: { select: { id: true, name: true } },
+      charityId: true,
+    },
+  },
+} as const;
+
+/** ما تُزيده السلسلةُ على صفِّ القائمة: عددُها، وصفوفُها لتعمل الأفعالُ عليها كلِّها. */
+function threadMeta(thread: MailThread) {
+  return {
+    threadId: thread.threadId,
+    threadCount: thread.count,
+    threadMailIds: thread.mailIds,
+    threadRowIds: thread.rowIds,
+  };
+}
+
+/**
+ * صندوقٌ مبنيٌّ على صفوف الاستلام — الوارد والمميَّزة والمهملات — مجموعاً في
+ * سلاسل: صفٌّ واحدٌ للمحادثة لا صفٌّ لكلِّ رسالة.
+ *
+ * **وخطوتان لا واحدة:** تُجلب صفوفُ الصندوق كلُّها خفيفةً (أربعةُ أعمدة) ليُعرف
+ * من أيِّ سلسلةٍ كلُّ رسالة، ثمّ تُحمَّل بياناتُ العرض لآخر رسالةٍ في كلِّ
+ * سلسلةٍ من سلاسل الصفحة وحدَها. والترقيمُ **بعد** الجمع لا قبله، وإلّا كانت
+ * الصفحةُ عشرين رسالةً تُعرض ثمانيةَ صفوفٍ ثمّ تقول «٢٠ من ١٤٦».
+ *
+ * وحالُ السطر حالُ السلسلة: غيرُ مقروءةٍ إن كانت فيها رسالةٌ لم تُقرأ، مميَّزةٌ
+ * إن كانت فيها نجمة — كجيميل.
+ */
+async function recipientThreadPage(
+  where: Prisma.MailRecipientWhereInput,
+  page: number,
+  limit: number,
+  userId: string
+) {
+  const seeds = await prisma.mailRecipient.findMany({
+    where,
+    select: {
+      id: true,
+      isRead: true,
+      isStarred: true,
+      mail: { select: { id: true, parentId: true, createdAt: true } },
+    },
+    orderBy: { mail: { createdAt: "desc" } },
+  });
+
+  const threads = groupMailThreads(
+    seeds.map(
+      (row): ThreadSeed => ({
+        rowId: row.id,
+        mailId: row.mail.id,
+        threadId: threadIdOf(row.mail),
+        createdAt: row.mail.createdAt,
+        isRead: row.isRead,
+        isStarred: row.isStarred,
+      })
+    )
+  );
+
+  const shown = threadPage(threads, page, limit);
+  const rows = await prisma.mailRecipient.findMany({
+    where: { id: { in: shown.map((thread) => thread.latestRowId) } },
+    include: { mail: { include: MAIL_LIST_INCLUDE } },
+  });
+  const byRowId = new Map(rows.map((row) => [row.id, row]));
+
+  // ترتيبُ السلاسل هو المعروض، لا ترتيبُ ما ردَّته القاعدة.
+  const mails = shown.flatMap((thread) => {
+    const row = byRowId.get(thread.latestRowId);
+    if (!row) return [];
+    stripHiddenBcc(row.mail, userId);
+    return [{ ...row, isRead: !thread.isUnread, isStarred: thread.isStarred, ...threadMeta(thread) }];
+  });
+
+  return { mails, total: threads.length, totalPages: Math.ceil(threads.length / limit) };
+}
+
 export async function getInbox(page = 1, limit = 20, search = "") {
   const user = await getAuthenticatedUser();
-  const skip = (page - 1) * limit;
   const mailFilter = mailSearchFilter(search, "sender");
-  const where = {
-    employeeId: user.id,
-    isDeleted: false,
-    ...(mailFilter ? { mail: mailFilter } : {}),
-  };
-
-  const [mails, total] = await Promise.all([
-    prisma.mailRecipient.findMany({
-      where,
-      include: {
-        mail: {
-          include: {
-            sender: {
-              select: { id: true, name: true, avatarUrl: true, role: true },
-            },
-            // بريدٌ من جمعية: مرسِله عضوٌ لا موظف. وبريدٌ من زاد إلى جمعية: يُعرض
-            // باسم خدمته وجمعيته لا باسم كاتبه.
-            senderCharityUser: { select: { id: true, name: true } },
-            charity: { select: { id: true, name: true } },
-            attachments: true,
-            // للعمود "إلى" في قائمة البريد — يُغربَل بـ stripHiddenBcc أدناه فلا
-            // يرى مستلم عادي (أو مَن نُسخ إليه خفيةً) غيرَه من أسماء النسخة المخفية.
-            recipients: {
-              select: {
-                type: true,
-                employeeId: true,
-                employee: { select: { id: true, name: true } },
-                charityUserId: true,
-                charityUser: { select: { id: true, name: true } },
-                charityId: true,
-              },
-            },
-          },
-        },
-      },
-      orderBy: {
-        mail: {
-          createdAt: "desc",
-        },
-      },
-      skip,
-      take: limit,
-    }),
-    prisma.mailRecipient.count({ where }),
-  ]);
-
-  // نسخة مخفية تخصّ غيرك تبقى مخفية حتى في قائمة الوارد، لا في صفحة الرسالة وحدها.
-  for (const row of mails) stripHiddenBcc(row.mail, user.id);
-
-  return { mails, total, totalPages: Math.ceil(total / limit) };
+  return recipientThreadPage(
+    {
+      employeeId: user.id,
+      isDeleted: false,
+      ...(mailFilter ? { mail: mailFilter } : {}),
+    },
+    page,
+    limit,
+    user.id
+  );
 }
 
 export async function getSentMails(page = 1, limit = 20, search = "") {
   const user = await getAuthenticatedUser();
-  const skip = (page - 1) * limit;
   // On the sent side the sender is always you, so the useful name to match is
   // the recipient's.
-  const where = {
+  const where: Prisma.InternalMailWhereInput = {
     senderId: user.id,
     isDeletedBySender: false,
     isDraft: false,
@@ -400,142 +463,80 @@ export async function getSentMails(page = 1, limit = 20, search = "") {
     ...(mailSearchFilter(search, "recipients") ?? {}),
   };
 
-  const [mails, total] = await Promise.all([
-    prisma.internalMail.findMany({
-      where,
-      include: {
-        recipients: {
-          include: {
-            employee: {
-              select: { id: true, name: true, avatarUrl: true },
-            },
-            charityUser: { select: { id: true, name: true } },
-          },
-        },
-        charity: { select: { id: true, name: true } },
-        attachments: true,
-      },
-      orderBy: {
-        createdAt: "desc",
-      },
-      skip,
-      take: limit,
-    }),
-    prisma.internalMail.count({ where }),
-  ]);
+  // المُرسَل سلاسلُ كذلك: ردٌّ أرسلتُه على رسالةٍ أرسلتُها محادثةٌ واحدة. ولا
+  // حالَ قراءةٍ هنا ولا نجمة — الصفُّ رسالةٌ لا استلام.
+  const seeds = await prisma.internalMail.findMany({
+    where,
+    select: { id: true, parentId: true, createdAt: true },
+    orderBy: { createdAt: "desc" },
+  });
 
-  return { mails, total, totalPages: Math.ceil(total / limit) };
+  const threads = groupMailThreads(
+    seeds.map(
+      (mail): ThreadSeed => ({
+        rowId: mail.id,
+        mailId: mail.id,
+        threadId: threadIdOf(mail),
+        createdAt: mail.createdAt,
+        isRead: true,
+        isStarred: false,
+      })
+    )
+  );
+
+  const shown = threadPage(threads, page, limit);
+  const rows = await prisma.internalMail.findMany({
+    where: { id: { in: shown.map((thread) => thread.latestMailId) } },
+    include: {
+      recipients: {
+        include: {
+          employee: { select: { id: true, name: true, avatarUrl: true } },
+          charityUser: { select: { id: true, name: true } },
+        },
+      },
+      charity: { select: { id: true, name: true } },
+      attachments: true,
+    },
+  });
+  const byId = new Map(rows.map((row) => [row.id, row]));
+
+  const mails = shown.flatMap((thread) => {
+    const row = byId.get(thread.latestMailId);
+    return row ? [{ ...row, ...threadMeta(thread) }] : [];
+  });
+
+  return { mails, total: threads.length, totalPages: Math.ceil(threads.length / limit) };
 }
 
 export async function getStarredMails(page = 1, limit = 20, search = "") {
   const user = await getAuthenticatedUser();
-  const skip = (page - 1) * limit;
   const mailFilter = mailSearchFilter(search, "sender");
-  const where = {
-    employeeId: user.id,
-    isStarred: true,
-    isDeleted: false,
-    ...(mailFilter ? { mail: mailFilter } : {}),
-  };
-
-  const [mails, total] = await Promise.all([
-    prisma.mailRecipient.findMany({
-      where,
-      include: {
-        mail: {
-          include: {
-            sender: {
-              select: { id: true, name: true, avatarUrl: true, role: true },
-            },
-            // بريدٌ من جمعية: مرسِله عضوٌ لا موظف. وبريدٌ من زاد إلى جمعية: يُعرض
-            // باسم خدمته وجمعيته لا باسم كاتبه.
-            senderCharityUser: { select: { id: true, name: true } },
-            charity: { select: { id: true, name: true } },
-            attachments: true,
-            // للعمود "إلى" في قائمة البريد — يُغربَل بـ stripHiddenBcc أدناه فلا
-            // يرى مستلم عادي (أو مَن نُسخ إليه خفيةً) غيرَه من أسماء النسخة المخفية.
-            recipients: {
-              select: {
-                type: true,
-                employeeId: true,
-                employee: { select: { id: true, name: true } },
-                charityUserId: true,
-                charityUser: { select: { id: true, name: true } },
-                charityId: true,
-              },
-            },
-          },
-        },
-      },
-      orderBy: {
-        mail: {
-          createdAt: "desc",
-        },
-      },
-      skip,
-      take: limit,
-    }),
-    prisma.mailRecipient.count({ where }),
-  ]);
-
-  for (const row of mails) stripHiddenBcc(row.mail, user.id);
-
-  return { mails, total, totalPages: Math.ceil(total / limit) };
+  return recipientThreadPage(
+    {
+      employeeId: user.id,
+      isStarred: true,
+      isDeleted: false,
+      ...(mailFilter ? { mail: mailFilter } : {}),
+    },
+    page,
+    limit,
+    user.id
+  );
 }
 
 export async function getTrashMails(page = 1, limit = 20, search = "") {
   const user = await getAuthenticatedUser();
-  const skip = (page - 1) * limit;
   const mailFilter = mailSearchFilter(search, "sender");
-  const where = {
-    employeeId: user.id,
-    isDeleted: true,
-    ...(mailFilter ? { mail: mailFilter } : {}),
-  };
-
-  const [mails, total] = await Promise.all([
-    prisma.mailRecipient.findMany({
-      where,
-      include: {
-        mail: {
-          include: {
-            sender: {
-              select: { id: true, name: true, avatarUrl: true, role: true },
-            },
-            // بريدٌ من جمعية: مرسِله عضوٌ لا موظف. وبريدٌ من زاد إلى جمعية: يُعرض
-            // باسم خدمته وجمعيته لا باسم كاتبه.
-            senderCharityUser: { select: { id: true, name: true } },
-            charity: { select: { id: true, name: true } },
-            attachments: true,
-            // للعمود "إلى" في قائمة البريد — يُغربَل بـ stripHiddenBcc أدناه فلا
-            // يرى مستلم عادي (أو مَن نُسخ إليه خفيةً) غيرَه من أسماء النسخة المخفية.
-            recipients: {
-              select: {
-                type: true,
-                employeeId: true,
-                employee: { select: { id: true, name: true } },
-                charityUserId: true,
-                charityUser: { select: { id: true, name: true } },
-                charityId: true,
-              },
-            },
-          },
-        },
-      },
-      orderBy: {
-        mail: {
-          createdAt: "desc",
-        },
-      },
-      skip,
-      take: limit,
-    }),
-    prisma.mailRecipient.count({ where }),
-  ]);
-
-  for (const row of mails) stripHiddenBcc(row.mail, user.id);
-
-  return { mails, total, totalPages: Math.ceil(total / limit) };
+  return recipientThreadPage(
+    {
+      employeeId: user.id,
+      isDeleted: true,
+      ...(mailFilter ? { mail: mailFilter } : {}),
+    },
+    page,
+    limit,
+    user.id
+  );
 }
 
 const MAIL_THREAD_INCLUDE = {

@@ -121,6 +121,29 @@ export function normalizeMailListItem(
   };
 }
 
+/**
+ * كاتبُ الرسالة كما يقرؤه الطرفُ الآخر: عضوُ الجمعية باسمه، وموظفُ زاد باسمه
+ * مع خدمته.
+ *
+ * فالبريدُ بين زاد والجمعيات يخرج باسم خدمةٍ لا باسم شخص، ومحادثةُ الخدمة
+ * يشترك فيها الفريقان — فالخدمةُ وحدَها لا تكفي: يلزم أن يُعرف مَن ردَّ من زاد
+ * ومَن ردَّ من الجمعية.
+ *
+ * وهو هنا لا في البوّابة وحدَها: «بانتظار التعميد» يعرض الرسالةَ كما ستصل
+ * الجمعيةَ، فلو كُتبت القاعدةُ في موضعين لافترقتا — فيقرأ المعمِّد اسماً غيرَ
+ * الذي يُقرأ هناك.
+ */
+export function mailAuthorLabel(mail: {
+  serviceName?: string | null;
+  sender?: { name: string } | null;
+  senderCharityUser?: { name: string } | null;
+}): string {
+  if (mail.senderCharityUser) return mail.senderCharityUser.name;
+  const name = mail.sender?.name;
+  if (mail.serviceName) return name ? `${name} — زاد | ${mail.serviceName}` : `زاد | ${mail.serviceName}`;
+  return name || "زاد";
+}
+
 const HTML_ENTITY_MAP: Record<string, string> = {
   "&nbsp;": " ",
   "&amp;": "&",

@@ -6,7 +6,6 @@ import Link from "next/link";
 import {
   ArrowRight,
   ChevronDown,
-  Download,
   Forward,
   Paperclip,
   Reply,
@@ -19,6 +18,7 @@ import { Avatar, Badge, MONO, Note, btn, cx, toolbarClass } from "@/components/c
 import { markManyAsRead, moveToTrash } from "@/app/actions/mail";
 import { notifyMailUnreadChanged } from "@/lib/mailBadge";
 import { formatMailDate, htmlToPlainText, splitQuotedHtml } from "../mailUtils";
+import { MailAttachments } from "../MailAttachments";
 
 interface MailViewClientProps {
   session: any;
@@ -486,43 +486,7 @@ function ThreadMessageCard({
         </div>
       )}
 
-      {message.attachments && message.attachments.length > 0 && (
-        <div className="mt-6">
-          <h3 className="mb-3 flex items-center gap-2 text-meta font-medium text-slate-600 dark:text-slate-300">
-            <Paperclip className="size-3.5" />
-            المرفقات ({message.attachments.length})
-          </h3>
-          <div className="flex flex-wrap gap-3">
-            {message.attachments.map((att: any) => (
-              <a
-                key={att.id}
-                href={att.fileUrl}
-                target="_blank"
-                rel="noreferrer"
-                className={cx(
-                  "group flex items-center gap-3 rounded-lg border border-slate-200 bg-white p-3 transition-colors",
-                  "hover:border-primary/30 hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:hover:bg-slate-800/40",
-                  "outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
-                )}
-              >
-                <span className="grid size-10 shrink-0 place-items-center rounded-lg bg-slate-50 text-slate-500 transition-colors group-hover:text-primary dark:bg-slate-800 dark:text-slate-400 dark:group-hover:text-teal-300">
-                  <Download className="size-4" />
-                </span>
-                <span className="block">
-                  <span className="block max-w-[200px] truncate text-body font-medium text-slate-900 dark:text-slate-100">
-                    {att.fileName}
-                  </span>
-                  {att.fileSize && (
-                    <span className={cx(MONO, "mt-0.5 block text-caption text-slate-500 dark:text-slate-400")}>
-                      {(att.fileSize / 1024 / 1024).toFixed(2)} MB
-                    </span>
-                  )}
-                </span>
-              </a>
-            ))}
-          </div>
-        </div>
-      )}
+      <MailAttachments attachments={message.attachments ?? []} className="mt-6" />
     </div>
   );
 }

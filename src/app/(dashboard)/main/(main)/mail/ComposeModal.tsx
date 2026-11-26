@@ -15,6 +15,7 @@ import {
 } from "@/app/actions/mail";
 import { useRoleLabels } from "@/components/RoleLabelsProvider";
 import { isHtmlBody, htmlToPlainText } from "./mailUtils";
+import { mailSentAt } from "@/lib/mailDates";
 import { uploadFile } from "@/lib/clientUpload";
 import { FileDropOverlay, useFileDrop } from "@/components/FileDrop";
 import { maxBytesFor, maxLabelFor } from "@/lib/uploadPurposes";
@@ -103,7 +104,8 @@ function escapeHtml(text: string): string {
 function buildForwardHtml(source: any): string {
   const originalBody = source.body || "";
   const safeBody = isHtmlBody(originalBody) ? originalBody : escapeHtml(originalBody).replace(/\n/g, "<br/>");
-  const date = new Date(source.createdAt).toLocaleString("ar-SA");
+  // تاريخُ الرسالة تاريخُ إرسالها: المعتمَدةُ بلحظة اعتمادها.
+  const date = new Date(mailSentAt(source)).toLocaleString("ar-SA");
   const head = `--- رسالة معاد توجيهها --- من: ${source.sender?.name || source.senderCharityUser?.name || ""}، التاريخ: ${date}، الموضوع: ${source.subject || ""}`;
 
   return `<p></p><div class="mail-quote"><p class="mail-quote-head">${escapeHtml(head)}</p><blockquote>${safeBody}</blockquote></div>`;

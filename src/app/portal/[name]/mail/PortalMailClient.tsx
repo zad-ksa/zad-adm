@@ -27,6 +27,7 @@ import {
 } from "@/app/actions/charityMail";
 import { htmlToPlainText, mailAuthorLabel } from "@/app/(dashboard)/main/(main)/mail/mailUtils";
 import { MailAttachments } from "@/app/(dashboard)/main/(main)/mail/MailAttachments";
+import { byMailSentAt, mailSentAt } from "@/lib/mailDates";
 import { ConfirmDialog } from "@/components/console/ConfirmDialog";
 import { notifyMailUnreadChanged } from "@/lib/mailBadge";
 import PortalComposeModal, { type ReplyTarget, type ResendTarget } from "./PortalComposeModal";
@@ -43,6 +44,8 @@ type MailShape = {
   subject: string;
   body: string;
   createdAt: string | Date;
+  /** لحظةُ الاعتماد، وهي لحظةُ الإرسال — بها تُؤرَّخ الرسالة لا بكتابتها. */
+  approvedAt?: string | Date | null;
   serviceName: string | null;
   addressedAs: string;
   senderCharityUserId: string | null;
@@ -169,7 +172,7 @@ export default function PortalMailClient({
       const mail = (await getPortalMail(charityName, mailId)) as unknown as MailShape;
       // المفتوحةُ والأخيرةُ وحدَهما تُفتحان، وما بقي من السلسلة مطويٌّ — فمن
       // دخل من سطرٍ فيه عشرُ رسائلَ لا يُستقبَل بعشرِ رسائلَ مفتوحة.
-      const messages = [mail, ...(mail.replies ?? [])];
+      const messages = [mail, ...(mail.replies ?? [])].sort(byMailSentAt);
       setExpandedIds(
         new Set(
           [mail.openedId ?? mailId, messages[messages.length - 1]?.id].filter(
@@ -232,7 +235,8 @@ export default function PortalMailClient({
    * و`getPortalMail` يردُّ جذر السلسلة أيّاً كانت الرسالةُ المطلوبة، فالقائمةُ
    * هنا كاملةٌ بلا استعلامٍ ثانٍ.
    */
-  const thread: MailShape[] = openMail ? [openMail, ...(openMail.replies ?? [])] : [];
+  // ترتيبُ القراءة ترتيبُ الإرسال: المعتمَدةُ تأخذ مكانها بلحظة اعتمادها.
+  const thread: MailShape[] = openMail ? [openMail, ...(openMail.replies ?? [])].sort(byMailSentAt) : [];
   const allExpanded = thread.length > 0 && thread.every((message) => expandedIds.has(message.id));
 
   const toggleMessage = (id: string) => {
@@ -345,7 +349,7 @@ export default function PortalMailClient({
               </h2>
               <div className="mt-1 flex items-center gap-2 flex-wrap text-xs text-slate-500 dark:text-slate-400">
                 <span>
-                  {thread.length > 1 ? `${thread.length} رسائل في المحادثة` : formatDate(openMail.createdAt)}
+                  {thread.length > 1 ? `${thread.length} رسائل في المحادثة` : formatDate(mailSentAt(openMail))}
                 </span>
                 {openMail.serviceName && (
                   <span className="h-6 px-2 inline-flex items-center rounded-full bg-primary/[0.08] text-primary dark:bg-primary/15 dark:text-teal-300 font-medium">
@@ -543,7 +547,7 @@ export default function PortalMailClient({
                       <Paperclip className="w-3.5 h-3.5 text-slate-400 shrink-0" />
                     )}
                     <span className="text-xs text-slate-400 dark:text-slate-500 shrink-0 w-16 text-left">
-                      {formatDate(mail.createdAt)}
+                      {formatDate(mailSentAt(mail))}
                     </span>
                   </button>
                 </li>
@@ -635,7 +639,7 @@ function PortalThreadMessage({
         {message.attachments.length > 0 && (
           <Paperclip className="w-3.5 h-3.5 shrink-0 text-slate-400 dark:text-slate-500" />
         )}
-        <span className="shrink-0 text-xs text-slate-400 dark:text-slate-500">{formatDate(message.createdAt)}</span>
+        <span className="shrink-0 text-xs text-slate-400 dark:text-slate-500">{formatDate(mailSentAt(message))}</span>
         <ChevronDown className="w-4 h-4 shrink-0 text-slate-300 dark:text-slate-600" />
       </button>
     );
@@ -651,7 +655,7 @@ function PortalThreadMessage({
       >
         <span className="text-body font-semibold text-slate-800 dark:text-slate-200">{author}</span>
         <span className="text-xs text-slate-400 dark:text-slate-500">·</span>
-        <span className="text-xs text-slate-400 dark:text-slate-500">{formatDate(message.createdAt)}</span>
+        <span className="text-xs text-slate-400 dark:text-slate-500">{formatDate(mailSentAt(message))}</span>
         <span className="flex-1" />
         <ChevronDown className="w-4 h-4 shrink-0 rotate-180 text-slate-300 dark:text-slate-600" />
       </button>

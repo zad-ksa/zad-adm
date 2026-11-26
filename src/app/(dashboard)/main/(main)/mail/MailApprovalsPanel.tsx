@@ -1,12 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Badge, btn, cx, field, MONO } from "@/components/console/ui";
+import { Badge, btn, field } from "@/components/console/ui";
 import {
   AlertTriangle,
   Building2,
   Check,
-  ChevronDown,
   CircleCheck,
   Clock,
   Eye,
@@ -16,7 +15,7 @@ import {
 } from "lucide-react";
 import dynamic from "next/dynamic";
 import { approveMail, getPendingApprovalMails, returnMail } from "@/app/actions/mailApproval";
-import { formatMailDate, htmlToPlainText, mailAuthorLabel } from "./mailUtils";
+import { mailAuthorLabel } from "./mailUtils";
 import { MailAttachments, type MailAttachmentItem } from "./MailAttachments";
 
 const MailRichTextEditor = dynamic(() => import("./MailRichTextEditor"), {
@@ -50,6 +49,10 @@ function formatWhen(value: string | Date) {
  *
  * ما أعمّده أنا، وما وقف لي عند غيري. والثاني ليس زينة: بدونه يظنّ المرسِل أن
  * بريده وصل، فالرسالة اختفت من «المسودات» ولم تظهر في «المُرسَل».
+ *
+ * وكلُّ رسالةٍ معروضةٌ بتمامها من أوّل فتحِ الشاشة — بلا ضغطٍ يفتحها: القرارُ
+ * يُتَّخذ على ما يُقرأ، والشاشةُ لا تُفتح إلّا على ما ينتظر فعلاً، فلا طولَ
+ * يُخشى منه.
  */
 export default function MailApprovalsPanel() {
   const [toApprove, setToApprove] = useState<PendingMail[]>([]);
@@ -64,11 +67,6 @@ export default function MailApprovalsPanel() {
   const [busyId, setBusyId] = useState<string | null>(null);
   const [returningId, setReturningId] = useState<string | null>(null);
   const [returnNote, setReturnNote] = useState("");
-
-  // الرسالةُ المفتوحة: واحدةٌ في الشاشة. وفتحُ غيرِها يطوي الأولى، فلا تصير
-  // الشاشةُ كومةَ رسائلَ مفتوحة لا يُقرأ فيها شيء.
-  const [openId, setOpenId] = useState<string | null>(null);
-  const toggleOpen = (id: string) => setOpenId((current) => (current === id ? null : id));
 
   // بلا setState قبل أول await: ضبط الحالة تزامناً داخل التأثير يُعيد الرسم
   // قبل أن يُرسم شيء. والتحميل الأول يبدأ من قيمة الحالة الابتدائية.
@@ -180,7 +178,6 @@ export default function MailApprovalsPanel() {
           toApprove.map((mail) => {
             const isEditing = editingId === mail.id;
             const isBusy = busyId === mail.id;
-            const isOpen = openId === mail.id;
             return (
               <article
                 key={mail.id}
@@ -199,13 +196,6 @@ export default function MailApprovalsPanel() {
                       <span>·</span>
                       <span>{formatWhen(mail.createdAt)}</span>
                     </div>
-                    {!isEditing && (
-                      <SubjectToggle
-                        subject={mail.subject}
-                        isOpen={isOpen}
-                        onToggle={() => toggleOpen(mail.id)}
-                      />
-                    )}
                   </div>
 
                   <div className="flex items-center gap-1 shrink-0">
@@ -263,18 +253,8 @@ export default function MailApprovalsPanel() {
                       التعديل يُحفظ مع الاعتماد — الرسالة تخرج كما تراها الآن.
                     </p>
                   </div>
-                ) : isOpen ? (
-                  <AsCharityReadsIt mail={mail} />
                 ) : (
-                  <Snippet body={mail.body} onOpen={() => toggleOpen(mail.id)} />
-                )}
-
-                {/* المرفقاتُ مذكورةٌ هنا بأسمائها حتى تُفتح الرسالة، فتُقرأ
-                    بطاقاتُها كما تقرؤها الجمعية. */}
-                {!isOpen && mail.attachments.length > 0 && (
-                  <p className="text-caption text-slate-400 dark:text-slate-500">
-                    {mail.attachments.length} مرفقاً: {mail.attachments.map((a) => a.fileName).join("، ")}
-                  </p>
+                  <AsCharityReadsIt mail={mail} />
                 )}
 
                 {returningId === mail.id && (
@@ -315,83 +295,26 @@ export default function MailApprovalsPanel() {
             لا رسائل لك تنتظر تعميد أحد.
           </p>
         ) : (
-          mine.map((mail) => {
-            const isOpen = openId === mail.id;
-            return (
-              <article
-                key={mail.id}
-                className="rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-800/30 p-4 space-y-3"
-              >
-                <div>
-                  <div className="flex items-center gap-2 flex-wrap text-caption text-slate-500 dark:text-slate-400">
-                    <Clock className="w-3.5 h-3.5" />
-                    <span>بانتظار تعميد «{mail.serviceName}»</span>
-                    <span>·</span>
-                    <span>{mail.charity?.name}</span>
-                    <span>·</span>
-                    <span>{formatWhen(mail.createdAt)}</span>
-                  </div>
-                  <SubjectToggle
-                    subject={mail.subject}
-                    isOpen={isOpen}
-                    onToggle={() => toggleOpen(mail.id)}
-                  />
-                </div>
+          mine.map((mail) => (
+            <article
+              key={mail.id}
+              className="rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-800/30 p-4 space-y-3"
+            >
+              <div className="flex items-center gap-2 flex-wrap text-caption text-slate-500 dark:text-slate-400">
+                <Clock className="w-3.5 h-3.5" />
+                <span>بانتظار تعميد «{mail.serviceName}»</span>
+                <span>·</span>
+                <span>{mail.charity?.name}</span>
+                <span>·</span>
+                <span>{formatWhen(mail.createdAt)}</span>
+              </div>
 
-                {isOpen ? (
-                  <AsCharityReadsIt mail={mail} />
-                ) : (
-                  <Snippet body={mail.body} onOpen={() => toggleOpen(mail.id)} />
-                )}
-              </article>
-            );
-          })
+              <AsCharityReadsIt mail={mail} />
+            </article>
+          ))
         )}
       </section>
     </div>
-  );
-}
-
-/** الموضوعُ مفتاحُ الرسالة: الضغطُ عليه يفتحها ويطويها. */
-function SubjectToggle({
-  subject,
-  isOpen,
-  onToggle,
-}: {
-  subject: string;
-  isOpen: boolean;
-  onToggle: () => void;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onToggle}
-      aria-expanded={isOpen}
-      title={isOpen ? "طيّ الرسالة" : "عرض الرسالة كما ستصل الجمعية"}
-      className="mt-1 flex items-center gap-2 rounded-lg text-right outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
-    >
-      <span className="font-semibold text-slate-900 dark:text-slate-100">{subject || "(بدون موضوع)"}</span>
-      <ChevronDown
-        className={cx(
-          "w-4 h-4 shrink-0 text-slate-300 transition-transform dark:text-slate-600",
-          isOpen && "rotate-180"
-        )}
-      />
-    </button>
-  );
-}
-
-/** أوّلُ النصّ مجرّداً من وسمه — وهو مفتاحٌ آخرُ لفتح الرسالة. */
-function Snippet({ body, onOpen }: { body: string; onOpen: () => void }) {
-  return (
-    <button
-      type="button"
-      onClick={onOpen}
-      title="عرض الرسالة كما ستصل الجمعية"
-      className="block w-full rounded-lg text-right text-body text-slate-600 transition-colors hover:text-slate-900 dark:text-slate-300 dark:hover:text-slate-100 outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
-    >
-      <span className="line-clamp-3">{htmlToPlainText(body)}</span>
-    </button>
   );
 }
 
@@ -406,6 +329,10 @@ function Snippet({ body, onOpen }: { body: string; onOpen: () => void }) {
  * ولا تظهر «إلى» فيها: صفوفُ الاستلام لا تُخلق إلا عند الاعتماد، وتُحسب من
  * تفويض تلك اللحظة لا من تفويض الآن — فذكرُ أسماءَ هنا وعدٌ قد يُخلف. والجمعيةُ
  * مذكورةٌ في ترويسة البطاقة فوقها.
+ *
+ * ولا تاريخَ فيها بعد: الرسالةُ تُؤرَّخ بلحظة اعتمادها لا بلحظة كتابتها
+ * (`mailSentAt`)، ولم تأتِ تلك اللحظةُ — فيُقال ذلك بدلاً من عرض تاريخٍ لن
+ * تقرأه الجمعيةُ.
  */
 function AsCharityReadsIt({ mail }: { mail: PendingMail }) {
   return (
@@ -420,7 +347,7 @@ function AsCharityReadsIt({ mail }: { mail: PendingMail }) {
           {mail.subject || "(بدون موضوع)"}
         </h4>
         <div className="mt-1 flex flex-wrap items-center gap-2 text-caption text-slate-500 dark:text-slate-400">
-          <span className={MONO}>{formatMailDate(mail.createdAt)}</span>
+          <span>تاريخها لحظة اعتمادها</span>
           {mail.serviceName && (
             <Badge tone="brand">
               <Building2 className="w-3 h-3" />
@@ -434,10 +361,6 @@ function AsCharityReadsIt({ mail }: { mail: PendingMail }) {
         <div className="flex flex-wrap items-center gap-2">
           <span className="text-body font-semibold text-slate-800 dark:text-slate-200">
             {mailAuthorLabel(mail)}
-          </span>
-          <span className="text-caption text-slate-400 dark:text-slate-500">·</span>
-          <span className="text-caption text-slate-400 dark:text-slate-500">
-            {formatMailDate(mail.createdAt)}
           </span>
         </div>
 

@@ -13,6 +13,7 @@ import {
   type MailThread,
   type ThreadSeed,
 } from "@/lib/mailThreads";
+import { mailSentAt } from "@/lib/mailDates";
 import { notifyMailDelivered } from "@/lib/mailNotify";
 import { isCharityMailOpen } from "@/lib/featureFlags";
 
@@ -175,7 +176,7 @@ export async function getPortalInbox(charityName: string, page = 1, limit = 20, 
       id: true,
       isRead: true,
       isStarred: true,
-      mail: { select: { id: true, parentId: true, createdAt: true } },
+      mail: { select: { id: true, parentId: true, createdAt: true, approvedAt: true } },
     },
     orderBy: { mail: { createdAt: "desc" } },
   });
@@ -186,7 +187,8 @@ export async function getPortalInbox(charityName: string, page = 1, limit = 20, 
         rowId: row.id,
         mailId: row.mail.id,
         threadId: threadIdOf(row.mail),
-        createdAt: row.mail.createdAt,
+        // تاريخُ الترتيب هو تاريخُ الإرسال: المعتمَدةُ بلحظة اعتمادها.
+        createdAt: mailSentAt(row.mail),
         isRead: row.isRead,
         isStarred: row.isStarred,
       })
@@ -225,7 +227,7 @@ export async function getPortalSent(charityName: string, page = 1, limit = 20, s
 
   const seeds = await prisma.internalMail.findMany({
     where,
-    select: { id: true, parentId: true, createdAt: true },
+    select: { id: true, parentId: true, createdAt: true, approvedAt: true },
     orderBy: { createdAt: "desc" },
   });
 
@@ -235,7 +237,7 @@ export async function getPortalSent(charityName: string, page = 1, limit = 20, s
         rowId: mail.id,
         mailId: mail.id,
         threadId: threadIdOf(mail),
-        createdAt: mail.createdAt,
+        createdAt: mailSentAt(mail),
         isRead: true,
         isStarred: false,
       })

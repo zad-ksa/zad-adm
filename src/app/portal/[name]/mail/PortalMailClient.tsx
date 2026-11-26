@@ -11,7 +11,6 @@ import {
   ArrowRight,
   Trash2,
   Reply,
-  Download,
   AlertTriangle,
   LoaderCircle,
   Inbox,
@@ -26,7 +25,8 @@ import {
   getPortalMail,
   deletePortalMail,
 } from "@/app/actions/charityMail";
-import { htmlToPlainText } from "@/app/(dashboard)/main/(main)/mail/mailUtils";
+import { htmlToPlainText, mailAuthorLabel } from "@/app/(dashboard)/main/(main)/mail/mailUtils";
+import { MailAttachments } from "@/app/(dashboard)/main/(main)/mail/MailAttachments";
 import { ConfirmDialog } from "@/components/console/ConfirmDialog";
 import { notifyMailUnreadChanged } from "@/lib/mailBadge";
 import PortalComposeModal, { type ReplyTarget, type ResendTarget } from "./PortalComposeModal";
@@ -80,20 +80,7 @@ type InboxRow = {
  * هكذا أُرسل باسم الخدمة، وهكذا يُردّ عليه — والشخص خلفها قد يتغيّر غداً.
  */
 function inboxParty(mail: MailShape) {
-  return authorLabel(mail);
-}
-
-/**
- * كاتب الرسالة كما يُعرض: عضو الجمعية باسمه، وموظف زاد باسمه مع خدمته.
- *
- * محادثة الخدمة يشترك فيها الفريقان، فالخدمة وحدها لا تكفي: يلزم أن يعرف
- * الفريق مَن ردّ منه ومَن ردّ من زاد.
- */
-function authorLabel(mail: MailShape) {
-  if (mail.senderCharityUser) return mail.senderCharityUser.name;
-  const name = mail.sender?.name;
-  if (mail.serviceName) return name ? `${name} — زاد | ${mail.serviceName}` : `زاد | ${mail.serviceName}`;
-  return name || "زاد";
+  return mailAuthorLabel(mail);
 }
 
 function sentParty(mail: MailShape) {
@@ -626,7 +613,7 @@ function PortalThreadMessage({
   isExpanded: boolean;
   onToggle: () => void;
 }) {
-  const author = authorLabel(message);
+  const author = mailAuthorLabel(message);
 
   if (!isExpanded) {
     return (
@@ -674,33 +661,7 @@ function PortalThreadMessage({
         dangerouslySetInnerHTML={{ __html: message.body || "" }}
       />
 
-      {message.attachments.length > 0 && (
-        <div className="flex flex-wrap gap-2 pt-3">
-          {message.attachments.map((att) => (
-            <a
-              key={att.id}
-              href={att.fileUrl}
-              target="_blank"
-              rel="noreferrer"
-              className="flex items-center gap-3 p-3 border border-slate-200 dark:border-slate-700 rounded-xl hover:bg-primary/[0.04] hover:border-primary/30 transition-colors bg-white dark:bg-slate-900"
-            >
-              <div className="w-9 h-9 bg-primary/5 dark:bg-primary/10 rounded-lg flex items-center justify-center">
-                <Download className="w-4 h-4 text-primary dark:text-teal-300" />
-              </div>
-              <div>
-                <div className="text-sm font-medium text-slate-900 dark:text-slate-100 truncate max-w-[200px]">
-                  {att.fileName}
-                </div>
-                {att.fileSize ? (
-                  <div className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                    {(att.fileSize / 1024 / 1024).toFixed(2)} MB
-                  </div>
-                ) : null}
-              </div>
-            </a>
-          ))}
-        </div>
-      )}
+      <MailAttachments attachments={message.attachments} className="pt-4" />
     </div>
   );
 }

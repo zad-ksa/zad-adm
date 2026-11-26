@@ -1,20 +1,23 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { btn, field } from "@/components/console/ui";
+import { Badge, btn, cx, field, MONO } from "@/components/console/ui";
 import {
   AlertTriangle,
   Building2,
   Check,
+  ChevronDown,
   CircleCheck,
   Clock,
+  Eye,
   LoaderCircle,
   Pencil,
   Undo2,
 } from "lucide-react";
 import dynamic from "next/dynamic";
 import { approveMail, getPendingApprovalMails, returnMail } from "@/app/actions/mailApproval";
-import { htmlToPlainText } from "./mailUtils";
+import { formatMailDate, htmlToPlainText, mailAuthorLabel } from "./mailUtils";
+import { MailAttachments, type MailAttachmentItem } from "./MailAttachments";
 
 const MailRichTextEditor = dynamic(() => import("./MailRichTextEditor"), {
   ssr: false,
@@ -30,7 +33,7 @@ type PendingMail = {
   returnNote: string | null;
   sender: { id: string; name: string } | null;
   charity: { id: string; name: string } | null;
-  attachments: { id: string; fileName: string }[];
+  attachments: MailAttachmentItem[];
 };
 
 function formatWhen(value: string | Date) {
@@ -61,6 +64,11 @@ export default function MailApprovalsPanel() {
   const [busyId, setBusyId] = useState<string | null>(null);
   const [returningId, setReturningId] = useState<string | null>(null);
   const [returnNote, setReturnNote] = useState("");
+
+  // الرسالةُ المفتوحة: واحدةٌ في الشاشة. وفتحُ غيرِها يطوي الأولى، فلا تصير
+  // الشاشةُ كومةَ رسائلَ مفتوحة لا يُقرأ فيها شيء.
+  const [openId, setOpenId] = useState<string | null>(null);
+  const toggleOpen = (id: string) => setOpenId((current) => (current === id ? null : id));
 
   // بلا setState قبل أول await: ضبط الحالة تزامناً داخل التأثير يُعيد الرسم
   // قبل أن يُرسم شيء. والتحميل الأول يبدأ من قيمة الحالة الابتدائية.
@@ -172,6 +180,7 @@ export default function MailApprovalsPanel() {
           toApprove.map((mail) => {
             const isEditing = editingId === mail.id;
             const isBusy = busyId === mail.id;
+            const isOpen = openId === mail.id;
             return (
               <article
                 key={mail.id}
@@ -191,9 +200,11 @@ export default function MailApprovalsPanel() {
                       <span>{formatWhen(mail.createdAt)}</span>
                     </div>
                     {!isEditing && (
-                      <h3 className="mt-1 font-semibold text-slate-900 dark:text-slate-100">
-                        {mail.subject || "(بدون موضوع)"}
-                      </h3>
+                      <SubjectToggle
+                        subject={mail.subject}
+                        isOpen={isOpen}
+                        onToggle={() => toggleOpen(mail.id)}
+                      />
                     )}
                   </div>
 
@@ -252,13 +263,15 @@ export default function MailApprovalsPanel() {
                       التعديل يُحفظ مع الاعتماد — الرسالة تخرج كما تراها الآن.
                     </p>
                   </div>
+                ) : isOpen ? (
+                  <AsCharityReadsIt mail={mail} />
                 ) : (
-                  <p className="text-body text-slate-600 dark:text-slate-300 line-clamp-3">
-                    {htmlToPlainText(mail.body)}
-                  </p>
+                  <Snippet body={mail.body} onOpen={() => toggleOpen(mail.id)} />
                 )}
 
-                {mail.attachments.length > 0 && (
+                {/* المرفقاتُ مذكورةٌ هنا بأسمائها حتى تُفتح الرسالة، فتُقرأ
+                    بطاقاتُها كما تقرؤها الجمعية. */}
+                {!isOpen && mail.attachments.length > 0 && (
                   <p className="text-caption text-slate-400 dark:text-slate-500">
                     {mail.attachments.length} مرفقاً: {mail.attachments.map((a) => a.fileName).join("، ")}
                   </p>
@@ -302,29 +315,139 @@ export default function MailApprovalsPanel() {
             لا رسائل لك تنتظر تعميد أحد.
           </p>
         ) : (
-          mine.map((mail) => (
-            <article
-              key={mail.id}
-              className="rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-800/30 p-4"
-            >
-              <div className="flex items-center gap-2 flex-wrap text-caption text-slate-500 dark:text-slate-400">
-                <Clock className="w-3.5 h-3.5" />
-                <span>بانتظار تعميد «{mail.serviceName}»</span>
-                <span>·</span>
-                <span>{mail.charity?.name}</span>
-                <span>·</span>
-                <span>{formatWhen(mail.createdAt)}</span>
-              </div>
-              <h3 className="mt-1 font-semibold text-slate-900 dark:text-slate-100">
-                {mail.subject || "(بدون موضوع)"}
-              </h3>
-              <p className="mt-1 text-body text-slate-600 dark:text-slate-300 line-clamp-2">
-                {htmlToPlainText(mail.body)}
-              </p>
-            </article>
-          ))
+          mine.map((mail) => {
+            const isOpen = openId === mail.id;
+            return (
+              <article
+                key={mail.id}
+                className="rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-800/30 p-4 space-y-3"
+              >
+                <div>
+                  <div className="flex items-center gap-2 flex-wrap text-caption text-slate-500 dark:text-slate-400">
+                    <Clock className="w-3.5 h-3.5" />
+                    <span>بانتظار تعميد «{mail.serviceName}»</span>
+                    <span>·</span>
+                    <span>{mail.charity?.name}</span>
+                    <span>·</span>
+                    <span>{formatWhen(mail.createdAt)}</span>
+                  </div>
+                  <SubjectToggle
+                    subject={mail.subject}
+                    isOpen={isOpen}
+                    onToggle={() => toggleOpen(mail.id)}
+                  />
+                </div>
+
+                {isOpen ? (
+                  <AsCharityReadsIt mail={mail} />
+                ) : (
+                  <Snippet body={mail.body} onOpen={() => toggleOpen(mail.id)} />
+                )}
+              </article>
+            );
+          })
         )}
       </section>
+    </div>
+  );
+}
+
+/** الموضوعُ مفتاحُ الرسالة: الضغطُ عليه يفتحها ويطويها. */
+function SubjectToggle({
+  subject,
+  isOpen,
+  onToggle,
+}: {
+  subject: string;
+  isOpen: boolean;
+  onToggle: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onToggle}
+      aria-expanded={isOpen}
+      title={isOpen ? "طيّ الرسالة" : "عرض الرسالة كما ستصل الجمعية"}
+      className="mt-1 flex items-center gap-2 rounded-lg text-right outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+    >
+      <span className="font-semibold text-slate-900 dark:text-slate-100">{subject || "(بدون موضوع)"}</span>
+      <ChevronDown
+        className={cx(
+          "w-4 h-4 shrink-0 text-slate-300 transition-transform dark:text-slate-600",
+          isOpen && "rotate-180"
+        )}
+      />
+    </button>
+  );
+}
+
+/** أوّلُ النصّ مجرّداً من وسمه — وهو مفتاحٌ آخرُ لفتح الرسالة. */
+function Snippet({ body, onOpen }: { body: string; onOpen: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onOpen}
+      title="عرض الرسالة كما ستصل الجمعية"
+      className="block w-full rounded-lg text-right text-body text-slate-600 transition-colors hover:text-slate-900 dark:text-slate-300 dark:hover:text-slate-100 outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+    >
+      <span className="line-clamp-3">{htmlToPlainText(body)}</span>
+    </button>
+  );
+}
+
+/**
+ * الرسالةُ كما تقرؤها الجمعيةُ في بوّابتها — لا ملخّصاً عنها.
+ *
+ * والمعمِّدُ يقرِّر في شيءٍ سيخرج باسم خدمته، فكان يقرأ ثلاثةَ أسطرٍ منزوعةَ
+ * الوسم: لا فقراتٍ ولا قوائمَ ولا روابطَ ولا مرفقاتٍ تُفتح. وهذا هو نفسُه
+ * معروضاً بوسمه (`mail-prose`) وبترويسته: الكاتبُ باسمه مع خدمته كما تُقرأ
+ * هناك (`mailAuthorLabel`)، والمرفقاتُ بطاقاتِ تنزيل.
+ *
+ * ولا تظهر «إلى» فيها: صفوفُ الاستلام لا تُخلق إلا عند الاعتماد، وتُحسب من
+ * تفويض تلك اللحظة لا من تفويض الآن — فذكرُ أسماءَ هنا وعدٌ قد يُخلف. والجمعيةُ
+ * مذكورةٌ في ترويسة البطاقة فوقها.
+ */
+function AsCharityReadsIt({ mail }: { mail: PendingMail }) {
+  return (
+    <div className="rounded-xl border border-dashed border-slate-300 p-3 dark:border-slate-700 sm:p-4">
+      <p className="mb-3 flex items-center gap-1.5 text-caption text-slate-400 dark:text-slate-500">
+        <Eye className="w-3.5 h-3.5" />
+        كما تقرؤها الجمعية في بوّابتها
+      </p>
+
+      <div className="rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900">
+        <h4 className="text-body font-semibold text-slate-900 dark:text-slate-100">
+          {mail.subject || "(بدون موضوع)"}
+        </h4>
+        <div className="mt-1 flex flex-wrap items-center gap-2 text-caption text-slate-500 dark:text-slate-400">
+          <span className={MONO}>{formatMailDate(mail.createdAt)}</span>
+          {mail.serviceName && (
+            <Badge tone="brand">
+              <Building2 className="w-3 h-3" />
+              {mail.serviceName}
+            </Badge>
+          )}
+        </div>
+
+        <hr className="my-3 border-slate-100 dark:border-slate-800" />
+
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="text-body font-semibold text-slate-800 dark:text-slate-200">
+            {mailAuthorLabel(mail)}
+          </span>
+          <span className="text-caption text-slate-400 dark:text-slate-500">·</span>
+          <span className="text-caption text-slate-400 dark:text-slate-500">
+            {formatMailDate(mail.createdAt)}
+          </span>
+        </div>
+
+        <div
+          className="mail-prose mt-3 text-slate-800 dark:text-slate-200"
+          dangerouslySetInnerHTML={{ __html: mail.body || "" }}
+        />
+
+        <MailAttachments attachments={mail.attachments} className="mt-4" />
+      </div>
     </div>
   );
 }

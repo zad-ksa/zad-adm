@@ -7,6 +7,7 @@ import {
   ArrowRight,
   ChevronDown,
   Forward,
+  History,
   Paperclip,
   Reply,
   ReplyAll,
@@ -18,6 +19,7 @@ import { Avatar, Badge, MONO, Note, btn, cx, toolbarClass } from "@/components/c
 import { markManyAsRead, moveToTrash } from "@/app/actions/mail";
 import { notifyMailUnreadChanged } from "@/lib/mailBadge";
 import { formatMailDate, htmlToPlainText, splitQuotedHtml } from "../mailUtils";
+import { byMailSentAt, mailSentAt } from "@/lib/mailDates";
 import { MailAttachments } from "../MailAttachments";
 
 interface MailViewClientProps {
@@ -51,6 +53,12 @@ type ThreadMessage = {
   body: string;
   attachments: any[];
   createdAt: string | Date;
+  /** لحظةُ الاعتماد — وهي لحظةُ الإرسال، وبها تُؤرَّخ الرسالة (`mailSentAt`). */
+  approvedAt?: string | Date | null;
+  approvedById?: string | null;
+  /** معمِّدُ بريدِ الجمعية إلى زاد: عضوٌ لا موظف. */
+  approvedByCharityUserId?: string | null;
+  approvalState?: string | null;
   /** هوية البريد بين زاد وجمعية: الجمعية الطرف، والخدمة التي خرج باسمها. */
   senderCharityUser?: { id: string; name: string } | null;
   charity?: { id: string; name: string } | null;
@@ -82,6 +90,10 @@ export default function MailViewClient({ session, mail, employees }: MailViewCli
         body: mail.body,
         attachments: mail.attachments,
         createdAt: mail.createdAt,
+        approvedAt: mail.approvedAt,
+        approvedById: mail.approvedById,
+        approvedByCharityUserId: mail.approvedByCharityUserId,
+        approvalState: mail.approvalState,
         senderCharityUser: mail.senderCharityUser,
         charity: mail.charity,
         serviceName: mail.serviceName,
@@ -89,7 +101,10 @@ export default function MailViewClient({ session, mail, employees }: MailViewCli
       // Replies inherit the thread's subject so a reply-to-a-reply is titled
       // from the conversation rather than from an empty field.
       ...(mail.replies || []).map((r: ThreadMessage) => ({ ...r, subject: r.subject || mail.subject })),
-    ],
+    ]
+      // ترتيبُ القراءة ترتيبُ الإرسال: ردٌّ كُتب قبل غيره واعتُمد بعده يأتي
+      // بعده — والقاعدةُ ترتِّب الردودَ بـ`createdAt`، وهي لحظةُ الكتابة.
+      .sort(byMailSentAt),
     [mail]
   );
 
@@ -236,6 +251,7 @@ export default function MailViewClient({ session, mail, employees }: MailViewCli
                 onReplyAll={() => setReplyTarget({ message, all: true })}
                 onForward={() => setForwardTarget(message)}
                 currentUserId={session?.id}
+                approverNames={mail.approverNames}
               />
             ))}
           </div>
@@ -297,6 +313,7 @@ function ThreadMessageCard({
   onReplyAll,
   onForward,
   currentUserId,
+  approverNames,
 }: {
   message: ThreadMessage;
   isExpanded: boolean;
@@ -305,6 +322,8 @@ function ThreadMessageCard({
   onReplyAll: () => void;
   onForward: () => void;
   currentUserId?: string;
+  /** أسماءُ المعمِّدين بمعرِّفاتهم — لسجلّ الرسالة. */
+  approverNames?: Record<string, string>;
 }) {
   const toRecipients: RecipientRow[] = (message.recipients || []).filter((r: RecipientRow) => r.type === "TO");
   const ccRecipients: RecipientRow[] = (message.recipients || []).filter((r: RecipientRow) => r.type === "CC");
@@ -375,7 +394,7 @@ function ThreadMessageCard({
           <Paperclip className="size-3.5 shrink-0 text-slate-400 dark:text-slate-500" />
         )}
         <span className={cx(MONO, "shrink-0 text-caption text-slate-400 dark:text-slate-500")}>
-          {formatMailDate(message.createdAt)}
+          {formatMailDate(mailSentAt(message))}
         </span>
         <ChevronDown className="size-4 shrink-0 text-slate-300 dark:text-slate-600" />
       </button>
@@ -459,7 +478,7 @@ function ThreadMessageCard({
           </button>
           <span className={cx(MONO, "whitespace-nowrap text-caption text-slate-400 dark:text-slate-500")}>
             {new Intl.DateTimeFormat("ar-SA", { year: "numeric", month: "long", day: "numeric", hour: "2-digit", minute: "2-digit" }).format(
-              new Date(message.createdAt)
+              new Date(mailSentAt(message))
             )}
           </span>
         </div>
@@ -487,6 +506,84 @@ function ThreadMessageCard({
       )}
 
       <MailAttachments attachments={message.attachments ?? []} className="mt-6" />
+
+      <MailTrail message={message} approverNames={approverNames} isSender={isSender} />
+    </div>
+  );
+}
+
+/** تاريخٌ بساعته — لسجلّ الرسالة، حيث الفرقُ بين تاريخين هو المقصود. */
+function trailWhen(value: string | Date | number) {
+  return new Intl.DateTimeFormat("ar-SA", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(new Date(value));
+}
+
+/**
+ * سجلُّ الرسالة — في لوحة زاد وحدَها.
+ *
+ * والرسالةُ تُؤرَّخ بلحظة إرسالها (`mailSentAt`)، فبريدٌ وقف على التعميد ثلاثةَ
+ * أيامٍ يُقرأ بتاريخ اعتماده — وتاريخُ كتابته لا يظهر في الترويسة. فهنا
+ * يُقرأ الاثنان ومعهما اسمُ المعمِّد وعددُ من وصلهم: موظفُ زاد يعرف ما جرى
+ * للرسالة كلَّه، والجمعيةُ لا ترى من هذا شيئاً — بوّابتُها لا تجلبه أصلاً.
+ *
+ * ولا يُعرض إلّا ما يُضيف: رسالةٌ خرجت باعتماد كاتبها ليس فيها «أُرسلت
+ * للتعميد» — ولحظةُ اعتمادها لحظةُ كتابتها.
+ */
+function MailTrail({
+  message,
+  approverNames,
+  isSender,
+}: {
+  message: ThreadMessage;
+  approverNames?: Record<string, string>;
+  isSender: boolean;
+}) {
+  const approverId = message.approvedById ?? message.approvedByCharityUserId ?? null;
+  const approverName = approverId ? approverNames?.[approverId] : undefined;
+  // المعمِّدُ غيرُ الكاتب: هو وحدَه ما يعني أن الرسالة وقفت ثم خرجت.
+  const wasHeld =
+    !!message.approvedAt && !!approverId && approverId !== message.senderId;
+  // عددُ من وصلهم لصاحبِ الرسالة وحدَه: نسخةُ غيرِه مغربَلةٌ من صفوف النسخة
+  // المخفيّة (`stripHiddenBcc`)، فالعددُ عنده أقلُّ من الحقيقة — وسجلٌّ يقول
+  // رقماً ناقصاً أسوأُ من سجلٍّ لا يقوله.
+  const delivered = isSender ? (message.recipients || []).length : 0;
+
+  return (
+    <div className="mt-6 border-t border-dashed border-slate-200 pt-3 dark:border-slate-800">
+      <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-caption text-slate-400 dark:text-slate-500">
+        <span className="inline-flex items-center gap-1 font-medium">
+          <History className="size-3.5" />
+          سجل الرسالة
+        </span>
+        <span>·</span>
+        <span>
+          كتبها {message.sender?.name || message.senderCharityUser?.name || "—"}
+          {wasHeld && " وأرسلها للتعميد"}
+        </span>
+        <span>·</span>
+        <span className={MONO}>{trailWhen(message.createdAt)}</span>
+
+        {wasHeld && (
+          <>
+            <span>·</span>
+            <span>اعتمدها {approverName || "معمد الخدمة"} وأرسلها</span>
+            <span>·</span>
+            <span className={MONO}>{trailWhen(message.approvedAt as string | Date)}</span>
+          </>
+        )}
+
+        {delivered > 0 && (
+          <>
+            <span>·</span>
+            <span>وصلت {delivered} من المستلمين</span>
+          </>
+        )}
+      </div>
     </div>
   );
 }

@@ -1,3 +1,5 @@
+import { mailSentAt } from "@/lib/mailDates";
+
 export type MailListItem = {
   rowId: string;
   mailId: string;
@@ -115,7 +117,9 @@ export function normalizeMailListItem(
     isUnread: tab !== "sent" && tab !== "drafts" && item.isRead === false,
     isStarred: !!item.isStarred,
     hasAttachments: !!(mail.attachments && mail.attachments.length > 0),
-    createdAt: tab === "drafts" ? mail.updatedAt || mail.createdAt : mail.createdAt,
+    // المسودةُ تُؤرَّخ بآخر حفظ، وغيرُها بلحظة إرسالها — والمعتمَدةُ أُرسلت
+    // لحظةَ اعتمادها لا لحظةَ كتابتها.
+    createdAt: tab === "drafts" ? mail.updatedAt || mail.createdAt : mailSentAt(mail),
     // المسوداتُ ليست محادثات، وبقيّةُ الصناديق تأتي مجموعةً من الخادم.
     threadCount: Math.max(1, Number(item.threadCount) || 1),
   };

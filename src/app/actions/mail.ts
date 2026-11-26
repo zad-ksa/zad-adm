@@ -10,6 +10,7 @@ import {
   type MailThread,
   type ThreadSeed,
 } from "@/lib/mailThreads";
+import { mailSentAt } from "@/lib/mailDates";
 import { getSession } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
 import { sanitizeMailHtml } from "@/lib/sanitizeMail";
@@ -134,6 +135,11 @@ export async function sendMail(data: {
         body: cleanBody,
         parentId: rootParentId,
         isDraft: false,
+        // المسودةُ تصير رسالةً في هذا الصفِّ نفسِه لا في صفٍّ جديد، فتاريخُها
+        // تاريخُ أوّلِ حفظٍ للمسودة: مسودةٌ كُتبت قبل أسبوعٍ وأُرسلت اليوم
+        // تُقرأ في الوارد بتاريخ الأسبوع الماضي وتقع تحت ما هو أقدمُ منها.
+        // والرسالةُ تُؤرَّخ بإرسالها، وهو الآن.
+        createdAt: new Date(),
         draftToIds: [],
         draftCcIds: [],
         draftBccIds: [],
@@ -399,7 +405,7 @@ async function recipientThreadPage(
       id: true,
       isRead: true,
       isStarred: true,
-      mail: { select: { id: true, parentId: true, createdAt: true } },
+      mail: { select: { id: true, parentId: true, createdAt: true, approvedAt: true } },
     },
     orderBy: { mail: { createdAt: "desc" } },
   });
@@ -410,7 +416,8 @@ async function recipientThreadPage(
         rowId: row.id,
         mailId: row.mail.id,
         threadId: threadIdOf(row.mail),
-        createdAt: row.mail.createdAt,
+        // تاريخُ الترتيب هو تاريخُ الإرسال: المعتمَدةُ بلحظة اعتمادها.
+        createdAt: mailSentAt(row.mail),
         isRead: row.isRead,
         isStarred: row.isStarred,
       })
@@ -467,7 +474,7 @@ export async function getSentMails(page = 1, limit = 20, search = "") {
   // حالَ قراءةٍ هنا ولا نجمة — الصفُّ رسالةٌ لا استلام.
   const seeds = await prisma.internalMail.findMany({
     where,
-    select: { id: true, parentId: true, createdAt: true },
+    select: { id: true, parentId: true, createdAt: true, approvedAt: true },
     orderBy: { createdAt: "desc" },
   });
 
@@ -477,7 +484,7 @@ export async function getSentMails(page = 1, limit = 20, search = "") {
         rowId: mail.id,
         mailId: mail.id,
         threadId: threadIdOf(mail),
-        createdAt: mail.createdAt,
+        createdAt: mailSentAt(mail),
         isRead: true,
         isStarred: false,
       })
@@ -605,6 +612,35 @@ function stripHiddenBcc<
   return m;
 }
 
+/**
+ * أسماءُ معمِّدي رسائلِ سلسلةٍ واحدة — موظفو زاد وأعضاءُ الجمعيات.
+ *
+ * و`approvedById` بلا علاقةٍ مُصرَّحة في المخطَّط (أثرٌ للتدقيق لا يُستعلم عنه
+ * من الجهة الأخرى)، فتُجلب الأسماءُ باستعلامٍ واحدٍ لكلِّ جهةٍ لا بـ`include`،
+ * ولا يُسأل عنها أصلاً إن لم تكن في السلسلة رسالةٌ معمَّدة.
+ */
+async function threadApproverNames(
+  messages: { approvedById: string | null; approvedByCharityUserId: string | null }[]
+): Promise<Record<string, string>> {
+  const only = (ids: (string | null)[]) => [...new Set(ids.filter((id): id is string => !!id))];
+  const employeeIds = only(messages.map((m) => m.approvedById));
+  const charityUserIds = only(messages.map((m) => m.approvedByCharityUserId));
+  if (employeeIds.length === 0 && charityUserIds.length === 0) return {};
+
+  const [employees, charityUsers] = await Promise.all([
+    employeeIds.length
+      ? prisma.employee.findMany({ where: { id: { in: employeeIds } }, select: { id: true, name: true } })
+      : [],
+    charityUserIds.length
+      ? prisma.charityUser.findMany({ where: { id: { in: charityUserIds } }, select: { id: true, name: true } })
+      : [],
+  ]);
+
+  const names: Record<string, string> = {};
+  for (const row of [...employees, ...charityUsers]) names[row.id] = row.name;
+  return names;
+}
+
 export async function getMailById(id: string) {
   const user = await getAuthenticatedUser();
 
@@ -644,7 +680,11 @@ export async function getMailById(id: string) {
     r.body = sanitizeMailHtml(r.body);
   });
 
-  return { ...mail, openedId: requested.id };
+  // سجلُّ الرسالة يُقرأ في لوحة زاد وحدَها، وفيه اسمُ معمِّدها — ولا يصل
+  // بوّابةَ الجمعية: `getPortalMail` لا يجلبه.
+  const approverNames = await threadApproverNames([mail, ...mail.replies]);
+
+  return { ...mail, openedId: requested.id, approverNames };
 }
 
 export async function markAsRead(mailId: string) {
